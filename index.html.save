@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veteran's Scene | Coming Soon</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/favicon.ico" />
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 bg-opacity-90 border-b border-gray-700">
+    <div class="max-w-6xl mx-auto flex justify-between items-center p-4">
+      <h1 class="text-2xl font-bold text-yellow-400">Veteran's Scene</h1>
+      <div class="space-x-4">
+        <a href="https://www.youtube.com/@VeteransScene" target="_blank" class="text-gray-300 hover:text-yellow-400">YouTube</a>
+        <a href="mailto:veteransscene@gmail.com" class="text-gray-300 hover:text-yellow-400">Contact</a>
+        <a href="https://www.va.gov/" target="_blank" class="text-gray-300 hover:text-yellow-400">VA.gov</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero / Main Section -->
+  <main class="flex-grow flex flex-col items-center justify-center text-center px-6 py-16">
+    <h2 class="text-4xl sm:text-5xl font-bold text-yellow-400 mb-4">Veteran's Scene</h2>
+    <p class="max-w-2xl text-lg text-gray-300 mb-8">
+      A community-driven project dedicated to empowering Veterans through connection, education, and resources.
+      We’re working hard behind the scenes to build a platform for discussion, events, and support.
+    </p>
+
+    <div class="bg-gray-800 rounded-xl p-6 max-w-lg shadow-lg">
+      <h3 class="text-xl font-semibold mb-2 text-yellow-300">Coming Soon</h3>
+      <p class="text-gray-300">
+        Our full website is currently under development. Stay tuned for updates, resources, and discussions that aim to
+        strengthen and support the Veteran community.
+      </p>
+    </div>
+
+    <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-6 w-full max-w-4xl">
+      <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Logo_of_the_United_States_Army.svg/500px-Logo_of_the_United_States_Army.svg.png?20230107222806" alt="Army" class="rounded mb-2 mx-auto">
+        <p class="text-sm text-gray-400 text-center">U.S. Army</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Emblem_of_the_United_States_Navy.svg/600px-Emblem_of_the_United_States_Navy.svg.png?20191225231645" alt="Navy" class="rounded mb-2 mx-auto">
+        <p class="text-sm text-gray-400 text-center">U.S. Navy</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+        <img src="" alt="Air Force" class="rounded mb-2 mx-auto">
+        <p class="text-sm text-gray-400 text-center">U.S. Air Force</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+        <img src="https://via.placeholder.com/150x100?text=Marines" alt="Marines" class="rounded mb-2 mx-auto">
+        <p class="text-sm text-gray-400 text-center">U.S. Marines</p>
+      </div>
+    </div>
+
+    <div class="mt-12">
+      <a href="https://www.va.gov/health-care/apply/application/introduction" target="_blank"
+         class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-lg transition">
+         Learn About VA Benefits
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 border-t border-gray-700 text-center py-6 text-gray-400">
+    <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+    <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+    <p class="mt-2">© <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
