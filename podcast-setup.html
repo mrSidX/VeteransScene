@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Easy Podcast Join Guide | Veteran's Scene</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/favicon.ico" />
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen scroll-smooth">
+
+  <!-- Navbar -->
+  <nav class="bg-gray-800 bg-opacity-95 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+      <!-- Logo + Title -->
+      <div class="flex items-center space-x-3">
+        <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene Logo" class="w-10 h-10 rounded-lg">
+        <h1 class="text-2xl font-bold text-yellow-400 tracking-wide">Veteran's Scene</h1>
+      </div>
+
+      <!-- Hamburger Button (Mobile) -->
+      <button id="menu-toggle" type="button" aria-controls="menu" aria-expanded="false"
+              class="md:hidden text-gray-300 hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">
+        <svg id="menu-open-icon" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Nav Links -->
+      <div id="menu"
+           class="hidden md:flex flex-col md:flex-row md:items-center md:space-x-4 absolute md:static left-0 top-full w-full md:w-auto bg-gray-800 md:bg-transparent border-t md:border-none border-gray-700 md:mt-0 mt-2 md:p-0 p-4 z-50 transition-all duration-300 ease-in-out transform origin-top md:transform-none md:transition-none">
+        <a href="index.html" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Home</a>
+        <a href="#benefits" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Benefits</a>
+        <a href="#apply" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Apply</a>
+        <a href="#support" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Support</a>
+        <a href="#local" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Local</a>
+        <a href="mailto:veteransscene@gmail.com" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Contact</a>
+        <a href="https://www.va.gov/" target="_blank" rel="noopener"
+           class="block mt-2 md:mt-0 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1 rounded-md font-semibold transition text-center">
+          VA.gov
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Banner -->
+  <section class="relative bg-cover bg-center h-[50vh]" style="background-image: url('/assets/img/vs-banner.png');">
+    <div class="absolute inset-0 bg-black bg-opacity-60 flex flex-col justify-center items-center text-center px-6">
+      <h2 class="text-5xl sm:text-6xl font-bold text-yellow-400 mb-4 drop-shadow-lg">Join Our Podcast</h2>
+      <p class="max-w-2xl text-lg text-gray-200 mb-6">
+        Super easy steps to join our video podcast chat!
+      </p>
+      <a href="#guide" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-3 rounded-lg transition">
+        Start Here
+      </a>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="flex-grow px-6 py-12 max-w-6xl mx-auto space-y-16">
+
+    <!-- Participant Guide -->
+    <section id="guide">
+      <h3 class="text-3xl font-bold text-yellow-400 mb-6 text-center">Easy Podcast Join Guide</h3>
+      <p class="text-gray-300 mb-8 text-center max-w-3xl mx-auto">
+        VDO.Ninja is a free, simple tool that lets you join our video podcast using your phone or computer’s web browser. No apps to download, no account needed—just a link! Follow these steps to get set up.
+      </p>
+
+      <div class="space-y-8">
+        <!-- Prep -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Before You Start</h4>
+          <p class="text-gray-300">
+            Close any apps or programs running on your phone or computer (like Zoom, Skype, or games) to avoid slowdowns or camera/microphone issues.
+          </p>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Step 1: Get Your Link</h4>
+          <p class="text-gray-300 mb-4">
+            Our director will send you a special link to join the podcast. You’ll get it by:
+          </p>
+          <ul class="list-disc list-inside text-gray-300 space-y-2">
+            <li><strong>Email:</strong> If using a computer, check your email and click the link.</li>
+            <li><strong>Text Message:</strong> If using a phone, check your texts and tap the link.</li>
+          </ul>
+          <p class="text-gray-300 mt-4">
+            When the link opens in your browser, click <strong>“Join Room with Webcam”</strong> to start.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Step 2: Say “Yes” to Camera & Mic</h4>
+          <p class="text-gray-300">
+            Your browser will ask if it’s okay to use your camera and microphone. Click <strong>“Allow”</strong> or <strong>“Yes”</strong> to let us see and hear you.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Step 3: Pick Your Camera & Mic</h4>
+          <p class="text-gray-300 mb-4">
+            If you have more than one camera or microphone, you’ll see a dropdown menu to choose them.
+          </p>
+          <ul class="list-disc list-inside text-gray-300 space-y-2">
+            <li><strong>Camera:</strong> Pick a camera. If you see yourself on the screen, it’s the right one!</li>
+            <li><strong>Microphone:</strong> Pick a mic. Speak or clap—if the green audio bars bounce, we can hear you!</li>
+          </ul>
+          <details class="mt-4 text-gray-300">
+            <summary class="text-yellow-300 hover:underline cursor-pointer">More: How to Choose Camera & Mic</summary>
+            <p class="mt-2">
+              On your screen, look for a small camera or gear icon (usually at the top or bottom). Click it to see a list of your cameras and mics. Try each one until you see yourself and the audio bars move when you talk.
+            </p>
+          </details>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Step 4: You’re Ready!</h4>
+          <p class="text-gray-300">
+            If you see yourself and the audio bars move when you talk, you’re good to go! You’ll be in the podcast session with us. The director will guide you from there.
+          </p>
+        </div>
+
+        <!-- Tips -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Tips for a Great Podcast</h4>
+          <ul class="list-disc list-inside text-gray-300 space-y-2">
+            <li><strong>Use Headphones or Earbuds:</strong> This stops echo so we hear you clearly. Low-profile earbuds work great!</li>
+            <li><strong>Good Microphone:</strong> Use a headset mic or your device’s built-in mic. Avoid cheap or distant mics for better sound.</li>
+            <li><strong>Well-Lit Room:</strong> Sit in a bright room or near a lamp so we can see you clearly.</li>
+            <li><strong>Strong Internet:</strong> Use Wi-Fi or a wired connection on a computer for the best quality. Test your speed at <a href="https://www.speedtest.net/" target="_blank" class="text-yellow-300 hover:underline">Speedtest.net</a>. Aim for at least 10 Mbps download/upload for smooth video.</li>
+            <li><strong>If Using a Phone:</strong> Make sure you have a strong signal (4G/5G or Wi-Fi). Avoid areas with bad reception to prevent dropouts.</li>
+            <li><strong>Best Setup:</strong> Use a computer or laptop at home with a wired internet connection (Ethernet) or strong Wi-Fi for the smoothest experience.</li>
+          </ul>
+        </div>
+
+        <!-- Speed Test -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+          <h4 class="text-xl font-semibold text-yellow-300 mb-2">Check Your Internet Speed</h4>
+          <p class="text-gray-300 mb-4">
+            A good internet connection is key! Click below to test your speed. For best results, aim for 10 Mbps or higher for both download and upload.
+          </p>
+          <a href="https://www.speedtest.net/" target="_blank" class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-lg transition">
+            Run Speed Test
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400">
+    <p><strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+    <p class="mt-2">© <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menu-toggle');
+      const menu = document.getElementById('menu');
+      const openIcon = document.getElementById('menu-open-icon');
+
+      if (!menuToggle || !menu) return;
+
+      menuToggle.addEventListener('click', () => {
+        const isHidden = menu.classList.toggle('hidden');
+        menuToggle.setAttribute('aria-expanded', (!isHidden).toString());
+
+        // Toggle hamburger ↔ close (X)
+        if (!isHidden) {
+          openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />';
+        } else {
+          openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />';
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
