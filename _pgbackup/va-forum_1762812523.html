@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>VA Benefits & Support | Veteran's Scene</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="icon" href="/favicon.ico"/>
+    </head>
+    <body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen scroll-smooth">
+        <!-- Navbar -->
+        <nav class="bg-gray-800 bg-opacity-95 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+            <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+                <!-- Logo + Title -->
+                <div class="flex items-center space-x-3">
+                    <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene Logo" class="w-10 h-10 rounded-lg">
+                    <h1 class="text-2xl font-bold text-yellow-400 tracking-wide">Veteran's Scene</h1>
+                </div>
+                <!-- Hamburger Button (Mobile) -->
+                <button id="menu-toggle" type="button" aria-controls="menu" aria-expanded="false" class="md:hidden text-gray-300 hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">
+                    <svg id="menu-open-icon" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <!-- Nav Links -->
+                <div id="menu" class="hidden md:flex flex-col md:flex-row md:items-center md:space-x-4 absolute md:static left-0 top-full w-full md:w-auto bg-gray-800 md:bg-transparent border-t md:border-none border-gray-700 md:mt-0 mt-2 md:p-0 p-4 z-50 transition-all duration-300 ease-in-out transform origin-top md:transform-none md:transition-none"><a href="index.html" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Home</a><a href="#benefits" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Benefits</a><a href="#apply" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Apply</a><a href="#support" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Support</a><a href="#local" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Local</a><a href="mailto:veteransscene@gmail.com" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Contact</a><a href="https://www.va.gov/" target="_blank" rel="noopener" class="block mt-2 md:mt-0 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1 rounded-md font-semibold transition text-center">
+        VA.gov </a>
+                </div>
+            </div>
+        </nav>
+        <!-- Hero Banner -->
+        <section class="relative bg-cover bg-center h-[50vh]" style="background-image: url('/assets/img/vs-banner.png');">
+            <div class="absolute inset-0 bg-black bg-opacity-60 flex flex-col justify-center items-center text-center px-6">
+                <h2 class="text-5xl sm:text-6xl font-bold text-yellow-400 mb-4 drop-shadow-lg">Get the Benefits You’ve Earned</h2>
+                <p class="max-w-2xl text-lg text-gray-200 mb-6">
+        Connect to health care, disability compensation, education, housing, and the services you deserve. </p><a href="#benefits" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-3 rounded-lg transition">
+        Explore Benefits & Guidance </a>
+            </div>
+        </section>
+        <!-- Main Content -->
+        <main class="flex-grow px-6 py-12 max-w-6xl mx-auto space-y-16">
+            <!-- Benefits & Guidance -->
+            <section id="benefits">
+                <h3 class="text-3xl font-bold text-yellow-400 mb-6 text-center">VA Benefits & Guidance</h3>
+                <p class="text-gray-300 mb-8 text-center max-w-3xl mx-auto">
+        The VA offers comprehensive support for Veterans, service members, and families.  
+        Below are direct links to help you apply for or manage your benefits and connect with VA representatives nationwide. </p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <ul class="list-disc list-inside text-gray-300 space-y-2">
+                            <li>
+                                <a href="https://www.va.gov/health-care/" target="_blank" class="text-yellow-300 hover:underline font-semibold">Health Care Enrollment</a> – Apply for VA medical services and find providers.
+                            </li>
+                            <li>
+                                <a href="https://www.va.gov/disability/" target="_blank" class="text-yellow-300 hover:underline font-semibold">Disability Compensation</a> – File or check your disability claim.
+                            </li>
+                            <li>
+                                <a href="https://www.va.gov/pension/" target="_blank" class="text-yellow-300 hover:underline font-semibold">VA Pension Benefits</a> – Financial support for eligible Veterans and survivors.
+                            </li>
+                            <li>
+                                <a href="https://www.va.gov/education/" target="_blank" class="text-yellow-300 hover:underline font-semibold">Education & Training</a> – Learn about the GI Bill and other education programs.
+                            </li>
+                            <li>
+                                <a href="https://www.va.gov/housing-assistance/" target="_blank" class="text-yellow-300 hover:underline font-semibold">Home Loans & Housing Assistance</a> – VA-backed home loans and support programs.
+                            </li>
+                            <li>
+                                <a href="https://www.va.gov/life-insurance/" target="_blank" class="text-yellow-300 hover:underline font-semibold">Life Insurance & Family Support</a> – Secure benefits for your family’s future.
+                            </li>
+                        </ul><a href="https://www.va.gov/find-locations" target="_blank" class="inline-block mt-6 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-lg transition">
+             Find VA Offices & Medical Centers Near You </a>
+                    </div>
+                    <div class="flex justify-center">
+                        <img src="/assets/img/va-benefits-stock.jpg" alt="VA Benefits Guidance" class="rounded-lg shadow-lg border border-gray-700">
+                    </div>
+                </div>
+            </section>
+            <!-- Applying for VA Benefits -->
+            <section id="apply" class="bg-gray-800 rounded-xl p-8 border border-gray-700 shadow-lg">
+                <h3 class="text-3xl font-bold text-yellow-400 mb-6 text-center">Applying for VA Benefits</h3>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p class="text-gray-300 mb-4">
+            Applying for your VA benefits is easier than ever. Whether you’re seeking health care, disability compensation,
+            education assistance, or other support, the process starts online at the official VA portal. </p>
+                        <p class="text-gray-300 mb-6">
+            You’ll need your service information, basic personal details, and supporting documentation.  
+            Click below to begin your secure application through the VA website. </p><a href="https://benefits.va.gov/BENEFITS/Applying.asp" target="_blank" class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-lg transition">
+             Apply For VA Benefits Online </a>
+                    </div>
+                    <div class="flex justify-center">
+                        <img src="https://news.va.gov/wp-content/uploads/sites/3/2016/03/VHIC_Fact_Sheet_020215a.jpeg?w=640" alt="Applying for VA Benefits" class="rounded-lg shadow-lg border border-gray-700 max-w-full">
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">
+        Image: VA Health Identification Card (VHIC) Fact Sheet — courtesy of <a href="https://news.va.gov/" target="_blank" class="text-yellow-300 hover:underline">news.va.gov</a>. </p>
+            </section>
+            <!-- Support & Well-Being -->
+            <section id="support">
+                <h3 class="text-3xl font-bold text-yellow-400 mb-6 text-center">Support & Well-Being</h3>
+                <p class="text-gray-300 mb-6 text-center max-w-3xl mx-auto">
+        You’re never alone. The VA and community organizations provide free, confidential support for mental health, counseling, and career assistance. </p>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-gray-800 rounded-lg p-6 shadow border border-gray-700">
+                        <h4 class="text-xl font-semibold text-yellow-300 mb-2">Veterans Crisis Line</h4>
+                        <p class="text-gray-300 mb-3">Call <a href="tel:988" class="text-yellow-300 hover:underline">988 (Press 1)</a> or chat online for 24/7 confidential support.</p><a href="https://www.veteranscrisisline.net/" target="_blank" class="text-blue-400 hover:underline">Visit VeteransCrisisLine.net</a>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6 shadow border border-gray-700">
+                        <h4 class="text-xl font-semibold text-yellow-300 mb-2">Vet Centers</h4>
+                        <p class="text-gray-300 mb-3">Community-based counseling centers for combat Veterans and families.</p><a href="https://www.va.gov/find-locations/?facilityType=vet_center" target="_blank" class="text-blue-400 hover:underline">Find a Vet Center</a>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6 shadow border border-gray-700">
+                        <h4 class="text-xl font-semibold text-yellow-300 mb-2">Career & Education Support</h4>
+                        <p class="text-gray-300 mb-3">Transition assistance, resume help, and job placement services for Veterans.</p><a href="https://www.va.gov/careers-employment/" target="_blank" class="text-blue-400 hover:underline">Explore VA Careers & Employment</a>
+                    </div>
+                </div>
+            </section>
+            <!-- Planning & Legacy (Low Emphasis) -->
+            <section id="legacy" class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 class="text-2xl font-bold text-gray-300 mb-4 text-center">Planning & Legacy Resources</h3>
+                <p class="text-gray-400 text-center max-w-3xl mx-auto mb-6">
+        These resources support Veterans and families with final planning, memorial benefits, and survivor assistance.  
+        While not urgent, knowing what’s available can bring peace of mind. </p>
+                <div class="flex flex-wrap justify-center gap-6 text-center"><a href="https://www.cem.va.gov/cems/listcem.asp" target="_blank" class="text-sm text-gray-400 hover:text-yellow-300 underline">National Cemeteries Directory</a><a href="https://www.va.gov/survivors/" target="_blank" class="text-sm text-gray-400 hover:text-yellow-300 underline">Survivor Benefits</a><a href="https://www.va.gov/SURVIVORS/docs/PlanningYourLegacyFinal.pdf" target="_blank" class="text-sm text-gray-400 hover:text-yellow-300 underline">Planning Your Legacy (PDF)</a>
+                </div>
+            </section>
+            <!-- Local Example -->
+            <section id="local">
+                <h3 class="text-3xl font-bold text-yellow-400 mb-6 text-center">Local — Las Vegas, NV</h3>
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <ul class="list-disc list-inside text-gray-300 space-y-2">
+                        <li>
+                            <strong>VASNHS Medical Center:</strong>
+                            <br>6900 North Pecos Road, North Las Vegas, NV 89086<br>
+                            Phone: <a href="tel:1-702-791-9000" class="text-yellow-300 hover:underline">1-702-791-9000</a>
+                        </li>
+                        <li>
+                            <strong>VA Hotline:</strong> <a href="tel:1-800-698-2411" class="text-yellow-300 hover:underline">1-800-698-2411</a> (Option 2)
+                        </li>
+                        <li>
+                            <strong>Ask for:</strong> A Veterans Service Officer (VSO)
+                        </li>
+                        <li>
+                            <strong>Benefits & Claims:</strong> <a href="https://www.va.gov/disability/" target="_blank" class="text-yellow-300 hover:underline">File or check a disability claim</a>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+        <!-- Footer -->
+        <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400">
+            <p><strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+            <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+            <p class="mt-2">© <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+        </footer>
+        <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+        <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.getElementById('menu-toggle');
+    const menu = document.getElementById('menu');
+    const openIcon = document.getElementById('menu-open-icon');
+
+    if (!menuToggle || !menu) return;
+
+    menuToggle.addEventListener('click', () => {
+      const isHidden = menu.classList.toggle('hidden');
+      menuToggle.setAttribute('aria-expanded', (!isHidden).toString());
+
+      // Toggle hamburger ↔ close (X)
+      if (!isHidden) {
+        openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />';
+      } else {
+        openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />';
+      }
+    });
+  });
+</script>
+    </body>
+</html>
