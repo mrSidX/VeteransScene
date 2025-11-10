@@ -160,19 +160,8 @@ WE are not affiliated with the va and we are not advocates.</p>
 </script>
 <script>
   function openModal(src) {
-    const modal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-
-    modalImage.src = src;
-    modal.classList.remove('hidden');
-
-    // Add click listener to close modal when clicking outside the image
-    modal.addEventListener('click', function handler(e) {
-      if (!modalImage.contains(e.target)) {
-        closeModal();
-        modal.removeEventListener('click', handler); // Clean up listener
-      }
-    });
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.remove('hidden');
   }
 
   function closeModal() {
