@@ -7,7 +7,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="/favicon.ico" />
 </head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CZY8ZGYP0M"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
 
+        gtag('config', 'G-CZY8ZGYP0M');
+        </script>
 <body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen scroll-smooth">
 
  <!-- Navbar -->
@@ -120,6 +127,24 @@
       <p class="text-sm text-gray-500 mt-4 text-center">
         Image: VA Health Identification Card (VHIC) Fact Sheet — courtesy of <a href="https://news.va.gov/" target="_blank" class="text-yellow-300 hover:underline">news.va.gov</a>.
       </p>
+    </section>
+
+    <!-- VA Locator -->
+    <section id="locator" class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-8 shadow-xl border border-yellow-400">
+      <div class="text-center">
+        <h3 class="text-4xl font-bold text-gray-900 mb-4">Find VA Facilities Near You</h3>
+        <p class="text-gray-800 text-lg mb-6 max-w-3xl mx-auto">
+          Use the official VA Locator to find medical centers, regional offices, vet centers,
+          and national cemeteries in your area. Access addresses, phone numbers, and services available at each location.
+        </p>
+        <a href="https://www.va.gov/find-locations/" target="_blank" rel="noopener"
+           class="inline-block bg-gray-900 hover:bg-gray-800 text-yellow-400 font-bold text-xl px-8 py-4 rounded-lg transition shadow-lg transform hover:scale-105">
+          Open VA Locator Tool
+        </a>
+        <p class="text-gray-800 text-sm mt-6">
+          Search by location, facility type, or services to find the support you need closest to home.
+        </p>
+      </div>
     </section>
 
     <!-- Support & Well-Being -->
