@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Verify Email - Veteran's Scene</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/assets/img/vs-favicon.png"/>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CZY8ZGYP0M"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CZY8ZGYP0M');
+</script>
+<body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-gray-800 bg-opacity-95 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene Logo" class="w-10 h-10 rounded-lg">
+                <a href="/index.html" class="text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
+                    Veteran's Scene
+                </a>
+            </div>
+            <a href="/login.html" class="text-gray-300 hover:text-yellow-400 font-medium transition">
+                Login
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow px-6 py-12 max-w-lg mx-auto w-full" id="app">
+        <!-- Loading State -->
+        <div v-if="status === 'loading'" class="text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-yellow-400 bg-opacity-20 rounded-full mb-6">
+                <svg class="w-10 h-10 text-yellow-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-yellow-400 mb-4">Verifying Your Email...</h1>
+            <p class="text-gray-400">Please wait while we verify your email address.</p>
+        </div>
+
+        <!-- Success State -->
+        <div v-if="status === 'success'" class="text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-500 bg-opacity-20 rounded-full mb-6">
+                <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-yellow-400 mb-4">Email Verified!</h1>
+            <p class="text-gray-300 mb-8">
+                Your email address has been successfully verified. You can now log in to your account and complete your profile.
+            </p>
+            <div class="space-y-4">
+                <a href="/login.html" class="block w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-3 px-6 rounded-lg transition text-center">
+                    Log In to Your Account
+                </a>
+                <a href="/index.html" class="block w-full bg-gray-700 hover:bg-gray-600 text-gray-100 font-medium py-3 px-6 rounded-lg transition text-center">
+                    Return to Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-if="status === 'error'" class="text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-500 bg-opacity-20 rounded-full mb-6">
+                <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-red-400 mb-4">Verification Failed</h1>
+            <p class="text-gray-300 mb-4">{{ errorMessage }}</p>
+
+            <!-- Resend Option -->
+            <div v-if="showResendOption" class="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-8">
+                <h2 class="text-lg font-semibold text-yellow-400 mb-4">Need a New Verification Link?</h2>
+                <p class="text-gray-400 mb-4 text-sm">Enter your email address and we'll send you a new verification link.</p>
+
+                <form @submit.prevent="resendVerification">
+                    <div class="mb-4">
+                        <input
+                            type="email"
+                            v-model="resendEmail"
+                            placeholder="Enter your email address"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 placeholder-gray-400 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        :disabled="resending"
+                        class="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-bold py-3 px-6 rounded-lg transition"
+                    >
+                        <span v-if="resending">Sending...</span>
+                        <span v-else>Send New Verification Link</span>
+                    </button>
+                </form>
+
+                <div v-if="resendMessage" class="mt-4 p-3 rounded-lg" :class="resendSuccess ? 'bg-green-500 bg-opacity-20 text-green-400' : 'bg-red-500 bg-opacity-20 text-red-400'">
+                    {{ resendMessage }}
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <a href="/login.html" class="text-yellow-400 hover:text-yellow-300 font-medium">
+                    Back to Login
+                </a>
+            </div>
+        </div>
+
+        <!-- No Token State -->
+        <div v-if="status === 'no-token'" class="text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-yellow-400 bg-opacity-20 rounded-full mb-6">
+                <svg class="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-yellow-400 mb-4">Verify Your Email</h1>
+            <p class="text-gray-300 mb-8">
+                Please check your email for a verification link. Click the link in the email to verify your account.
+            </p>
+
+            <!-- Resend Form -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h2 class="text-lg font-semibold text-yellow-400 mb-4">Didn't receive the email?</h2>
+                <p class="text-gray-400 mb-4 text-sm">Enter your email address and we'll send you a new verification link.</p>
+
+                <form @submit.prevent="resendVerification">
+                    <div class="mb-4">
+                        <input
+                            type="email"
+                            v-model="resendEmail"
+                            placeholder="Enter your email address"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 placeholder-gray-400 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        :disabled="resending"
+                        class="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-bold py-3 px-6 rounded-lg transition"
+                    >
+                        <span v-if="resending">Sending...</span>
+                        <span v-else>Resend Verification Email</span>
+                    </button>
+                </form>
+
+                <div v-if="resendMessage" class="mt-4 p-3 rounded-lg" :class="resendSuccess ? 'bg-green-500 bg-opacity-20 text-green-400' : 'bg-red-500 bg-opacity-20 text-red-400'">
+                    {{ resendMessage }}
+                </div>
+            </div>
+
+            <div class="mt-8 space-y-2">
+                <p class="text-gray-400 text-sm">Already verified?</p>
+                <a href="/login.html" class="text-yellow-400 hover:text-yellow-300 font-medium">
+                    Log In to Your Account
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400 mt-auto">
+        <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+        <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+        <p class="m-6 text-sm">This information is provided by veteran volunteers and is not affiliated with or endorsed by the U.S. Department of Veterans Affairs.</p>
+        <p class="mt-2">&copy; <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000/api'
+            : '/api';
+
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    status: 'loading', // loading, success, error, no-token
+                    errorMessage: '',
+                    showResendOption: false,
+                    resendEmail: '',
+                    resending: false,
+                    resendMessage: '',
+                    resendSuccess: false
+                };
+            },
+            mounted() {
+                document.getElementById('year').textContent = new Date().getFullYear();
+                this.verifyEmail();
+            },
+            methods: {
+                async verifyEmail() {
+                    // Get token from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const token = urlParams.get('token');
+
+                    if (!token) {
+                        this.status = 'no-token';
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`${API_BASE}/auth/verify-email`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ token })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.status = 'success';
+                        } else {
+                            this.status = 'error';
+                            this.errorMessage = data.message || 'Verification failed. Please try again.';
+                            this.showResendOption = true;
+                        }
+                    } catch (error) {
+                        console.error('Verification error:', error);
+                        this.status = 'error';
+                        this.errorMessage = 'Unable to connect to the server. Please try again later.';
+                        this.showResendOption = true;
+                    }
+                },
+                async resendVerification() {
+                    if (!this.resendEmail) return;
+
+                    this.resending = true;
+                    this.resendMessage = '';
+
+                    try {
+                        const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ email: this.resendEmail })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.resendSuccess = true;
+                            this.resendMessage = 'Verification email sent! Please check your inbox.';
+                        } else {
+                            this.resendSuccess = false;
+                            this.resendMessage = data.message || 'Unable to send verification email.';
+                        }
+                    } catch (error) {
+                        console.error('Resend error:', error);
+                        this.resendSuccess = false;
+                        this.resendMessage = 'Unable to connect to the server. Please try again later.';
+                    } finally {
+                        this.resending = false;
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

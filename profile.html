@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Profile - Veteran's Scene</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/assets/img/vs-favicon.png"/>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CZY8ZGYP0M"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CZY8ZGYP0M');
+</script>
+<body class="bg-gray-900 text-gray-100">
+    <div id="app"></div>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+      }
+    }
+    </script>
+
+    <script type="module">
+    import { ref, reactive, computed, onMounted, createApp } from 'vue';
+
+    const ProfileApp = {
+      setup() {
+        const user = ref(null);
+        const loading = ref(true);
+        const saving = ref(false);
+        const error = ref('');
+        const successMessage = ref('');
+        const activeTab = ref('basic');
+
+        const profile = reactive({
+          // Basic Info
+          firstName: '',
+          lastName: '',
+          phone: '',
+          displayName: '',
+          preferAnonymous: false,
+
+          // Bio
+          bio: '',
+          tagline: '',
+          connectionType: 'veteran',
+          connectionTypeOther: '',
+
+          // Military Service
+          militaryService: {
+            branch: '',
+            rank: '',
+            yearsOfService: { start: null, end: null },
+            mos: '',
+            wars: [],
+            deploymentLocations: [],
+            specializations: []
+          },
+
+          // Location
+          location: {
+            city: '',
+            state: '',
+            country: 'USA',
+            timezone: ''
+          },
+
+          // Social Links
+          socialLinks: {
+            website: '',
+            linkedin: '',
+            twitter: '',
+            facebook: '',
+            instagram: '',
+            youtube: '',
+            tiktok: ''
+          },
+
+          // Topics & Interests
+          topics: [],
+          interests: [],
+
+          // Availability
+          availability: {
+            willingToParticipate: true,
+            preferredFormats: [],
+            preferredContactMethod: 'email',
+            availabilityNotes: ''
+          },
+
+          // Technical Setup
+          technicalSetup: {
+            hasWebcam: null,
+            hasMicrophone: null,
+            hasStableInternet: null,
+            internetSpeed: '',
+            setupNotes: ''
+          }
+        });
+
+        // Temp inputs for array fields
+        const warInput = ref('');
+        const deploymentInput = ref('');
+        const specializationInput = ref('');
+        const topicInput = ref('');
+        const interestInput = ref('');
+
+        const connectionTypes = [
+          { value: 'veteran', label: 'Veteran' },
+          { value: 'active-duty', label: 'Active Duty' },
+          { value: 'reserve', label: 'Reserve' },
+          { value: 'guard', label: 'National Guard' },
+          { value: 'military-spouse', label: 'Military Spouse' },
+          { value: 'military-child', label: 'Military Child' },
+          { value: 'gold-star-family', label: 'Gold Star Family' },
+          { value: 'caregiver', label: 'Caregiver' },
+          { value: 'supporter', label: 'Supporter' },
+          { value: 'other', label: 'Other' }
+        ];
+
+        const branches = ['', 'Army', 'Navy', 'Air Force', 'Marines', 'Coast Guard', 'Space Force', 'National Guard', 'Reserves'];
+
+        const states = [
+          '', 'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+          'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+          'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+          'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+          'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+        ];
+
+        const participationFormats = [
+          { value: 'video-podcast', label: 'Video Podcast' },
+          { value: 'audio-only', label: 'Audio Only' },
+          { value: 'in-person', label: 'In-Person' },
+          { value: 'written-interview', label: 'Written Interview' },
+          { value: 'panel-discussion', label: 'Panel Discussion' }
+        ];
+
+        const isVeteran = computed(() => {
+          return ['veteran', 'active-duty', 'reserve', 'guard'].includes(profile.connectionType);
+        });
+
+        const profileCompleteness = computed(() => {
+          let completed = 0;
+          const total = 6;
+          if (profile.firstName && profile.lastName) completed++;
+          if (profile.bio) completed++;
+          if (profile.militaryService.branch) completed++;
+          if (profile.socialLinks.website || profile.socialLinks.linkedin) completed++;
+          if (profile.availability.preferredFormats.length > 0) completed++;
+          if (profile.technicalSetup.hasWebcam !== null) completed++;
+          return Math.round((completed / total) * 100);
+        });
+
+        const getApiUrl = () => {
+          const hostname = window.location.hostname;
+          if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+            return 'http://localhost:5000/api';
+          }
+          return 'https://api.veteransscene.org/api';
+        };
+
+        const getToken = () => localStorage.getItem('vs_auth_token');
+
+        const loadProfile = async () => {
+          const token = getToken();
+          if (!token) {
+            window.location.href = '/login.html?redirect=/profile.html';
+            return;
+          }
+
+          try {
+            const response = await fetch(`${getApiUrl()}/auth/profile`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              if (response.status === 401) {
+                localStorage.removeItem('vs_auth_token');
+                localStorage.removeItem('vs_user_data');
+                window.location.href = '/login.html?redirect=/profile.html';
+                return;
+              }
+              throw new Error(data.message || 'Failed to load profile');
+            }
+
+            user.value = data.data.user;
+
+            // Populate form with user data
+            profile.firstName = user.value.firstName || '';
+            profile.lastName = user.value.lastName || '';
+            profile.phone = user.value.phone || '';
+
+            if (user.value.profile) {
+              const p = user.value.profile;
+              profile.displayName = p.displayName || '';
+              profile.preferAnonymous = p.preferAnonymous || false;
+              profile.bio = p.bio || '';
+              profile.tagline = p.tagline || '';
+              profile.connectionType = p.connectionType || 'veteran';
+              profile.connectionTypeOther = p.connectionTypeOther || '';
+
+              if (p.militaryService) {
+                profile.militaryService = { ...profile.militaryService, ...p.militaryService };
+              }
+              if (p.location) {
+                profile.location = { ...profile.location, ...p.location };
+              }
+              if (p.socialLinks) {
+                profile.socialLinks = { ...profile.socialLinks, ...p.socialLinks };
+              }
+              if (p.topics) {
+                profile.topics = [...p.topics];
+              }
+              if (p.interests) {
+                profile.interests = [...p.interests];
+              }
+              if (p.availability) {
+                profile.availability = { ...profile.availability, ...p.availability };
+              }
+              if (p.technicalSetup) {
+                profile.technicalSetup = { ...profile.technicalSetup, ...p.technicalSetup };
+              }
+            }
+          } catch (err) {
+            console.error('Load profile error:', err);
+            error.value = err.message;
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const saveProfile = async () => {
+          saving.value = true;
+          error.value = '';
+          successMessage.value = '';
+
+          try {
+            const token = getToken();
+            const apiUrl = getApiUrl();
+
+            // Save basic info
+            await fetch(`${apiUrl}/auth/profile`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                phone: profile.phone
+              })
+            });
+
+            // Save extended profile
+            const extendedResponse = await fetch(`${apiUrl}/auth/profile/extended`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                displayName: profile.displayName,
+                preferAnonymous: profile.preferAnonymous,
+                bio: profile.bio,
+                tagline: profile.tagline,
+                connectionType: profile.connectionType,
+                connectionTypeOther: profile.connectionTypeOther,
+                militaryService: profile.militaryService,
+                location: profile.location,
+                socialLinks: profile.socialLinks,
+                topics: profile.topics,
+                interests: profile.interests,
+                availability: profile.availability,
+                technicalSetup: profile.technicalSetup
+              })
+            });
+
+            const data = await extendedResponse.json();
+
+            if (!extendedResponse.ok) {
+              throw new Error(data.message || 'Failed to save profile');
+            }
+
+            // Update local storage
+            localStorage.setItem('vs_user_data', JSON.stringify(data.data.user));
+            user.value = data.data.user;
+
+            successMessage.value = 'Profile saved successfully!';
+            setTimeout(() => { successMessage.value = ''; }, 3000);
+          } catch (err) {
+            console.error('Save profile error:', err);
+            error.value = err.message;
+          } finally {
+            saving.value = false;
+          }
+        };
+
+        // Array manipulation helpers
+        const addToArray = (arr, inputRef, maxLength = 50) => {
+          const value = inputRef.value.trim();
+          if (value && !arr.includes(value) && arr.length < maxLength) {
+            arr.push(value);
+            inputRef.value = '';
+          }
+        };
+
+        const removeFromArray = (arr, index) => {
+          arr.splice(index, 1);
+        };
+
+        const logout = () => {
+          localStorage.removeItem('vs_auth_token');
+          localStorage.removeItem('vs_user_data');
+          window.location.href = '/index.html';
+        };
+
+        onMounted(loadProfile);
+
+        return {
+          user,
+          profile,
+          loading,
+          saving,
+          error,
+          successMessage,
+          activeTab,
+          warInput,
+          deploymentInput,
+          specializationInput,
+          topicInput,
+          interestInput,
+          connectionTypes,
+          branches,
+          states,
+          participationFormats,
+          isVeteran,
+          profileCompleteness,
+          saveProfile,
+          addToArray,
+          removeFromArray,
+          logout
+        };
+      },
+      template: `
+        <div class="min-h-screen bg-gray-900 text-gray-100">
+          <!-- Navigation -->
+          <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+            <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+              <div class="flex items-center space-x-3">
+                <img src="/assets/img/vs-logo.jpg" alt="VS Logo" class="w-10 h-10 rounded-lg">
+                <a href="/index.html" class="text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
+                  Veteran's Scene
+                </a>
+              </div>
+              <div class="flex items-center space-x-4">
+                <a href="/index.html" class="text-gray-300 hover:text-yellow-400 font-medium transition">Home</a>
+                <button @click="logout" class="text-gray-300 hover:text-red-400 font-medium transition">Log Out</button>
+              </div>
+            </div>
+          </nav>
+
+          <!-- Loading State -->
+          <div v-if="loading" class="flex items-center justify-center min-h-[60vh]">
+            <div class="text-center">
+              <div class="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p class="text-gray-400">Loading your profile...</p>
+            </div>
+          </div>
+
+          <!-- Profile Content -->
+          <div v-else class="py-8 px-4 max-w-5xl mx-auto">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+              <div>
+                <h1 class="text-3xl font-bold text-yellow-400 mb-2">My Profile</h1>
+                <p class="text-gray-400">Manage your account and profile information</p>
+              </div>
+              <div class="mt-4 md:mt-0 flex items-center gap-4">
+                <div class="text-right">
+                  <p class="text-sm text-gray-400">Profile Completeness</p>
+                  <div class="flex items-center gap-2">
+                    <div class="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
+                      <div class="h-full bg-yellow-400 transition-all duration-500" :style="{ width: profileCompleteness + '%' }"></div>
+                    </div>
+                    <span class="text-yellow-400 font-bold">{{ profileCompleteness }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages -->
+            <div v-if="error" class="bg-red-900 border border-red-700 text-red-200 px-6 py-4 rounded-lg mb-6">
+              {{ error }}
+            </div>
+            <div v-if="successMessage" class="bg-green-900 border border-green-700 text-green-200 px-6 py-4 rounded-lg mb-6">
+              {{ successMessage }}
+            </div>
+
+            <!-- Verification Warning -->
+            <div v-if="user && !user.isVerified" class="bg-yellow-900 border border-yellow-700 text-yellow-200 px-6 py-4 rounded-lg mb-6">
+              <strong>Email not verified:</strong> Please check your email for a verification link to fully activate your account.
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
+              <button v-for="tab in ['basic', 'bio', 'military', 'location', 'social', 'availability', 'technical']"
+                :key="tab"
+                @click="activeTab = tab"
+                class="px-4 py-2 rounded-lg font-medium transition capitalize"
+                :class="activeTab === tab ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'">
+                {{ tab === 'technical' ? 'Tech Setup' : tab }}
+              </button>
+            </div>
+
+            <!-- Form Sections -->
+            <form @submit.prevent="saveProfile" class="bg-gray-800 rounded-lg shadow-xl p-6 md:p-8">
+
+              <!-- Basic Info Tab -->
+              <div v-show="activeTab === 'basic'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">Basic Information</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">First Name *</label>
+                    <input v-model="profile.firstName" type="text" required
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Last Name *</label>
+                    <input v-model="profile.lastName" type="text" required
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Display Name</label>
+                    <input v-model="profile.displayName" type="text" maxlength="100"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="How you want to be known publicly" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                    <input v-model="profile.phone" type="tel"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-4">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input v-model="profile.preferAnonymous" type="checkbox"
+                      class="mt-1 w-5 h-5 rounded border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                    <div>
+                      <span class="text-gray-100 font-medium">I prefer to remain anonymous publicly</span>
+                      <p class="text-sm text-gray-400 mt-1">Your real name won't be displayed publicly. Your display name or "Anonymous Veteran" will be used instead.</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <input :value="user?.email" type="email" disabled
+                    class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-400 cursor-not-allowed" />
+                  <p class="text-sm text-gray-500 mt-1">Email cannot be changed here. Contact support if needed.</p>
+                </div>
+              </div>
+
+              <!-- Bio Tab -->
+              <div v-show="activeTab === 'bio'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">About You</h2>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">My Connection to Military</label>
+                  <select v-model="profile.connectionType"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    <option v-for="type in connectionTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+                  </select>
+                </div>
+
+                <div v-if="profile.connectionType === 'other'">
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Please describe</label>
+                  <input v-model="profile.connectionTypeOther" type="text" maxlength="100"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Tagline</label>
+                  <input v-model="profile.tagline" type="text" maxlength="150"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="A short description about yourself" />
+                  <p class="text-sm text-gray-500 mt-1">{{ (profile.tagline || '').length }}/150 characters</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Bio</label>
+                  <textarea v-model="profile.bio" rows="6" maxlength="2000"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Tell us about yourself, your experiences, and what you'd like to share..."></textarea>
+                  <p class="text-sm text-gray-500 mt-1">{{ (profile.bio || '').length }}/2000 characters</p>
+                </div>
+
+                <!-- Topics -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Topics I'd Like to Discuss</label>
+                  <div class="flex gap-2">
+                    <input v-model="topicInput" type="text" @keyup.enter.prevent="addToArray(profile.topics, topicInput)"
+                      class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="e.g., Transition, Mental Health, Career" />
+                    <button type="button" @click="addToArray(profile.topics, topicInput)"
+                      class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold">Add</button>
+                  </div>
+                  <div v-if="profile.topics.length" class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="(topic, i) in profile.topics" :key="i"
+                      class="inline-flex items-center gap-2 px-3 py-1 bg-gray-700 text-gray-200 rounded-full">
+                      {{ topic }}
+                      <button type="button" @click="removeFromArray(profile.topics, i)" class="text-red-400 hover:text-red-300">&times;</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Military Service Tab -->
+              <div v-show="activeTab === 'military'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">Military Service</h2>
+
+                <div v-if="!isVeteran" class="bg-gray-700 rounded-lg p-4 text-gray-300">
+                  <p>This section is primarily for veterans and active-duty service members. You can still fill it out if applicable to your family member's service.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Branch</label>
+                    <select v-model="profile.militaryService.branch"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                      <option v-for="branch in branches" :key="branch" :value="branch">{{ branch || 'Select Branch' }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Rank (at discharge/current)</label>
+                    <input v-model="profile.militaryService.rank" type="text"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Service Start Year</label>
+                    <input v-model.number="profile.militaryService.yearsOfService.start" type="number" min="1900" :max="new Date().getFullYear()"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Service End Year</label>
+                    <input v-model.number="profile.militaryService.yearsOfService.end" type="number" min="1900" :max="new Date().getFullYear()"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="Leave blank if currently serving" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">MOS/Rating/AFSC</label>
+                  <input v-model="profile.militaryService.mos" type="text" maxlength="100"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="e.g., 11B Infantry, IT2, 3D0X2" />
+                </div>
+
+                <!-- Wars/Conflicts -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Wars/Conflicts</label>
+                  <div class="flex gap-2">
+                    <input v-model="warInput" type="text" @keyup.enter.prevent="addToArray(profile.militaryService.wars, warInput)"
+                      class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="e.g., Vietnam, OEF, OIF" />
+                    <button type="button" @click="addToArray(profile.militaryService.wars, warInput)"
+                      class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold">Add</button>
+                  </div>
+                  <div v-if="profile.militaryService.wars.length" class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="(war, i) in profile.militaryService.wars" :key="i"
+                      class="inline-flex items-center gap-2 px-3 py-1 bg-gray-700 text-gray-200 rounded-full">
+                      {{ war }}
+                      <button type="button" @click="removeFromArray(profile.militaryService.wars, i)" class="text-red-400 hover:text-red-300">&times;</button>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Deployment Locations -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Deployment Locations</label>
+                  <div class="flex gap-2">
+                    <input v-model="deploymentInput" type="text" @keyup.enter.prevent="addToArray(profile.militaryService.deploymentLocations, deploymentInput)"
+                      class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="e.g., Iraq, Afghanistan, Korea" />
+                    <button type="button" @click="addToArray(profile.militaryService.deploymentLocations, deploymentInput)"
+                      class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold">Add</button>
+                  </div>
+                  <div v-if="profile.militaryService.deploymentLocations.length" class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="(loc, i) in profile.militaryService.deploymentLocations" :key="i"
+                      class="inline-flex items-center gap-2 px-3 py-1 bg-gray-700 text-gray-200 rounded-full">
+                      {{ loc }}
+                      <button type="button" @click="removeFromArray(profile.militaryService.deploymentLocations, i)" class="text-red-400 hover:text-red-300">&times;</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Location Tab -->
+              <div v-show="activeTab === 'location'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">Location</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">City</label>
+                    <input v-model="profile.location.city" type="text"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">State</label>
+                    <select v-model="profile.location.state"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                      <option v-for="state in states" :key="state" :value="state">{{ state || 'Select State' }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Country</label>
+                    <input v-model="profile.location.country" type="text"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Timezone</label>
+                    <input v-model="profile.location.timezone" type="text"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="e.g., EST, PST, CST" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Social Links Tab -->
+              <div v-show="activeTab === 'social'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">Social Links</h2>
+                <p class="text-gray-400 text-sm">Add your social media profiles and website. These may be shared publicly if you participate.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Website</label>
+                    <input v-model="profile.socialLinks.website" type="url"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="https://yourwebsite.com" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">LinkedIn</label>
+                    <input v-model="profile.socialLinks.linkedin" type="url"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="https://linkedin.com/in/username" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Twitter/X</label>
+                    <input v-model="profile.socialLinks.twitter" type="url"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="https://twitter.com/username" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Facebook</label>
+                    <input v-model="profile.socialLinks.facebook" type="url"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="https://facebook.com/username" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Instagram</label>
+                    <input v-model="profile.socialLinks.instagram" type="url"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="https://instagram.com/username" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">YouTube</label>
+                    <input v-model="profile.socialLinks.youtube" type="url"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="https://youtube.com/@channel" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Availability Tab -->
+              <div v-show="activeTab === 'availability'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">Participation Availability</h2>
+
+                <div class="bg-gray-700 rounded-lg p-4">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input v-model="profile.availability.willingToParticipate" type="checkbox"
+                      class="mt-1 w-5 h-5 rounded border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                    <div>
+                      <span class="text-gray-100 font-medium">I'm willing to participate in podcast episodes or events</span>
+                      <p class="text-sm text-gray-400 mt-1">Let us know if you're open to being featured on Veteran's Scene.</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Preferred Participation Formats</label>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label v-for="format in participationFormats" :key="format.value" class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" :value="format.value" v-model="profile.availability.preferredFormats"
+                        class="w-4 h-4 rounded border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                      <span class="text-gray-300 text-sm">{{ format.label }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Preferred Contact Method</label>
+                  <select v-model="profile.availability.preferredContactMethod"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    <option value="email">Email</option>
+                    <option value="phone">Phone Call</option>
+                    <option value="text">Text Message</option>
+                    <option value="any">Any Method</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Availability Notes</label>
+                  <textarea v-model="profile.availability.availabilityNotes" rows="3" maxlength="500"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Best times to reach you, scheduling preferences, etc."></textarea>
+                </div>
+              </div>
+
+              <!-- Technical Setup Tab -->
+              <div v-show="activeTab === 'technical'" class="space-y-6">
+                <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2">Technical Setup</h2>
+                <p class="text-gray-400 text-sm">Help us understand your setup for remote participation.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div class="bg-gray-700 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Do you have a webcam?</label>
+                    <div class="space-y-2">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" v-model="profile.technicalSetup.hasWebcam" :value="true"
+                          class="w-4 h-4 border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                        <span class="text-gray-300">Yes</span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" v-model="profile.technicalSetup.hasWebcam" :value="false"
+                          class="w-4 h-4 border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                        <span class="text-gray-300">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="bg-gray-700 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Do you have a microphone?</label>
+                    <div class="space-y-2">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" v-model="profile.technicalSetup.hasMicrophone" :value="true"
+                          class="w-4 h-4 border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                        <span class="text-gray-300">Yes</span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" v-model="profile.technicalSetup.hasMicrophone" :value="false"
+                          class="w-4 h-4 border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                        <span class="text-gray-300">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="bg-gray-700 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Stable internet connection?</label>
+                    <div class="space-y-2">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" v-model="profile.technicalSetup.hasStableInternet" :value="true"
+                          class="w-4 h-4 border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                        <span class="text-gray-300">Yes</span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" v-model="profile.technicalSetup.hasStableInternet" :value="false"
+                          class="w-4 h-4 border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500" />
+                        <span class="text-gray-300">No / Unsure</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Internet Speed (if known)</label>
+                  <input v-model="profile.technicalSetup.internetSpeed" type="text"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="e.g., 50 Mbps download, 10 Mbps upload" />
+                  <p class="text-sm text-gray-500 mt-1">
+                    Test your speed at <a href="https://www.speedtest.net/" target="_blank" class="text-yellow-400 hover:underline">speedtest.net</a>
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Additional Setup Notes</label>
+                  <textarea v-model="profile.technicalSetup.setupNotes" rows="3" maxlength="500"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Any other details about your setup, equipment you use, etc."></textarea>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-4">
+                  <p class="text-sm text-gray-300">
+                    <strong class="text-yellow-400">Need help with setup?</strong>
+                    Check out our <a href="/participant-guide.html" class="text-yellow-400 hover:underline">Participant Guide</a> for recommended specs and setup instructions.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Save Button -->
+              <div class="mt-8 pt-6 border-t border-gray-700 flex justify-end">
+                <button type="submit" :disabled="saving"
+                  class="px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span v-if="saving">Saving...</span>
+                  <span v-else>Save Profile</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Footer -->
+          <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400 mt-auto">
+            <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+            <p class="mt-2">&copy; <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+          </footer>
+        </div>
+      `
+    };
+
+    createApp(ProfileApp).mount('#app');
+    document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

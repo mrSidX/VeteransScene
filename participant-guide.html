@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Participant Guide - Veteran's Scene</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/assets/img/vs-favicon.png"/>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CZY8ZGYP0M"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CZY8ZGYP0M');
+</script>
+<body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen scroll-smooth">
+    <!-- Navbar -->
+    <nav class="bg-gray-800 bg-opacity-95 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene Logo" class="w-10 h-10 rounded-lg">
+                <a href="/index.html" class="text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
+                    Veteran's Scene
+                </a>
+            </div>
+            <!-- Mobile menu button -->
+            <button id="menu-toggle" type="button" class="md:hidden text-gray-300 hover:text-yellow-400 focus:outline-none">
+                <svg id="menu-open-icon" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <!-- Nav Links -->
+            <div id="menu" class="hidden md:flex flex-col md:flex-row md:items-center md:space-x-4 absolute md:static left-0 top-full w-full md:w-auto bg-gray-800 md:bg-transparent border-t md:border-none border-gray-700 p-4 md:p-0">
+                <a href="/index.html" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Home</a>
+                <a href="#overview" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Overview</a>
+                <a href="#setup" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Setup</a>
+                <a href="#specs" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Tech Specs</a>
+                <a href="#expectations" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Expectations</a>
+                <a href="/apply.html" class="block mt-2 md:mt-0 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 rounded-md font-semibold transition text-center">
+                    Apply Now
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Banner -->
+    <section class="relative bg-cover bg-center h-[40vh]" style="background-image: url('/assets/img/vs-banner.png');">
+        <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-center px-6">
+            <h1 class="text-4xl sm:text-5xl font-bold text-yellow-400 mb-4 drop-shadow-lg">Participant Guide</h1>
+            <p class="max-w-2xl text-lg text-gray-200">
+                Everything you need to know about joining our podcast as a remote participant
+            </p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="flex-grow px-6 py-12 max-w-6xl mx-auto space-y-12">
+
+        <!-- Quick Navigation -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 class="text-lg font-bold text-yellow-400 mb-4">Quick Links</h2>
+            <div class="flex flex-wrap gap-3">
+                <a href="#overview" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg transition">Overview</a>
+                <a href="#before-the-call" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg transition">Before the Call</a>
+                <a href="#specs" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg transition">Ideal Setup</a>
+                <a href="#joining" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg transition">Joining the Call</a>
+                <a href="#expectations" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg transition">What to Expect</a>
+                <a href="#troubleshooting" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg transition">Troubleshooting</a>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <section id="overview">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-6">How We Connect</h2>
+            <p class="text-gray-300 mb-6">
+                We use <strong class="text-yellow-300">VDO.Ninja</strong> for remote podcast recordings. It's a free, browser-based tool that requires no downloads, no accounts, and no complicated setup. You simply click a link we send you.
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="w-12 h-12 bg-green-500 bg-opacity-20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">No Downloads</h3>
+                    <p class="text-gray-400 text-sm">Works directly in your web browser. No apps or software to install.</p>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="w-12 h-12 bg-green-500 bg-opacity-20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">No Account Needed</h3>
+                    <p class="text-gray-400 text-sm">Just click the link we send you. No sign-ups or passwords required.</p>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="w-12 h-12 bg-green-500 bg-opacity-20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-100 mb-2">High Quality</h3>
+                    <p class="text-gray-400 text-sm">Professional-grade audio and video quality for the best recording.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ideal Technical Setup -->
+        <section id="specs" class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-6">Ideal Technical Setup</h2>
+            <p class="text-gray-300 mb-6">
+                For the best experience and recording quality, here are our recommended specifications. Don't worry if you don't have the ideal setup - we can work with what you have!
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Internet Connection -->
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                        </svg>
+                        Internet Connection
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-600">
+                            <span class="text-gray-300">Minimum Speed</span>
+                            <span class="text-yellow-400 font-medium">10 Mbps up/down</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-600">
+                            <span class="text-gray-300">Recommended</span>
+                            <span class="text-green-400 font-medium">25+ Mbps up/down</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-300">Connection Type</span>
+                            <span class="text-green-400 font-medium">Wired (Ethernet) preferred</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm text-gray-400">
+                            <strong class="text-yellow-300">Test Your Speed:</strong> Visit
+                            <a href="https://www.speedtest.net/" target="_blank" class="text-yellow-400 hover:underline">speedtest.net</a>
+                            to check your connection. Look at both download AND upload speeds.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Video Quality -->
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Video (Camera)
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-600">
+                            <span class="text-gray-300">Minimum Resolution</span>
+                            <span class="text-yellow-400 font-medium">720p HD</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-600">
+                            <span class="text-gray-300">Recommended</span>
+                            <span class="text-green-400 font-medium">1080p Full HD</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-300">Frame Rate</span>
+                            <span class="text-green-400 font-medium">30 fps</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm text-gray-400">
+                            Most laptops built after 2018 have HD webcams. External USB webcams like Logitech C920/C922 work great.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Audio -->
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                        Audio (Microphone)
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="py-2 border-b border-gray-600">
+                            <span class="text-green-400 font-medium">Best:</span>
+                            <span class="text-gray-300 ml-2">USB microphone or headset with mic</span>
+                        </div>
+                        <div class="py-2 border-b border-gray-600">
+                            <span class="text-yellow-400 font-medium">Good:</span>
+                            <span class="text-gray-300 ml-2">Wired earbuds with microphone</span>
+                        </div>
+                        <div class="py-2">
+                            <span class="text-gray-400 font-medium">Acceptable:</span>
+                            <span class="text-gray-300 ml-2">Built-in laptop/phone microphone</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm text-gray-400">
+                            <strong class="text-yellow-300">Important:</strong> Use headphones or earbuds to prevent echo. Low-profile earbuds look best on camera!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Computer/Device -->
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Computer/Device
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="py-2 border-b border-gray-600">
+                            <span class="text-green-400 font-medium">Best:</span>
+                            <span class="text-gray-300 ml-2">Desktop or laptop computer</span>
+                        </div>
+                        <div class="py-2 border-b border-gray-600">
+                            <span class="text-yellow-400 font-medium">Good:</span>
+                            <span class="text-gray-300 ml-2">Tablet (iPad, Android tablet)</span>
+                        </div>
+                        <div class="py-2">
+                            <span class="text-gray-400 font-medium">Works:</span>
+                            <span class="text-gray-300 ml-2">Smartphone (stable mount recommended)</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm text-gray-400">
+                            <strong class="text-yellow-300">Browser:</strong> Chrome or Edge work best. Make sure your browser is up to date.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speed Test CTA -->
+            <div class="mt-8 text-center bg-gray-700 rounded-lg p-6">
+                <h3 class="text-xl font-semibold text-yellow-300 mb-3">Test Your Internet Speed</h3>
+                <p class="text-gray-300 mb-4">Before your scheduled session, check that your connection meets our requirements.</p>
+                <a href="https://www.speedtest.net/" target="_blank" class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-3 px-8 rounded-lg transition">
+                    Run Speed Test
+                </a>
+                <p class="text-sm text-gray-400 mt-3">Look for at least 10 Mbps on both Download and Upload</p>
+            </div>
+        </section>
+
+        <!-- Before the Call -->
+        <section id="before-the-call" class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-6">Before the Call</h2>
+
+            <div class="space-y-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-yellow-400 font-bold">1</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-100">Close Other Applications</h3>
+                        <p class="text-gray-400">Shut down Zoom, Skype, games, streaming services, and any other apps that might use your camera, microphone, or internet bandwidth.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-yellow-400 font-bold">2</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-100">Find a Quiet Space</h3>
+                        <p class="text-gray-400">Choose a room where you won't be interrupted. Let others in your home know you'll be recording. Turn off TVs, radios, and silence your phone.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-yellow-400 font-bold">3</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-100">Set Up Good Lighting</h3>
+                        <p class="text-gray-400">Face a window or lamp so light shines on your face (not behind you). Avoid sitting with a bright window behind you - it will make you appear dark.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-yellow-400 font-bold">4</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-100">Check Your Background</h3>
+                        <p class="text-gray-400">A clean, uncluttered background works best. A plain wall, bookshelf, or tidy room looks professional. Remove anything you don't want on camera.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-yellow-400 font-bold">5</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-100">Plug In Your Device</h3>
+                        <p class="text-gray-400">Make sure your laptop or phone is plugged into power. Video calls drain batteries quickly, and you don't want to run out mid-recording.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Joining the Call -->
+        <section id="joining" class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-6">Joining the Call</h2>
+
+            <div class="space-y-6">
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">Step 1: Get Your Link</h3>
+                    <p class="text-gray-300">Our director will send you a special link via email or text message. This is your personal invitation to join the podcast room.</p>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">Step 2: Click and Join</h3>
+                    <p class="text-gray-300 mb-3">When you click the link, it will open in your web browser. Look for the button that says <strong class="text-yellow-400">"Join Room with Webcam"</strong> and click it.</p>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">Step 3: Allow Camera & Microphone</h3>
+                    <p class="text-gray-300 mb-3">Your browser will ask permission to use your camera and microphone. Click <strong class="text-yellow-400">"Allow"</strong> or <strong class="text-yellow-400">"Yes"</strong> when prompted.</p>
+                    <p class="text-sm text-gray-400">If you accidentally clicked "Block", you'll need to reset permissions in your browser settings.</p>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">Step 4: Select Your Devices</h3>
+                    <p class="text-gray-300 mb-3">If you have multiple cameras or microphones, you can choose which ones to use from the dropdown menus.</p>
+                    <ul class="list-disc list-inside text-gray-400 space-y-1">
+                        <li><strong class="text-gray-300">Camera:</strong> Select one and check if you can see yourself on screen</li>
+                        <li><strong class="text-gray-300">Microphone:</strong> Speak or clap - if the audio meter moves, you're good!</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">Step 5: You're In!</h3>
+                    <p class="text-gray-300">Once connected, you'll see yourself on screen and the director will guide you from there. Relax and be yourself!</p>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-yellow-400 bg-opacity-10 border border-yellow-400 border-opacity-30 rounded-lg">
+                <p class="text-yellow-300">
+                    <strong>Need the step-by-step VDO.Ninja guide?</strong>
+                    <a href="/podcast-setup.html" class="underline hover:text-yellow-400">View our Easy Podcast Join Guide</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- What to Expect -->
+        <section id="expectations" class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-6">What to Expect</h2>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">Before Recording</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Pre-briefing call:</strong> We'll discuss topics, format, and answer any questions</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Technical check:</strong> We'll help you test your setup if needed</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Set your boundaries:</strong> Let us know any topics you'd prefer not to discuss</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Scheduling flexibility:</strong> We'll find a time that works for you</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-yellow-300 mb-4">During the Session</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Casual conversation:</strong> It's a discussion, not an interrogation</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Take your time:</strong> Pause when you need to, there's no rush</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>You're in control:</strong> Skip any question you're not comfortable with</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-0.5">&#10003;</span>
+                            <span><strong>Director support:</strong> We're there to help, not pressure you</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-8 p-6 bg-gray-700 rounded-lg">
+                <h3 class="text-xl font-semibold text-yellow-300 mb-4">You're Always In Control</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-gray-300">
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">&#10003;</span>
+                            Decline or reschedule anytime
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">&#10003;</span>
+                            Choose what to share and what to keep private
+                        </li>
+                    </ul>
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">&#10003;</span>
+                            Request anonymity if desired
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">&#10003;</span>
+                            Review before publication (when applicable)
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section id="troubleshooting" class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-6">Troubleshooting</h2>
+
+            <div class="space-y-4">
+                <details class="bg-gray-700 rounded-lg p-4">
+                    <summary class="text-yellow-300 font-medium cursor-pointer hover:text-yellow-400">Camera or microphone not working?</summary>
+                    <div class="mt-3 text-gray-300 space-y-2">
+                        <p>1. Make sure no other apps are using your camera/mic (close Zoom, Skype, etc.)</p>
+                        <p>2. Check that you clicked "Allow" when the browser asked for permission</p>
+                        <p>3. Try refreshing the page</p>
+                        <p>4. If using Chrome, click the camera icon in the address bar to check permissions</p>
+                    </div>
+                </details>
+
+                <details class="bg-gray-700 rounded-lg p-4">
+                    <summary class="text-yellow-300 font-medium cursor-pointer hover:text-yellow-400">Video is choppy or freezing?</summary>
+                    <div class="mt-3 text-gray-300 space-y-2">
+                        <p>1. Close other browser tabs and applications</p>
+                        <p>2. If on WiFi, try moving closer to your router</p>
+                        <p>3. If possible, use a wired ethernet connection</p>
+                        <p>4. Ask others in your home to pause streaming/downloads temporarily</p>
+                    </div>
+                </details>
+
+                <details class="bg-gray-700 rounded-lg p-4">
+                    <summary class="text-yellow-300 font-medium cursor-pointer hover:text-yellow-400">Can't hear anyone?</summary>
+                    <div class="mt-3 text-gray-300 space-y-2">
+                        <p>1. Check that your computer/device volume is turned up</p>
+                        <p>2. Make sure headphones are plugged in correctly</p>
+                        <p>3. Check the audio output selection in the VDO.Ninja settings</p>
+                        <p>4. Try using the device's built-in speakers instead of headphones</p>
+                    </div>
+                </details>
+
+                <details class="bg-gray-700 rounded-lg p-4">
+                    <summary class="text-yellow-300 font-medium cursor-pointer hover:text-yellow-400">Others can't hear me?</summary>
+                    <div class="mt-3 text-gray-300 space-y-2">
+                        <p>1. Make sure you're not muted (check for mute button in VDO.Ninja)</p>
+                        <p>2. Verify the correct microphone is selected</p>
+                        <p>3. Speak louder or move closer to your microphone</p>
+                        <p>4. Check if the audio meter moves when you speak</p>
+                    </div>
+                </details>
+
+                <details class="bg-gray-700 rounded-lg p-4">
+                    <summary class="text-yellow-300 font-medium cursor-pointer hover:text-yellow-400">Echo or feedback during the call?</summary>
+                    <div class="mt-3 text-gray-300 space-y-2">
+                        <p>1. <strong>Use headphones!</strong> This is the #1 fix for echo</p>
+                        <p>2. Lower your speaker volume</p>
+                        <p>3. Move your microphone away from your speakers</p>
+                        <p>4. Use earbuds with a built-in microphone</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- Contact & Help -->
+        <section class="text-center bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-4">Need Help?</h2>
+            <p class="text-gray-300 mb-6">Having technical issues or questions? We're here to help you get set up.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:veteransscene@gmail.com" class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-3 px-6 rounded-lg transition">
+                    Email Us
+                </a>
+                <a href="/apply.html" class="inline-block bg-gray-700 hover:bg-gray-600 text-yellow-400 font-bold py-3 px-6 rounded-lg transition">
+                    Submit Application
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400 mt-auto">
+        <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+        <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+        <p class="m-6 text-sm">This information is provided by veteran volunteers and is not affiliated with or endorsed by the U.S. Department of Veterans Affairs.</p>
+        <p class="mt-2">&copy; <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const menu = document.getElementById('menu');
+            const openIcon = document.getElementById('menu-open-icon');
+
+            if (!menuToggle || !menu) return;
+
+            menuToggle.addEventListener('click', () => {
+                const isHidden = menu.classList.toggle('hidden');
+                if (!isHidden) {
+                    openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />';
+                } else {
+                    openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

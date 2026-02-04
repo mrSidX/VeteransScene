@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Create Account - Veteran's Scene</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/assets/img/vs-favicon.png"/>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CZY8ZGYP0M"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CZY8ZGYP0M');
+</script>
+<body class="bg-gray-900 text-gray-100">
+    <div id="app"></div>
+
+    <!-- Import Vue 3 from CDN -->
+    <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+      }
+    }
+    </script>
+
+    <!-- Registration Form -->
+    <script type="module">
+    import { ref, computed, createApp } from 'vue';
+
+    const SignupApp = {
+      setup() {
+        const formData = ref({
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          phone: '',
+          connectionType: 'veteran',
+          connectionTypeOther: '',
+          agreeToTerms: false
+        });
+
+        const loading = ref(false);
+        const success = ref(false);
+        const error = ref('');
+        const showPassword = ref(false);
+
+        const connectionTypes = [
+          { value: 'veteran', label: 'Veteran', description: 'Served in the U.S. Armed Forces' },
+          { value: 'active-duty', label: 'Active Duty', description: 'Currently serving' },
+          { value: 'reserve', label: 'Reserve', description: 'Member of the Reserve' },
+          { value: 'guard', label: 'National Guard', description: 'Member of the National Guard' },
+          { value: 'military-spouse', label: 'Military Spouse', description: 'Spouse of a service member' },
+          { value: 'military-child', label: 'Military Child', description: 'Child of a service member' },
+          { value: 'gold-star-family', label: 'Gold Star Family', description: 'Lost a loved one in service' },
+          { value: 'caregiver', label: 'Caregiver', description: 'Caregiver of a veteran' },
+          { value: 'supporter', label: 'Supporter', description: 'Supporter of veterans' },
+          { value: 'other', label: 'Other', description: 'Other connection to military' }
+        ];
+
+        const passwordStrength = computed(() => {
+          const password = formData.value.password;
+          if (!password) return { score: 0, label: '', color: '' };
+
+          let score = 0;
+          if (password.length >= 8) score++;
+          if (password.length >= 12) score++;
+          if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+          if (/\d/.test(password)) score++;
+          if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+          const levels = [
+            { score: 0, label: '', color: '' },
+            { score: 1, label: 'Weak', color: 'bg-red-500' },
+            { score: 2, label: 'Fair', color: 'bg-orange-500' },
+            { score: 3, label: 'Good', color: 'bg-yellow-500' },
+            { score: 4, label: 'Strong', color: 'bg-green-500' },
+            { score: 5, label: 'Very Strong', color: 'bg-green-600' }
+          ];
+
+          return levels[score] || levels[0];
+        });
+
+        const passwordsMatch = computed(() => {
+          return formData.value.password === formData.value.confirmPassword;
+        });
+
+        const isFormValid = computed(() => {
+          return formData.value.firstName.trim() !== '' &&
+                 formData.value.lastName.trim() !== '' &&
+                 formData.value.email.trim() !== '' &&
+                 formData.value.password.length >= 8 &&
+                 passwordsMatch.value &&
+                 formData.value.agreeToTerms;
+        });
+
+        const getApiUrl = () => {
+          const hostname = window.location.hostname;
+          const protocol = window.location.protocol;
+
+          if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || protocol === 'file:') {
+            return 'http://localhost:5000/api';
+          }
+          return 'https://api.veteransscene.org/api';
+        };
+
+        const handleSubmit = async () => {
+          error.value = '';
+
+          if (!passwordsMatch.value) {
+            error.value = 'Passwords do not match';
+            return;
+          }
+
+          if (formData.value.password.length < 8) {
+            error.value = 'Password must be at least 8 characters';
+            return;
+          }
+
+          if (!formData.value.agreeToTerms) {
+            error.value = 'You must agree to the terms to create an account';
+            return;
+          }
+
+          loading.value = true;
+
+          try {
+            const apiUrl = getApiUrl();
+
+            const submissionData = {
+              email: formData.value.email,
+              password: formData.value.password,
+              firstName: formData.value.firstName,
+              lastName: formData.value.lastName,
+              phone: formData.value.phone || undefined,
+              connectionType: formData.value.connectionType,
+              connectionTypeOther: formData.value.connectionType === 'other' ? formData.value.connectionTypeOther : undefined
+            };
+
+            const response = await fetch(`${apiUrl}/auth/signup`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(submissionData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to create account');
+            }
+
+            if (data.success) {
+              success.value = true;
+              // Store token for auto-login after verification
+              if (data.data.token) {
+                localStorage.setItem('vs_auth_token', data.data.token);
+                localStorage.setItem('vs_user_data', JSON.stringify(data.data.user));
+              }
+            }
+          } catch (err) {
+            console.error('Registration error:', err);
+            error.value = err.message || 'Failed to create account. Please try again.';
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        return {
+          formData,
+          loading,
+          success,
+          error,
+          showPassword,
+          connectionTypes,
+          passwordStrength,
+          passwordsMatch,
+          isFormValid,
+          handleSubmit
+        };
+      },
+      template: `
+        <div class="min-h-screen bg-gray-900 text-gray-100">
+          <!-- Navigation -->
+          <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+            <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+              <div class="flex items-center space-x-3">
+                <img src="/assets/img/vs-logo.jpg" alt="VS Logo" class="w-10 h-10 rounded-lg">
+                <a href="/index.html" class="text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
+                  Veteran's Scene
+                </a>
+              </div>
+              <div class="flex items-center space-x-4">
+                <a href="/index.html" class="text-gray-300 hover:text-yellow-400 font-medium transition">Home</a>
+                <a href="/login.html" class="text-gray-300 hover:text-yellow-400 font-medium transition">Log In</a>
+              </div>
+            </div>
+          </nav>
+
+          <div class="py-12 px-4">
+            <div class="max-w-xl mx-auto">
+              <!-- Success State -->
+              <div v-if="success" class="bg-gray-800 rounded-lg shadow-xl p-8 text-center">
+                <div class="w-20 h-20 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-yellow-400 mb-4">Account Created!</h1>
+                <p class="text-gray-300 mb-6">
+                  Please check your email for a verification link to activate your account.
+                </p>
+                <div class="bg-gray-700 rounded-lg p-4 mb-6">
+                  <p class="text-sm text-gray-400">
+                    Didn't receive the email? Check your spam folder or
+                    <button class="text-yellow-400 hover:underline">resend verification email</button>
+                  </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                  <a href="/login.html" class="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-lg transition">
+                    Go to Login
+                  </a>
+                  <a href="/index.html" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-100 font-medium rounded-lg transition">
+                    Return Home
+                  </a>
+                </div>
+              </div>
+
+              <!-- Registration Form -->
+              <div v-else>
+                <div class="text-center mb-8">
+                  <h1 class="text-4xl font-bold text-yellow-400 mb-4">Create Your Account</h1>
+                  <p class="text-gray-300">Join the Veteran's Scene community</p>
+                </div>
+
+                <div v-if="error" class="bg-red-900 border border-red-700 text-red-200 px-6 py-4 rounded-lg mb-6">
+                  {{ error }}
+                </div>
+
+                <form @submit.prevent="handleSubmit" class="bg-gray-800 rounded-lg shadow-xl p-8 space-y-6">
+                  <!-- Connection Type -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">I am a... *</label>
+                    <select v-model="formData.connectionType" required
+                      class="w-full px-3 py-3 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                      <option v-for="type in connectionTypes" :key="type.value" :value="type.value">
+                        {{ type.label }} - {{ type.description }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div v-if="formData.connectionType === 'other'">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Please describe your connection</label>
+                    <input v-model="formData.connectionTypeOther" type="text" maxlength="100"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="Describe your connection to the military community" />
+                  </div>
+
+                  <!-- Name Fields -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-300 mb-2">First Name *</label>
+                      <input v-model="formData.firstName" type="text" required
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        placeholder="John" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-300 mb-2">Last Name *</label>
+                      <input v-model="formData.lastName" type="text" required
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        placeholder="Doe" />
+                    </div>
+                  </div>
+
+                  <!-- Email -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                    <input v-model="formData.email" type="email" required
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="john.doe@email.com" />
+                  </div>
+
+                  <!-- Phone (Optional) -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Phone <span class="text-gray-500">(optional)</span></label>
+                    <input v-model="formData.phone" type="tel"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="(555) 123-4567" />
+                  </div>
+
+                  <!-- Password -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+                    <div class="relative">
+                      <input v-model="formData.password" :type="showPassword ? 'text' : 'password'" required minlength="8"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 pr-10"
+                        placeholder="Minimum 8 characters" />
+                      <button type="button" @click="showPassword = !showPassword"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300">
+                        <svg v-if="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <!-- Password Strength Indicator -->
+                    <div v-if="formData.password" class="mt-2">
+                      <div class="flex items-center gap-2">
+                        <div class="flex-1 h-2 bg-gray-600 rounded-full overflow-hidden">
+                          <div class="h-full transition-all duration-300"
+                            :class="passwordStrength.color"
+                            :style="{ width: (passwordStrength.score / 5 * 100) + '%' }"></div>
+                        </div>
+                        <span class="text-sm text-gray-400">{{ passwordStrength.label }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Password -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Confirm Password *</label>
+                    <input v-model="formData.confirmPassword" :type="showPassword ? 'text' : 'password'" required
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      :class="{'border-red-500': formData.confirmPassword && !passwordsMatch, 'border-green-500': formData.confirmPassword && passwordsMatch}"
+                      placeholder="Re-enter your password" />
+                    <p v-if="formData.confirmPassword && !passwordsMatch" class="mt-1 text-sm text-red-400">Passwords do not match</p>
+                    <p v-if="formData.confirmPassword && passwordsMatch" class="mt-1 text-sm text-green-400">Passwords match</p>
+                  </div>
+
+                  <!-- Terms Agreement -->
+                  <div class="bg-gray-700 rounded-lg p-4">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input v-model="formData.agreeToTerms" type="checkbox" required
+                        class="mt-1 w-5 h-5 rounded border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500 focus:ring-2" />
+                      <div class="text-sm text-gray-300">
+                        I agree to the <a href="#" class="text-yellow-400 hover:underline">Terms of Service</a>
+                        and <a href="#" class="text-yellow-400 hover:underline">Privacy Policy</a>.
+                        I understand my information will be used to create my account and facilitate participation in Veteran's Scene.
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Submit Button -->
+                  <button type="submit" :disabled="loading || !isFormValid"
+                    class="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span v-if="loading">Creating Account...</span>
+                    <span v-else>Create Account</span>
+                  </button>
+
+                  <!-- Login Link -->
+                  <p class="text-center text-gray-400">
+                    Already have an account?
+                    <a href="/login.html" class="text-yellow-400 hover:underline font-medium">Log in</a>
+                  </p>
+                </form>
+
+                <!-- Info Box -->
+                <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 class="text-lg font-bold text-yellow-400 mb-3">Why Create an Account?</h3>
+                  <ul class="space-y-2 text-gray-300 text-sm">
+                    <li class="flex items-start gap-2">
+                      <span class="text-green-400 mt-0.5">&#10003;</span>
+                      <span>Build your profile and share your story</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-green-400 mt-0.5">&#10003;</span>
+                      <span>Participate in our podcast and community events</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-green-400 mt-0.5">&#10003;</span>
+                      <span>Connect with other veterans and families</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-green-400 mt-0.5">&#10003;</span>
+                      <span>Access exclusive resources and content</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400">
+            <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
+            <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+            <p class="mt-4 text-sm">&copy; <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+          </footer>
+        </div>
+      `
+    };
+
+    createApp(SignupApp).mount('#app');
+    document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

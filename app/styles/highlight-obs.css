@@ -1,0 +1,472 @@
+/* OBS Slideshow Display - Professional Military Theme */
+
+/* Ensure no scroll bars on root elements when showing OBS */
+:root {
+  --obs-display: true;
+}
+
+html.obs-active,
+body.obs-active {
+  margin: 0;
+  padding: 0;
+  overflow: hidden !important;
+  height: 100%;
+  width: 100%;
+  background: #1a1a1a;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* When OBS display is visible, make app fill viewport completely */
+#app:has(.obs-display) {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.obs-display {
+  display: grid;
+  grid-template-columns: 30% 70%;
+  height: 1080px;
+  width: 1920px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  overflow: hidden !important;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  box-sizing: border-box;
+}
+
+/* Loading State */
+.obs-display.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-template-columns: none;
+}
+
+.loading-spinner {
+  text-align: center;
+}
+
+.spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(212, 175, 55, 0.3);
+  border-top: 4px solid #d4af37;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  color: #c5a572;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Error State */
+.obs-display.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-template-columns: none;
+}
+
+.error-box {
+  background: rgba(220, 38, 38, 0.15);
+  border: 2px solid #dc2626;
+  border-radius: 8px;
+  padding: 3rem;
+  max-width: 500px;
+  text-align: center;
+}
+
+.error-box h2 {
+  color: #fca5a5;
+  margin-top: 0;
+  font-size: 1.8rem;
+}
+
+.error-box p {
+  color: #f5f5f5;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Profile Section (Left Side) */
+.profile-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border-right: 3px solid #d4af37;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.profile-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 4px solid #d4af37;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+}
+
+.profile-placeholder {
+  width: 280px;
+  height: 380px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 4px dashed #d4af37;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.placeholder-text {
+  color: #d4af37;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Content Section (Right Side) */
+.content-section {
+  display: flex;
+  flex-direction: column;
+  padding: 3rem 4rem;
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  flex: 1;
+}
+
+/* Header */
+.header {
+  margin-bottom: 2.5rem;
+  border-bottom: 2px solid #d4af37;
+  padding-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 5.5rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin: 0;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.subtitle {
+  font-size: 2.2rem;
+  color: #c5a572;
+  margin: 0.8rem 0 0 0;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Slides Container - Fixed height to prevent layout shifts */
+.slide {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+.slide-title {
+  font-size: 3.5rem;
+  color: #d4af37;
+  margin: 0 0 2rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.slide-content {
+  font-size: 2.8rem;
+  line-height: 1.6;
+  color: #f5f5f5;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.no-content {
+  font-size: 1.3rem;
+  color: #999;
+  font-style: italic;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Facts List */
+.facts-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  overflow: visible;
+}
+
+.fact-item {
+  font-size: 2.4rem;
+  line-height: 1.5;
+  padding-left: 3.5rem;
+  position: relative;
+  color: #f5f5f5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  margin-bottom: 1.5rem;
+}
+
+.fact-icon {
+  position: absolute;
+  left: 0;
+  font-size: 2.5rem;
+  display: inline-block;
+  width: 3rem;
+}
+
+.fact-text {
+  display: block;
+}
+
+/* Achievements List */
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow: visible;
+}
+
+/* Gallery Image Slide */
+.slide-gallery {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  gap: 1.5rem;
+  padding: 1rem 2rem;
+  min-height: 0;
+}
+
+.gallery-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.gallery-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border: 4px solid #d4af37;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+}
+
+.gallery-caption {
+  font-size: 2rem;
+  color: #f5f5f5;
+  text-align: center;
+  margin-top: 2rem;
+  padding: 0 2rem;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  max-width: 85%;
+}
+
+/* Sources Slide */
+.slide-sources {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.sources-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.source-item {
+  font-size: 2rem;
+  line-height: 1.5;
+  color: #f5f5f5;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.source-label {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.source-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.achievement {
+  padding: 1.2rem 1.5rem;
+  background: rgba(212, 175, 55, 0.1);
+  border-left: 4px solid #d4af37;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.achievement-title {
+  font-size: 2.6rem;
+  font-weight: 600;
+  color: #d4af37;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.achievement-date {
+  font-size: 1.8rem;
+  color: #c5a572;
+  margin: 0.7rem 0 0 0;
+  font-weight: 500;
+}
+
+.achievement-desc {
+  font-size: 2.2rem;
+  color: #f5f5f5;
+  margin-top: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Progress Dots */
+.progress-dots {
+  position: absolute;
+  bottom: 2rem;
+  right: 4rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.dot:hover {
+  background: rgba(212, 175, 55, 0.6);
+  transform: scale(1.15);
+}
+
+.dot.active {
+  background: #d4af37;
+  transform: scale(1.4);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+}
+
+/* Simple Clean Fade Transition */
+.fade-enter-active {
+  transition: opacity 1s ease-in-out;
+}
+
+.fade-leave-active {
+  transition: opacity 0.8s ease-in-out;
+}
+
+.fade-enter-from {
+  opacity: 0;
+}
+
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Veterans Scene Branding */
+.obs-branding {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(26, 26, 26, 0.95);
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  border: 2px solid #d4af37;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+}
+
+.obs-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-image {
+  height: 140px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.obs-website {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #d4af37;
+  text-align: center;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
