@@ -13,7 +13,12 @@ export const API_CONFIG = {
       return 'http://localhost:5000/api';
     }
 
-    // Production/Beta: use same domain with /api path (proxied by Apache)
+    // Production: veteransscene.org (GitHub Pages) points to api.veteransscene.org
+    if (hostname === 'veteransscene.org' || hostname === 'www.veteransscene.org') {
+      return 'https://api.veteransscene.org/api';
+    }
+
+    // Beta: use same domain with /api path (proxied by Apache)
     return `${protocol}//${hostname}/api`;
   })(),
 
