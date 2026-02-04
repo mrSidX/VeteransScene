@@ -58,17 +58,23 @@ const routes = [
   {
     path: '/apply',
     name: 'Apply',
-    component: Apply
+    beforeEnter: () => {
+      window.location.href = 'https://beta.veteransscene.org/apply.html';
+    }
   },
   {
     path: '/join',
     name: 'JoinAlias',
-    redirect: '/apply'
+    beforeEnter: () => {
+      window.location.href = 'https://beta.veteransscene.org/apply.html';
+    }
   },
   {
     path: '/joinus',
     name: 'JoinUsAlias',
-    redirect: '/apply'
+    beforeEnter: () => {
+      window.location.href = 'https://beta.veteransscene.org/apply.html';
+    }
   },
   {
     path: '/dashboard',
