@@ -61,6 +61,16 @@ const routes = [
     component: Apply
   },
   {
+    path: '/join',
+    name: 'JoinAlias',
+    redirect: '/apply'
+  },
+  {
+    path: '/joinus',
+    name: 'JoinUsAlias',
+    redirect: '/apply'
+  },
+  {
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
