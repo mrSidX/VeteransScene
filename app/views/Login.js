@@ -17,14 +17,21 @@ export default {
     const handleSubmit = async () => {
       error.value = '';
       loading.value = true;
+      console.log('Login attempt for:', email.value);
 
       try {
-        await authStore.login(email.value, password.value);
+        const response = await authStore.login(email.value, password.value);
+        console.log('Login response:', response);
+        console.log('Is authenticated:', authStore.isAuthenticated.value);
+        console.log('User:', authStore.user.value);
 
         // Redirect to intended page or dashboard
         const redirect = route.query.redirect || '/dashboard';
-        router.push(redirect);
+        console.log('Redirecting to:', redirect);
+        await router.push(redirect);
+        console.log('Redirect complete');
       } catch (err) {
+        console.error('Login error:', err);
         error.value = err.message || 'Login failed. Please check your credentials.';
       } finally {
         loading.value = false;

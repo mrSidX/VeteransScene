@@ -209,9 +209,6 @@
             </div>
         </section>
         <!-- Footer -->
-        <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
         <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400">
             <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
             <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
@@ -221,6 +218,11 @@ VETERAN&rsquo;S SCENE provides this information voluntarily.
 WE are not affiliated with the va and we are not advocates.</p>
             <p class="mt-2">© <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
         </footer>
+
+        <!-- Year Script -->
+        <script>
+          document.getElementById("year").textContent = new Date().getFullYear();
+        </script>
     </body>
 </html>
 <!-- Toggle Script (safe: waits for DOM ready) -->

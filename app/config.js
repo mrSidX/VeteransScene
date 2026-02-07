@@ -1,26 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
-  // Use environment-based API URL
-  BASE_URL: (() => {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-
-    // Development: localhost, 127.0.0.1, or file protocol
-    if (hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        hostname === '' ||
-        protocol === 'file:') {
-      return 'http://localhost:5000/api';
-    }
-
-    // Production: veteransscene.org (GitHub Pages) points to api.veteransscene.org
-    if (hostname === 'veteransscene.org' || hostname === 'www.veteransscene.org') {
-      return 'https://api.veteransscene.org/api';
-    }
-
-    // Beta: use same domain with /api path (proxied by Apache)
-    return `${protocol}//${hostname}/api`;
-  })(),
+  // All API calls route to api.veteransscene.org
+  BASE_URL: 'https://api.veteransscene.org/api',
 
   ENDPOINTS: {
     // Auth

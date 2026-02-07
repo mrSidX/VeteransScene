@@ -1,11 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import { useAuthStore } from './stores/auth.js?v=20260124i';
+import { useAuthStore } from './stores/auth.js';
 import Login from './views/Login.js?v=20260124i';
 import ForgotPassword from './views/ForgotPassword.js?v=20260124i';
 import ResetPassword from './views/ResetPassword.js?v=20260124i';
 import VerifyEmail from './views/VerifyEmail.js?v=20260124i';
 import Apply from './views/Apply.js?v=20260124i';
-import Dashboard from './views/Dashboard.js?v=20260124i';
+import Dashboard from './views/Dashboard.js?v=20260206';
 import Applications from './views/Applications.js?v=20260124i';
 import ApplicationDetail from './views/ApplicationDetail.js?v=20260124i';
 import Users from './views/Users.js?v=20260124i';
@@ -27,6 +27,9 @@ import HelpTopics from './views/HelpTopics.js?v=20260202';
 import HighlightDisplay from './views/HighlightDisplay.js?v=20260202';
 import HighlightDisplayRandom from './views/HighlightDisplayRandom.js?v=20260202';
 import HighlightDisplayOBS from './views/HighlightDisplayOBS.js?v=20260203';
+import Waiver from './views/Waiver.js?v=20260206';
+import MyApplications from './views/MyApplications.js?v=20260206';
+import WaiverSign from './views/WaiverSign.js?v=20260206';
 
 // Routes with direct component imports
 const routes = [
@@ -56,6 +59,11 @@ const routes = [
     component: VerifyEmail
   },
   {
+    path: '/waiver/:applicationId',
+    name: 'Waiver',
+    component: Waiver
+  },
+  {
     path: '/apply',
     name: 'Apply',
     beforeEnter: () => {
@@ -80,6 +88,18 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/my-applications',
+    name: 'MyApplications',
+    component: MyApplications,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/waiver/:applicationId',
+    name: 'WaiverSign',
+    component: WaiverSign,
     meta: { requiresAuth: true }
   },
   {
@@ -216,19 +236,35 @@ const router = createRouter({
 });
 
 // Navigation guard
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
+  console.log(`[Router Guard] From: ${from.name} (${from.path}) → To: ${to.name} (${to.path})`);
+  console.log(`[Router Guard] Authenticated: ${authStore.isAuthenticated.value}, RequiresAuth: ${to.meta.requiresAuth}, RequiresRole: ${to.meta.requiresRole ? JSON.stringify(to.meta.requiresRole) : 'none'}`);
+
+  // Redirect logged-in users away from login page to dashboard
+  if ((to.name === 'Login' || to.name === 'LoginAlias') && authStore.isAuthenticated.value) {
+    console.log('[Router Guard] Redirecting logged-in user from login to dashboard');
+    next({ name: 'Dashboard' });
+    return;
+  }
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated.value) {
+    console.log('[Router Guard] Redirecting unauthenticated user to login');
     next({ name: 'Login', query: { redirect: to.fullPath } });
   } else if (to.meta.requiresRole) {
-    const userRole = authStore.user.value?.role;
-    if (!to.meta.requiresRole.includes(userRole)) {
+    // Check both .role (singular) and .roles (plural) for flexibility
+    const userRole = authStore.user.value?.role || (Array.isArray(authStore.user.value?.roles) ? authStore.user.value.roles[0] : null);
+    console.log(`[Router Guard] Checking role: user has ${userRole}, requires ${to.meta.requiresRole}`);
+    if (!userRole || !to.meta.requiresRole.includes(userRole)) {
+      console.log('[Router Guard] User does not have required role, redirecting to dashboard');
       next({ name: 'Dashboard' });
     } else {
+      console.log('[Router Guard] User has required role, allowing navigation');
       next();
     }
   } else {
+    console.log('[Router Guard] No restrictions, allowing navigation');
     next();
   }
 });

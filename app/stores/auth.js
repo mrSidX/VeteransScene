@@ -10,6 +10,8 @@ const state = reactive({
   error: null
 });
 
+let authInitialized = false;
+
 // Normalize user data to always have roles array
 const normalizeUser = (user) => {
   if (!user) return user;
@@ -27,8 +29,16 @@ const normalizeUser = (user) => {
   return user;
 };
 
-// Initialize from localStorage
+// Initialize from localStorage (only once)
 const initAuth = () => {
+  if (authInitialized) {
+    console.log('[Auth] Already initialized, skipping reinit');
+    return;
+  }
+
+  authInitialized = true;
+  console.log('[Auth] Initializing auth from localStorage');
+
   const token = localStorage.getItem(APP_CONFIG.TOKEN_KEY);
   const userStr = localStorage.getItem(APP_CONFIG.USER_KEY);
 
@@ -37,11 +47,13 @@ const initAuth = () => {
       state.token = token;
       state.user = normalizeUser(JSON.parse(userStr));
       state.isAuthenticated = true;
-      console.log('Auth initialized from localStorage, user roles:', state.user.roles);
+      console.log('[Auth] Initialized from localStorage, user roles:', state.user.roles);
     } catch (e) {
       console.error('Error parsing user data:', e);
       api.logout();
     }
+  } else {
+    console.log('[Auth] No token/user in localStorage');
   }
 };
 
@@ -54,12 +66,17 @@ export const useAuthStore = () => {
     state.error = null;
 
     try {
+      console.log('[Auth] Calling api.login');
       const response = await api.login(email, password);
+      console.log('[Auth] api.login response:', response);
+
       if (response.success) {
+        console.log('[Auth] Login successful, setting state');
         state.user = normalizeUser(response.data.user);
         state.token = response.data.token;
         state.isAuthenticated = true;
-        console.log('User logged in. Roles:', state.user.roles);
+        console.log('[Auth] State after login - isAuthenticated:', state.isAuthenticated, 'token:', !!state.token, 'user:', state.user.email);
+        console.log('[Auth] localStorage check - token:', !!localStorage.getItem(APP_CONFIG.TOKEN_KEY));
       }
       return response;
     } catch (error) {

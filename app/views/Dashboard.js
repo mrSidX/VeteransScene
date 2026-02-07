@@ -233,6 +233,30 @@ export default {
               </span>
             </button>
             <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/highlights')"
+              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
+            >
+              <span>⭐</span>
+              <span>Highlights</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/mail')"
+              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
+            >
+              <span>📧</span>
+              <span>Mail</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/dropbox')"
+              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
+            >
+              <span>📁</span>
+              <span>Dropbox</span>
+            </button>
+            <button
               @click="navigateTo('/notifications')"
               class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
             >

@@ -59,6 +59,53 @@ export default {
       { value: 'other', label: 'Other', icon: '📝' }
     ];
 
+    const waiverStatuses = [
+      { value: 'not_signed', label: 'Not Signed', color: 'red' },
+      { value: 'pending', label: 'Pending', color: 'yellow' },
+      { value: 'signed', label: 'Signed', color: 'green' },
+      { value: 'declined', label: 'Declined', color: 'gray' }
+    ];
+
+    const showWaiverLinkCopied = ref(false);
+
+    const getWaiverLink = () => {
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/app.html#/waiver/${application.value.id}`;
+    };
+
+    const copyWaiverLink = () => {
+      const link = getWaiverLink();
+      navigator.clipboard.writeText(link).then(() => {
+        showWaiverLinkCopied.value = true;
+        setTimeout(() => {
+          showWaiverLinkCopied.value = false;
+        }, 2000);
+      });
+    };
+
+    const updateWaiverStatus = async (status) => {
+      try {
+        const response = await fetch(`${window.api.baseURL}/waivers/${application.value.id}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('vs_auth_token')}`
+          },
+          body: JSON.stringify({ status, method: 'physical' })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          application.value.waiver.status = status;
+          alert('Waiver status updated!');
+        } else {
+          alert('Failed to update waiver status');
+        }
+      } catch (err) {
+        alert('Error updating waiver status: ' + err.message);
+      }
+    };
+
     const fetchApplicationDetail = async () => {
       loading.value = true;
       error.value = '';
@@ -257,9 +304,12 @@ export default {
       statuses,
       priorities,
       categories,
+      waiverStatuses,
+      showWaiverLinkCopied,
       updateStatus,
       updatePriority,
       updateCategory,
+      updateWaiverStatus,
       openScheduleModal,
       saveSchedule,
       openNoteModal,
@@ -267,6 +317,8 @@ export default {
       openDeleteModal,
       confirmDelete,
       raiseFlag,
+      getWaiverLink,
+      copyWaiverLink,
       getStatusColor,
       getPriorityColor,
       getCategoryIcon,
@@ -487,6 +539,56 @@ export default {
                 class="w-full px-4 py-2 bg-blue-900 hover:bg-blue-800 text-blue-200 rounded-md transition">
                 {{ application.scheduledDate ? 'Change Schedule' : 'Set Schedule' }}
               </button>
+            </div>
+
+            <!-- Waiver Card -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+              <h3 class="text-lg font-bold text-yellow-400 mb-4">Media Waiver</h3>
+
+              <!-- Waiver Status -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Waiver Status</label>
+                <select v-model="application.waiver.status" @change="updateWaiverStatus(application.waiver.status)"
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                  <option v-for="status in waiverStatuses" :key="status.value" :value="status.value">
+                    {{ status.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Waiver Link -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Share Waiver Link</label>
+                <div class="flex gap-2">
+                  <input
+                    :value="getWaiverLink()"
+                    type="text"
+                    readonly
+                    class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 text-sm"
+                  />
+                  <button
+                    @click="copyWaiverLink"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition text-sm font-medium">
+                    {{ showWaiverLinkCopied ? '✓ Copied' : 'Copy' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Waiver Info -->
+              <div v-if="application.waiver" class="text-sm text-gray-400 space-y-2">
+                <div v-if="application.waiver.signedDate">
+                  <label>Signed Date:</label>
+                  <p class="text-gray-300">{{ formatDate(application.waiver.signedDate) }}</p>
+                </div>
+                <div v-if="application.waiver.method">
+                  <label>Signed Via:</label>
+                  <p class="text-gray-300 capitalize">{{ application.waiver.method }}</p>
+                </div>
+                <div v-if="application.waiver.consentType">
+                  <label>Consent Type:</label>
+                  <p class="text-gray-300 capitalize">{{ application.waiver.consentType }}</p>
+                </div>
+              </div>
             </div>
 
             <!-- Metadata Card -->

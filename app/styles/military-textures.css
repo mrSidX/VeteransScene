@@ -1,0 +1,118 @@
+/* Military-Style Texture System for Veterans Scene - Pro Edition */
+/* Realistic military camo patterns, gun metal, and tactical aesthetics */
+
+/* ===== MILITARY COLOR PALETTE ===== */
+:root {
+  --mil-acu-light: #898a7e;     /* ACU light tan */
+  --mil-acu-med: #6b7a6f;       /* ACU medium green */
+  --mil-acu-dark: #525c52;      /* ACU dark green */
+  --mil-acu-darker: #3d4339;    /* ACU darker gray */
+  --mil-woodland-lt: #8a9b6f;   /* Woodland light green */
+  --mil-woodland-md: #556b2f;   /* Woodland medium olive */
+  --mil-woodland-dk: #3d5028;   /* Woodland dark green */
+  --mil-gunmetal: #2d2d2d;      /* Gun metal gray */
+  --mil-steel: #3a3a3a;         /* Steel gray */
+}
+
+/* ===== ACU DIGITAL PIXELATED CAMO (Army Combat Uniform) ===== */
+.texture-acu-camo {
+  background-color: #6b7a6f;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><defs><pattern id="acu" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse"><rect width="64" height="64" fill="%236b7a6f"/><rect x="0" y="0" width="8" height="8" fill="%23898a7e"/><rect x="8" y="8" width="8" height="8" fill="%233d4339"/><rect x="16" y="0" width="8" height="8" fill="%23525c52"/><rect x="24" y="16" width="8" height="8" fill="%23898a7e"/><rect x="32" y="8" width="8" height="8" fill="%232d2d2d"/><rect x="40" y="24" width="8" height="8" fill="%23525c52"/><rect x="8" y="24" width="8" height="8" fill="%232d2d2d"/><rect x="48" y="0" width="8" height="8" fill="%23898a7e"/><rect x="56" y="16" width="8" height="8" fill="%23525c52"/><rect x="32" y="32" width="8" height="8" fill="%232d2d2d"/><rect x="0" y="40" width="8" height="8" fill="%23525c52"/><rect x="16" y="48" width="8" height="8" fill="%23898a7e"/><rect x="40" y="56" width="8" height="8" fill="%233d4339"/><rect x="24" y="32" width="16" height="8" fill="%232d2d2d" opacity="0.6"/><rect x="0" y="56" width="8" height="8" fill="%233d4339"/><rect x="56" y="40" width="8" height="8" fill="%23898a7e"/><rect x="48" y="48" width="8" height="8" fill="%23525c52"/></pattern></defs><rect width="64" height="64" fill="url(%23acu)"/></svg>');
+  background-size: 64px 64px;
+  background-repeat: repeat;
+}
+
+/* ===== REALISTIC WOODLAND CAMOUFLAGE ===== */
+.texture-woodland-camo {
+  background-color: #556b2f;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><defs><filter id="roughen"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="2" /></filter></defs><rect width="160" height="120" fill="%23556b2f"/><path d="M-10,20 Q20,5 50,15 T120,10 L130,40 Q100,25 70,35 T20,45 Z" fill="%238a9b6f" opacity="0.7"/><path d="M10,45 Q40,35 80,50 T150,45 L160,80 Q130,60 90,75 T30,85 Z" fill="%233d5028" opacity="0.8" filter="url(%23roughen)"/><path d="M0,70 Q30,65 70,75 T160,70 L165,110 Q130,95 80,105 T10,110 Z" fill="%238a9b6f" opacity="0.65"/><ellipse cx="35" cy="35" rx="20" ry="28" fill="%233d5028" opacity="0.6"/><ellipse cx="110" cy="60" rx="28" ry="20" fill="%233d5028" opacity="0.65" filter="url(%23roughen)"/><path d="M55,10 Q60,20 65,15 Q70,25 75,20 Q80,30 85,25" stroke="%238a9b6f" stroke-width="2" fill="none" opacity="0.5"/></svg>');
+  background-size: 160px 120px;
+  background-repeat: repeat;
+}
+
+/* ===== GUN METAL / BRUSHED STEEL ===== */
+.texture-gunmetal {
+  background-color: rgb(45, 45, 45);
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(200, 200, 200, 0.05) 2px, rgba(200, 200, 200, 0.05) 4px),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.03) 2px, rgba(255, 255, 255, 0.03) 4px),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="metal"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="100" height="100" fill="%232d2d2d"/><rect width="100" height="100" fill="%234a4a4a" opacity="0.08" filter="url(%23metal)"/><line x1="0" y1="0" x2="100" y2="0" stroke="%23555555" stroke-width="0.5" opacity="0.1"/><line x1="0" y1="25" x2="100" y2="25" stroke="%23555555" stroke-width="0.5" opacity="0.08"/><line x1="0" y1="50" x2="100" y2="50" stroke="%23555555" stroke-width="0.5" opacity="0.1"/><line x1="0" y1="75" x2="100" y2="75" stroke="%23555555" stroke-width="0.5" opacity="0.08"/></svg>');
+  background-size: 100%, 100%, 100px 100px;
+  background-attachment: fixed;
+}
+
+/* ===== TACTICAL GRID / ARMOR PLATE ===== */
+.texture-armor {
+  background-color: rgb(42, 48, 55);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(100, 100, 100, 0.15) 19px, rgba(100, 100, 100, 0.15) 20px),
+    repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(100, 100, 100, 0.15) 19px, rgba(100, 100, 100, 0.15) 20px),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%232a3037"/><circle cx="10" cy="10" r="1" fill="%234a4a4a" opacity="0.3"/><circle cx="30" cy="10" r="1" fill="%234a4a4a" opacity="0.3"/><circle cx="10" cy="30" r="1" fill="%234a4a4a" opacity="0.3"/><circle cx="30" cy="30" r="1" fill="%234a4a4a" opacity="0.3"/><rect x="5" y="5" width="30" height="30" fill="none" stroke="%23555555" stroke-width="0.5" opacity="0.08"/></svg>');
+  background-size: 100%, 100%, 40px 40px;
+  background-attachment: fixed;
+}
+
+/* ===== MILITARY CARD - REAL CAMOUFLAGE FABRIC TEXTURE ===== */
+.military-card {
+  background-color: #6b7a6f;
+  background-image: url('/assets/textures/camouflage-fabric.jpg');
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: scroll;
+  position: relative;
+  border-radius: inherit;
+}
+
+/* ===== MILITARY DETAIL CARD - REAL BRUSHED METAL ===== */
+.military-detail-card {
+  background-color: #3a3a3a;
+  background-image: url('/assets/textures/brushed-metal-01.jpg');
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: scroll;
+}
+
+/* ===== ARMORED PANEL - REAL STEEL TEXTURE (Tank Armor Style) ===== */
+.military-armor-panel {
+  background-color: #2a3037;
+  background-image: url('/assets/textures/steel-metal-02.jpg');
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: scroll;
+}
+
+/* ===== WOODLAND CAMO PANEL - Field Ops (Real Camo Fabric) ===== */
+.military-woodland-panel {
+  background-color: #556b2f;
+  background-image: url('/assets/textures/camouflage-fabric.jpg');
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: scroll;
+}
+
+/* ===== Hover States ===== */
+.military-card:hover {
+  filter: brightness(1.05);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.military-detail-card:hover {
+  filter: brightness(1.08);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.military-armor-panel:hover {
+  filter: brightness(1.06);
+}
+
+.military-woodland-panel:hover {
+  filter: brightness(1.05);
+}
+
+/* ===== Transitions ===== */
+.military-card,
+.military-detail-card,
+.military-armor-panel,
+.military-woodland-panel {
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}

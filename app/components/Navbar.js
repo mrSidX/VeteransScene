@@ -59,27 +59,35 @@ export default {
                 <router-link to="/highlights" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   ⭐ Highlights
                 </router-link>
-                <router-link to="/prompt-templates" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
+                <router-link to="/prompt-templates" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   🎯 Prompt Templates
+                </router-link>
+                <router-link to="/dropbox" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  📁 Dropbox
+                </router-link>
+                <router-link to="/help-topics" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
+                  ❓ Help Topics
                 </router-link>
               </div>
             </div>
 
-            <router-link v-if="authStore.isModerator.value" to="/flags" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
-              Flags
-            </router-link>
-
-            <router-link v-if="authStore.isModerator.value" to="/mail" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
-              Mail
-            </router-link>
-
-            <router-link v-if="authStore.isModerator.value" to="/dropbox" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
-              Dropbox
-            </router-link>
-
-            <router-link v-if="authStore.isModerator.value" to="/help-topics" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
-              Help Topics
-            </router-link>
+            <!-- Moderation Dropdown -->
+            <div v-if="authStore.isModerator.value" class="relative group">
+              <button class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition flex items-center space-x-1">
+                <span>Moderation</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div class="absolute left-0 mt-0 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <router-link to="/mail" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  📧 Mail
+                </router-link>
+                <router-link to="/flags" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
+                  🚩 Flags
+                </router-link>
+              </div>
+            </div>
 
             <router-link v-if="authStore.isAdmin.value" to="/users" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
               Users
@@ -115,8 +123,11 @@ export default {
                   </div>
                 </div>
                 <!-- Menu Items -->
-                <router-link to="/profile" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
+                <router-link to="/profile" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   My Profile
+                </router-link>
+                <router-link to="/my-applications" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  My Applications
                 </router-link>
                 <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-red-400 transition text-sm border-t border-gray-700">
                   Logout

@@ -1,0 +1,55 @@
+/* Daily Rotating Military/Patriotic Background System */
+/* Dedicated background container behind all content */
+
+/* Background container - sits behind everything */
+#bg-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #1a1a1a;
+  z-index: -999;
+}
+
+/* Vignette effect - darkens edges */
+#bg-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.15) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Subtle overall darkening */
+#bg-container::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* App container - content on top of background */
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* Smooth transitions */
+#bg-container {
+  transition: background-image 0.8s ease-in-out;
+}
