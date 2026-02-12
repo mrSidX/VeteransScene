@@ -151,25 +151,27 @@ export default {
     <div class="min-h-screen bg-gray-900 text-gray-100 py-8 px-4">
       <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="mb-8 flex justify-between items-center">
-          <div>
-            <router-link to="/dashboard" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-2">
-              ← Back to Dashboard
-            </router-link>
-            <h1 class="text-4xl font-bold text-yellow-400">Highlights</h1>
-            <p class="text-gray-400 mt-2">Manage featured content about military figures, topics, and events</p>
+        <div class="mb-4 md:mb-6">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 md:gap-4 mb-2 md:mb-4">
+            <div class="flex-1">
+              <router-link to="/dashboard" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-2">
+                ← Back to Dashboard
+              </router-link>
+              <h1 class="text-3xl sm:text-4xl font-bold text-yellow-400">Highlights</h1>
+              <p class="text-sm sm:text-base text-gray-400 mt-2">Manage featured content about military figures, topics, and events</p>
+            </div>
+            <button
+              @click="createNewHighlight"
+              class="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition min-h-[44px] flex items-center justify-center"
+            >
+              + New Highlight
+            </button>
           </div>
-          <button
-            @click="createNewHighlight"
-            class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition"
-          >
-            + New Highlight
-          </button>
         </div>
 
         <!-- Filters -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">Search</label>
               <input
@@ -248,20 +250,20 @@ export default {
         </div>
 
         <!-- Stats Bar -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-gray-800 border border-gray-700 rounded p-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
+          <div class="bg-gray-800 border border-gray-700 rounded p-2 md:p-3">
             <p class="text-gray-400 text-sm">Total Highlights</p>
             <p class="text-2xl font-bold text-yellow-400">{{ total }}</p>
           </div>
-          <div class="bg-gray-800 border border-gray-700 rounded p-4">
+          <div class="bg-gray-800 border border-gray-700 rounded p-2 md:p-3">
             <p class="text-gray-400 text-sm">Published</p>
             <p class="text-2xl font-bold text-green-400">{{ statusCounts['published'] || 0 }}</p>
           </div>
-          <div class="bg-gray-800 border border-gray-700 rounded p-4">
+          <div class="bg-gray-800 border border-gray-700 rounded p-2 md:p-3">
             <p class="text-gray-400 text-sm">AI Fetched</p>
             <p class="text-2xl font-bold text-blue-400">{{ statusCounts['ai-fetched'] || 0 }}</p>
           </div>
-          <div class="bg-gray-800 border border-gray-700 rounded p-4">
+          <div class="bg-gray-800 border border-gray-700 rounded p-2 md:p-3">
             <p class="text-gray-400 text-sm">In Progress</p>
             <p class="text-2xl font-bold text-yellow-400">{{ (statusCounts['draft'] || 0) + (statusCounts['pending-ai-fetch'] || 0) }}</p>
           </div>
@@ -279,7 +281,7 @@ export default {
         </div>
 
         <!-- Results Grid -->
-        <div v-else-if="highlights.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div v-else-if="highlights.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           <div
             v-for="highlight in highlights"
             :key="highlight._id"
@@ -299,9 +301,9 @@ export default {
             </div>
 
             <!-- Content -->
-            <div class="p-6 flex flex-col flex-1">
+            <div class="p-3 md:p-4 flex flex-col flex-1">
               <!-- Type Icon & Title -->
-              <div class="flex items-start justify-between mb-4">
+              <div class="flex items-start justify-between mb-2 md:mb-4">
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-2">
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">{{ getTypeLabel(highlight.type) }}</span>
@@ -311,35 +313,35 @@ export default {
               </div>
 
               <!-- Status Badge -->
-              <div :class="['text-xs font-semibold px-3 py-1 rounded inline-block mb-4', getStatusColor(highlight.status)]">
+              <div :class="['text-xs font-semibold px-2 py-1 rounded inline-block mb-2 md:mb-4', getStatusColor(highlight.status)]">
                 {{ highlight.status }}
               </div>
 
               <!-- Description -->
-              <p v-if="highlight.description" class="text-gray-400 text-sm line-clamp-2 mb-4">{{ highlight.description }}</p>
+              <p v-if="highlight.description" class="text-gray-400 text-sm line-clamp-2 mb-2 md:mb-4">{{ highlight.description }}</p>
 
               <!-- Person Info (if applicable) -->
-              <div v-if="highlight.type === 'person' && highlight.personInfo" class="mb-4 text-sm text-gray-400 space-y-1 border-t border-gray-700 pt-3">
+              <div v-if="highlight.type === 'person' && highlight.personInfo" class="mb-2 md:mb-4 text-sm text-gray-400 space-y-1 border-t border-gray-700 pt-2 md:pt-3">
                 <div v-if="highlight.personInfo.rank"><span class="font-semibold">Rank:</span> {{ highlight.personInfo.rank }}</div>
                 <div v-if="highlight.personInfo.branch"><span class="font-semibold">Branch:</span> {{ highlight.personInfo.branch }}</div>
               </div>
 
               <!-- AI Content Badge -->
-              <div v-if="highlight.aiContent?.fetched" class="mb-4">
-                <div class="inline-flex items-center gap-2 text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded">
+              <div v-if="highlight.aiContent?.fetched" class="mb-2 md:mb-4">
+                <div class="inline-flex items-center gap-1 md:gap-2 text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded">
                   <span>✓</span>
                   <span>AI Enhanced</span>
                 </div>
               </div>
 
               <!-- Featured Star -->
-              <div v-if="highlight.displaySettings?.featured" class="flex items-center gap-2 text-xs text-yellow-400 mb-4">
+              <div v-if="highlight.displaySettings?.featured" class="flex items-center gap-2 text-xs text-yellow-400 mb-2 md:mb-4">
                 <span class="text-lg">⭐</span>
                 <span>Featured</span>
               </div>
 
               <!-- Meta Info -->
-              <div class="text-xs text-gray-500 space-y-1 border-t border-gray-700 pt-3 mt-auto">
+              <div class="text-xs text-gray-500 space-y-1 border-t border-gray-700 pt-2 md:pt-3 mt-auto">
                 <div>Created: {{ formatDate(highlight.createdAt) }}</div>
                 <div v-if="highlight.creator">By: {{ highlight.creator.firstName }} {{ highlight.creator.lastName }}</div>
               </div>
@@ -359,7 +361,7 @@ export default {
         </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 mt-8">
+        <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 mt-6 md:mt-8">
           <button
             @click="goToPage(page - 1)"
             :disabled="page === 1"

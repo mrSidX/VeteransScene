@@ -126,23 +126,23 @@ export default {
     <div class="min-h-screen bg-gray-900 text-gray-100 py-8 px-4">
       <div class="max-w-4xl mx-auto">
         <!-- Header -->
-        <div class="mb-8">
+        <div class="mb-4 md:mb-6">
           <router-link to="/segments" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-4">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
             Back to Segments
           </router-link>
-          <h1 class="text-4xl font-bold text-yellow-400 mb-2">
+          <h1 class="text-3xl sm:text-4xl font-bold text-yellow-400 mb-2">
             {{ templateSegment ? 'Create Variation' : 'Create New Segment' }}
           </h1>
-          <p class="text-gray-400">
+          <p class="text-gray-400 text-sm sm:text-base">
             {{ templateSegment ? \`Based on template: \${templateSegment.title}\` : 'Plan a new production segment' }}
           </p>
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleSubmit" class="space-y-6">
+        <form @submit.prevent="handleSubmit" class="space-y-4 md:space-y-6">
           <!-- Error Message -->
           <div v-if="error" class="bg-red-900 border border-red-700 text-red-200 px-6 py-4 rounded-lg">
             {{ error }}
@@ -187,7 +187,7 @@ export default {
           <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
             <h2 class="text-xl font-bold text-yellow-400 mb-4">Production Details</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">
                   Production Type <span class="text-red-400">*</span>
@@ -254,7 +254,7 @@ export default {
           <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
             <h2 class="text-xl font-bold text-yellow-400 mb-4">Status & Priority</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">
                   Status
@@ -339,13 +339,13 @@ export default {
           </div>
 
           <!-- Submit Buttons -->
-          <div class="flex gap-4">
+          <div class="flex flex-col-reverse sm:flex-row gap-2 md:gap-4">
             <button type="submit" :disabled="loading"
-              class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-6 py-3 rounded-md font-bold transition disabled:opacity-50 disabled:cursor-not-allowed">
+              class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 md:px-6 py-2.5 md:py-3 rounded-md font-bold transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center">
               {{ loading ? 'Creating...' : 'Create Segment' }}
             </button>
             <button type="button" @click="router.push('/segments')"
-              class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md font-semibold transition">
+              class="flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center">
               Cancel
             </button>
           </div>

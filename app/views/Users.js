@@ -1,14 +1,22 @@
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '../services/api.js';
 
 export default {
   name: 'Users',
   setup() {
+    const router = useRouter();
     const users = ref([]);
     const loading = ref(true);
     const error = ref('');
     const searchTerm = ref('');
     const roleFilter = ref('');
+    const anonymousFilter = ref(''); // '' = hide by default, 'true' = show anonymous, 'false' = show standard
+
+    // Unsaved changes tracking
+    const hasChanges = ref(false);
+    const originalEditForm = ref(null);
+    const navigationBlocked = ref(false);
 
     // Modal states
     const showCreateModal = ref(false);
@@ -51,6 +59,35 @@ export default {
       { value: 'guest', label: 'Guest', color: 'gray' }
     ];
 
+    // Unsaved changes detection methods
+    const handleBeforeUnload = (e) => {
+      if ((hasChanges.value || showEditModal.value) && !navigationBlocked.value) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    const setupUnsavedChangesDetection = () => {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    };
+
+    const setupRouterGuard = () => {
+      return router.beforeEach((to, from, next) => {
+        if (hasChanges.value && from.path !== to.path) {
+          const proceed = confirm('You have unsaved changes. Do you want to leave without saving?\n\nClick OK to discard changes, or Cancel to stay on this page.');
+          if (proceed) {
+            navigationBlocked.value = true;
+            next();
+          } else {
+            next(false);
+          }
+        } else {
+          next();
+        }
+      });
+    };
+
     const fetchUsers = async () => {
       loading.value = true;
       error.value = '';
@@ -59,6 +96,8 @@ export default {
         const params = {};
         if (roleFilter.value) params.role = roleFilter.value;
         if (searchTerm.value) params.search = searchTerm.value;
+        // Default to hiding anonymous users unless explicitly requested
+        params.anonymous = anonymousFilter.value || 'false';
 
         const response = await api.getUsers(params);
         console.log('Users response:', response);
@@ -133,6 +172,9 @@ export default {
         roles: userRoles,
         isActive: user.isActive
       };
+      // Save original form state for change detection
+      originalEditForm.value = JSON.parse(JSON.stringify(editForm.value));
+      hasChanges.value = false;
       showEditModal.value = true;
     };
 
@@ -173,6 +215,10 @@ export default {
       try {
         const response = await api.updateUser(selectedUser.value.id, editForm.value);
         if (response.success) {
+          // Reset unsaved changes tracking
+          originalEditForm.value = JSON.parse(JSON.stringify(editForm.value));
+          hasChanges.value = false;
+          navigationBlocked.value = false;
           showEditModal.value = false;
           fetchUsers();
           alert('User updated successfully!');
@@ -255,9 +301,28 @@ export default {
       return filtered;
     });
 
+    const getAvatarUrl = (user) => {
+      if (!user?.profile?.avatarUrl || !user?.id) return '';
+      const url = window.api.getAvatarUrl(user.id);
+      return `${url}?v=${encodeURIComponent(user.profile.avatarUrl)}`;
+    };
+
+    // Watch for form changes
+    watch(() => editForm.value, () => {
+      if (originalEditForm.value && showEditModal.value) {
+        hasChanges.value = JSON.stringify(editForm.value) !== JSON.stringify(originalEditForm.value);
+      }
+    }, { deep: true });
+
     onMounted(() => {
       console.log('Users component mounted');
       fetchUsers();
+      setupUnsavedChangesDetection();
+      setupRouterGuard();
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     });
 
     return {
@@ -266,6 +331,7 @@ export default {
       error,
       searchTerm,
       roleFilter,
+      anonymousFilter,
       showCreateModal,
       showEditModal,
       showDeleteConfirm,
@@ -289,7 +355,15 @@ export default {
       updateUser,
       changePassword,
       deactivateUser,
-      permanentlyDeleteUser
+      permanentlyDeleteUser,
+      getAvatarUrl,
+      // Unsaved changes tracking
+      hasChanges,
+      originalEditForm,
+      navigationBlocked,
+      handleBeforeUnload,
+      setupUnsavedChangesDetection,
+      setupRouterGuard
     };
   },
   template: `
@@ -306,34 +380,41 @@ export default {
         </div>
 
         <!-- Header -->
-        <div class="mb-8 flex justify-between items-center">
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <h1 class="text-4xl font-bold text-yellow-400">User Management</h1>
-              <info-helper topic-slug="user-roles-explained" size="md" />
-            </div>
-            <p class="text-gray-400">Manage system users and permissions</p>
+        <div class="mb-4 md:mb-6">
+          <div class="flex items-center gap-2 md:gap-4 mb-2 flex-wrap">
+            <h1 class="text-3xl sm:text-4xl font-bold text-yellow-400">User Management</h1>
+            <info-helper topic-slug="user-roles-explained" size="md" />
           </div>
+          <p class="text-gray-400 mb-4">Manage system users and permissions</p>
           <button @click="openCreateModal"
-            class="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition">
+            class="w-full sm:w-auto px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition min-h-[44px]">
             + Create User
           </button>
         </div>
 
         <!-- Filters -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4 mb-3 md:mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">Search</label>
-              <input v-model="searchTerm" type="text" placeholder="Name or email..."
+              <input v-model="searchTerm" @input="fetchUsers" type="text" placeholder="Name or email..."
                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">Role</label>
-              <select v-model="roleFilter"
+              <select v-model="roleFilter" @change="fetchUsers"
                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
                 <option value="">All Roles</option>
                 <option v-for="role in roles" :key="role.value" :value="role.value">{{ role.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">User Type</label>
+              <select v-model="anonymousFilter" @change="fetchUsers"
+                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                <option value="">Standard Users (Default)</option>
+                <option value="true">From Anonymous Applications</option>
+                <option value="">All Users</option>
               </select>
             </div>
             <div class="flex items-end">
@@ -356,8 +437,8 @@ export default {
           {{ error }}
         </div>
 
-        <!-- Users Table -->
-        <div v-if="!loading" class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+        <!-- Users Table (Desktop) -->
+        <div v-if="!loading" class="hidden md:block bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead class="bg-gray-900 border-b border-gray-700">
@@ -373,7 +454,15 @@ export default {
               <tbody class="divide-y divide-gray-700">
                 <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-750">
                   <td class="px-6 py-4">
-                    <div class="font-medium text-gray-100">{{ user.fullName }}</div>
+                    <div class="font-medium text-gray-100 flex items-center gap-2">
+                      {{ user.fullName }}
+                      <span v-if="user.createdFromAnonymousApplication" class="px-2 py-1 bg-purple-900 text-purple-200 rounded text-xs">🔒 From Anon App</span>
+                    </div>
+                    <div v-if="user.linkedApplication" class="text-xs text-blue-400 mt-1">
+                      <router-link :to="'/applications/' + user.linkedApplication._id" class="hover:underline">
+                        View Original Application →
+                      </router-link>
+                    </div>
                   </td>
                   <td class="px-6 py-4 text-gray-300">{{ user.email }}</td>
                   <td class="px-6 py-4">
@@ -412,9 +501,79 @@ export default {
             </table>
           </div>
 
-          <!-- Empty State -->
+          <!-- Empty State (Desktop) -->
           <div v-if="filteredUsers.length === 0" class="text-center py-12">
             <p class="text-gray-400">No users found</p>
+          </div>
+        </div>
+
+        <!-- Users Cards (Mobile) -->
+        <div v-if="!loading" class="md:hidden space-y-2 md:space-y-4">
+          <!-- Empty State (Mobile) -->
+          <div v-if="filteredUsers.length === 0" class="text-center py-12">
+            <p class="text-gray-400">No users found</p>
+          </div>
+
+          <!-- User Cards -->
+          <div v-for="user in filteredUsers" :key="user.id" class="bg-gray-800 border border-gray-700 rounded-lg p-2.5 md:p-4">
+            <!-- User Header: Avatar + Name + Email -->
+            <div class="flex items-center gap-2 md:gap-3 mb-1.5 md:mb-3">
+              <!-- Avatar -->
+              <div v-if="user.profile?.avatarUrl" class="w-12 h-12 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                <img :src="getAvatarUrl(user)" :alt="user.fullName" class="w-full h-full object-cover">
+              </div>
+              <div v-else class="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-sm font-bold flex-shrink-0">
+                {{ (user.firstName || 'U')[0] }}{{ (user.lastName || '')[0] }}
+              </div>
+
+              <!-- Name and Email -->
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-gray-100 flex items-center gap-2">
+                  <span class="truncate">{{ user.fullName }}</span>
+                  <span v-if="user.createdFromAnonymousApplication" class="px-1.5 py-0.5 bg-purple-900 text-purple-200 rounded text-xs flex-shrink-0">🔒</span>
+                </div>
+                <div class="text-sm text-gray-400 truncate">{{ user.email }}</div>
+                <router-link v-if="user.linkedApplication" :to="'/applications/' + user.linkedApplication._id" class="text-xs text-blue-400 hover:underline block">
+                  View Original Application →
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Roles Badges -->
+            <div class="flex flex-wrap gap-1.5 md:gap-2 mb-1.5 md:mb-3">
+              <span v-for="role in (Array.isArray(user.roles) ? user.roles : [user.role])" :key="role"
+                :class="getRoleBadgeClass(role)" class="px-2 py-1 rounded text-xs font-semibold">
+                {{ role }}
+              </span>
+            </div>
+
+            <!-- Status and Last Login -->
+            <div class="flex items-center justify-between mb-2 md:mb-4 text-sm border-t border-gray-700 pt-1.5 md:pt-3">
+              <div>
+                <span class="text-gray-400">Status: </span>
+                <span v-if="user.isActive" class="text-green-400 font-semibold">Active</span>
+                <span v-else class="text-red-400 font-semibold">Inactive</span>
+              </div>
+              <div class="text-gray-400">
+                {{ user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never logged in' }}
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-1.5 md:gap-2 flex-wrap">
+              <button @click="openEditModal(user)"
+                class="flex-1 min-h-[44px] px-3 py-2 bg-blue-900 hover:bg-blue-800 text-blue-200 rounded font-medium transition text-sm">
+                Edit
+              </button>
+              <button @click="openPasswordModal(user)"
+                class="flex-1 min-h-[44px] px-3 py-2 bg-purple-900 hover:bg-purple-800 text-purple-200 rounded font-medium transition text-sm">
+                Password
+              </button>
+              <button @click="openDeleteConfirm(user)"
+                class="flex-1 min-h-[44px] px-3 py-2 bg-red-900 hover:bg-red-800 text-red-200 rounded font-medium transition text-sm">
+                Delete
+              </button>
+            </div>
           </div>
         </div>
 
@@ -479,13 +638,13 @@ export default {
                   <label for="createActive" class="ml-2 text-sm text-gray-300">Active User</label>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700">
                   <button type="button" @click="showCreateModal = false"
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition">
+                    class="px-4 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition min-h-[44px] flex items-center justify-center">
                     Cancel
                   </button>
                   <button type="submit"
-                    class="px-6 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition">
+                    class="px-6 py-2 sm:py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center">
                     Create User
                   </button>
                 </div>
@@ -550,13 +709,13 @@ export default {
                   <label for="editActive" class="ml-2 text-sm text-gray-300">Active User</label>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700">
                   <button type="button" @click="showEditModal = false"
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition">
+                    class="px-4 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition min-h-[44px] flex items-center justify-center">
                     Cancel
                   </button>
                   <button type="submit"
-                    class="px-6 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition">
+                    class="px-6 py-2 sm:py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center">
                     Update User
                   </button>
                 </div>
@@ -604,13 +763,13 @@ export default {
                   <span>✓</span> Password will be securely hashed using bcrypt
                 </p>
 
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700">
                   <button type="button" @click="showPasswordModal = false"
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md font-semibold transition">
+                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center gap-2">
                     Cancel
                   </button>
                   <button type="submit"
-                    class="px-6 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition flex items-center gap-2">
+                    class="px-6 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center gap-2">
                     <span>✓</span> Change Password
                   </button>
                 </div>
@@ -662,17 +821,17 @@ export default {
                 </div>
               </div>
 
-              <div class="border-t border-gray-700 pt-4 flex justify-end gap-3">
+              <div class="border-t border-gray-700 pt-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button @click="showDeleteConfirm = false"
-                  class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md font-semibold transition">
+                  class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center">
                   Cancel
                 </button>
                 <button v-if="deactivateAction === 'deactivate'" @click="deactivateUser"
-                  class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-gray-900 rounded-md font-semibold transition">
+                  class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-gray-900 rounded-md font-semibold transition min-h-[44px] flex items-center justify-center">
                   Deactivate User
                 </button>
                 <button v-if="deactivateAction === 'permanent'" @click="permanentlyDeleteUser"
-                  class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-md font-semibold transition">
+                  class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-md font-semibold transition min-h-[44px] flex items-center justify-center">
                   Permanently Delete
                 </button>
               </div>

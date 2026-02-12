@@ -92,8 +92,8 @@ export default {
     };
   },
   template: `
-    <div class="space-y-3">
-      <label class="block text-sm font-semibold text-gray-300">📎 Attachments</label>
+    <div class="space-y-2">
+      <label class="block text-xs md:text-sm font-semibold text-gray-300">📎 Attachments</label>
 
       <!-- Upload Area -->
       <div
@@ -101,9 +101,9 @@ export default {
         @dragleave="handleDragleave"
         @drop="handleDrop"
         :class="isDragover ? 'border-yellow-500 bg-yellow-900/20' : 'border-gray-700 bg-gray-800/50'"
-        class="border-2 border-dashed rounded-lg p-6 transition text-center cursor-pointer hover:border-yellow-500/50">
-        <div class="flex flex-col items-center gap-2">
-          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        class="border-2 border-dashed rounded-lg p-2 md:p-3 transition text-center cursor-pointer hover:border-yellow-500/50">
+        <div class="flex flex-col items-center gap-1">
+          <svg class="w-5 md:w-6 h-5 md:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
           <div>
@@ -117,37 +117,37 @@ export default {
             <button
               type="button"
               @click="$refs.fileInput?.click()"
-              class="text-yellow-400 hover:text-yellow-300 font-semibold">
+              class="text-yellow-400 hover:text-yellow-300 font-semibold text-xs md:text-sm">
               Click to upload
             </button>
-            <span class="text-gray-400"> or drag and drop</span>
+            <span class="text-gray-400 text-xs"> or drag</span>
           </div>
           <p class="text-xs text-gray-500">
-            Max {{ maxFiles }} files, {{ formatFileSize(maxSize) }} each
+            Max {{ maxFiles }} × {{ formatFileSize(maxSize) }}
           </p>
         </div>
       </div>
 
       <!-- Error Message -->
-      <div v-if="errorMessage" class="p-3 bg-red-900/30 border-2 border-red-600 rounded-lg">
-        <p class="text-sm text-red-400">⚠️ {{ errorMessage }}</p>
+      <div v-if="errorMessage" class="p-1.5 md:p-2 bg-red-900/30 border-2 border-red-600 rounded-lg">
+        <p class="text-xs text-red-400">⚠️ {{ errorMessage }}</p>
       </div>
 
       <!-- File List -->
-      <div v-if="files.length > 0" class="space-y-2">
-        <p class="text-xs text-gray-400">{{ files.length }} file(s) selected</p>
-        <div class="space-y-2">
+      <div v-if="files.length > 0" class="space-y-1.5">
+        <p class="text-xs text-gray-400">{{ files.length }} file(s)</p>
+        <div class="space-y-1">
           <div
             v-for="(file, index) in files"
             :key="index"
-            class="flex items-center justify-between gap-3 p-3 bg-gray-800 border border-gray-700 rounded-lg">
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-              <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            class="flex items-center justify-between gap-1.5 md:gap-2 p-1.5 md:p-2 bg-gray-800 border border-gray-700 rounded-lg">
+            <div class="flex items-center gap-1.5 flex-1 min-w-0">
+              <svg class="w-3 h-3 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                 <path fill-rule="evenodd" d="M3 4a2 2 0 00-2 2v4a1 1 0 001 1h12a1 1 0 001-1V6a2 2 0 00-2-2H3zm11.378 1.555a1 1 0 00-.633-1.066l-4-1a1 1 0 00-1.002.236L7.528 5.43a1 1 0 00-.163 1.263l2 3A1 1 0 0010 9h5a2 2 0 002-2V7a1 1 0 00-1-1h-1.378z" clip-rule="evenodd"/>
               </svg>
               <div class="min-w-0">
-                <p class="text-sm text-gray-300 truncate">{{ file.name }}</p>
+                <p class="text-xs text-gray-300 truncate">{{ file.name }}</p>
                 <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
               </div>
             </div>
@@ -155,7 +155,7 @@ export default {
               type="button"
               @click="removeFile(index)"
               class="text-gray-400 hover:text-red-400 transition flex-shrink-0">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg class="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
               </svg>
             </button>

@@ -124,8 +124,8 @@ export default {
     <div class="min-h-screen bg-gray-900 text-gray-100 py-8 px-4">
       <div class="max-w-2xl mx-auto">
         <!-- Header -->
-        <div class="mb-8">
-          <button @click="goBack" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-4">
+        <div class="mb-4 md:mb-6">
+          <button @click="goBack" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-2 md:mb-4">
             ← Back to Highlights
           </button>
           <h1 class="text-4xl font-bold text-yellow-400">Create New Highlight</h1>
@@ -133,19 +133,19 @@ export default {
         </div>
 
         <!-- Messages -->
-        <div v-if="error" class="bg-red-900 border border-red-700 rounded-lg p-4 mb-6 text-red-200">
+        <div v-if="error" class="bg-red-900 border border-red-700 rounded-lg p-3 md:p-4 mb-4 md:mb-6 text-red-200">
           {{ error }}
         </div>
-        <div v-if="successMessage" class="bg-green-900 border border-green-700 rounded-lg p-4 mb-6 text-green-200">
+        <div v-if="successMessage" class="bg-green-900 border border-green-700 rounded-lg p-3 md:p-4 mb-4 md:mb-6 text-green-200">
           {{ successMessage }}
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleSubmit" class="bg-gray-800 border border-gray-700 rounded-lg p-8 space-y-6">
+        <form @submit.prevent="handleSubmit" class="bg-gray-800 border border-gray-700 rounded-lg p-4 md:p-6 space-y-4 md:space-y-6">
 
           <!-- Basic Information -->
-          <div class="space-y-4">
-            <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-3">Basic Information</h2>
+          <div class="space-y-3 md:space-y-4">
+            <h2 class="text-xl font-bold text-yellow-400 border-b border-gray-700 pb-2 md:pb-3">Basic Information</h2>
 
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">Title *</label>
@@ -158,7 +158,7 @@ export default {
               />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">Type *</label>
                 <select
@@ -205,7 +205,7 @@ export default {
               ></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">Priority</label>
                 <select
@@ -222,7 +222,7 @@ export default {
           </div>
 
           <!-- Person-Specific Fields -->
-          <div v-if="formData.type === 'person'" class="space-y-4 border-t border-gray-700 pt-6">
+          <div v-if="formData.type === 'person'" class="space-y-3 md:space-y-4 border-t border-gray-700 pt-4 md:pt-6">
             <h2 class="text-xl font-bold text-yellow-400">Person Information</h2>
 
             <div>
@@ -235,7 +235,7 @@ export default {
               />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">Rank</label>
                 <input
@@ -265,7 +265,7 @@ export default {
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">Service Start Year</label>
                 <input
@@ -293,10 +293,10 @@ export default {
           </div>
 
           <!-- Tags -->
-          <div class="space-y-4 border-t border-gray-700 pt-6">
+          <div class="space-y-3 md:space-y-4 border-t border-gray-700 pt-4 md:pt-6">
             <h2 class="text-xl font-bold text-yellow-400">Tags</h2>
 
-            <div class="flex gap-2">
+            <div class="flex gap-1 md:gap-2">
               <input
                 v-model="newTag"
                 @keyup.enter="addTag"
@@ -313,11 +313,11 @@ export default {
               </button>
             </div>
 
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-1 md:gap-2">
               <div
                 v-for="tag in formData.tags"
                 :key="tag"
-                class="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                class="bg-yellow-600 text-white px-2 md:px-3 py-1 rounded-full text-sm flex items-center gap-1 md:gap-2"
               >
                 {{ tag }}
                 <button
@@ -332,15 +332,15 @@ export default {
           </div>
 
           <!-- Manual Links -->
-          <div class="space-y-4 border-t border-gray-700 pt-6">
+          <div class="space-y-3 md:space-y-4 border-t border-gray-700 pt-4 md:pt-6">
             <h2 class="text-xl font-bold text-yellow-400">Manual Source Links (Optional)</h2>
             <p class="text-gray-400 text-sm">Add reference links that Grok AI will use when researching this highlight</p>
 
-            <div class="space-y-3">
+            <div class="space-y-2 md:space-y-3">
               <div
                 v-for="(link, index) in formData.manualLinks"
                 :key="index"
-                class="flex gap-2"
+                class="flex gap-1 md:gap-2"
               >
                 <input
                   v-model="link.title"
@@ -364,23 +364,23 @@ export default {
               </div>
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-1 md:gap-2">
               <input
                 v-model="newLinkTitle"
                 type="text"
                 placeholder="New link title"
-                class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500"
+                class="flex-1 px-3 md:px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500"
               />
               <input
                 v-model="newLinkUrl"
                 type="url"
                 placeholder="https://..."
-                class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500"
+                class="flex-1 px-3 md:px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500"
               />
               <button
                 @click="addManualLink"
                 type="button"
-                class="bg-gray-700 hover:bg-gray-600 text-gray-100 font-medium py-2 px-4 rounded transition"
+                class="bg-gray-700 hover:bg-gray-600 text-gray-100 font-medium py-2 px-3 md:px-4 rounded transition"
               >
                 Add Link
               </button>
@@ -388,11 +388,11 @@ export default {
           </div>
 
           <!-- Form Actions -->
-          <div class="flex gap-4 border-t border-gray-700 pt-6">
+          <div class="flex flex-col-reverse sm:flex-row gap-2 md:gap-4 border-t border-gray-700 pt-4 md:pt-6">
             <button
               @click="goBack"
               type="button"
-              class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-100 font-bold py-3 px-6 rounded-lg transition"
+              class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-100 font-bold py-3 px-6 rounded-lg transition min-h-[44px] flex items-center justify-center"
             >
               Cancel
             </button>
@@ -400,7 +400,7 @@ export default {
               @click="handleSubmit"
               :disabled="loading || !formData.title.trim()"
               type="submit"
-              class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
             >
               {{ loading ? 'Creating...' : 'Create Highlight' }}
             </button>

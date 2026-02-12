@@ -30,7 +30,6 @@ export default {
 
       <!-- Footer -->
       <footer v-if="showFooter()" class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400 mt-auto">
-        <p>Need help now? <strong>Veterans Crisis Line:</strong> <a href="tel:988" class="text-yellow-400 hover:underline">Dial 988 (Press 1)</a></p>
         <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
         <p class="m-6">
           This information is provided by veteran volunteers and is not affiliated with or endorsed by the U.S. Department of Veterans Affairs.

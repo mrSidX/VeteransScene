@@ -1,5 +1,10 @@
+import RecordingNotificationBanner from '../components/RecordingNotificationBanner.js?v=20260211';
+
 export default {
   name: 'Dashboard',
+  components: {
+    RecordingNotificationBanner
+  },
   template: `
     <div class="container mx-auto px-4 py-6">
       <!-- Header -->
@@ -30,32 +35,32 @@ export default {
 
       <!-- Dashboard Content -->
       <div v-else>
+        <!-- Recording Notification Banner -->
+        <recording-notification-banner />
+
         <!-- Tools Navigation Bar -->
-        <div class="sticky top-0 z-10 bg-gray-900 py-3 -mx-4 px-4 mb-4 border-b border-gray-800 flex flex-wrap gap-3">
+        <div class="sticky top-0 z-10 bg-gray-900 py-2 -mx-4 px-4 mb-2 md:mb-4 border-b border-gray-800 flex flex-wrap gap-2 md:gap-3">
           <!-- Todo List Button -->
           <button
             v-if="hasAnyRole('admin', 'moderator')"
             @click="toggleDashPanel('todos')"
             :class="[
-              'group flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-700 transform hover:scale-[1.05]',
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03]',
               expandedDashPanels.todos
                 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/25'
                 : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-green-500/50'
             ]"
           >
             <div :class="[
-              'p-2 rounded-lg transition-colors duration-300',
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300',
               expandedDashPanels.todos ? 'bg-green-500/30' : 'bg-gray-700 group-hover:bg-green-900/30'
             ]">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
             </div>
-            <span>To Do List</span>
-            <span v-if="todos.length > 0" class="ml-1 px-2 py-0.5 bg-green-500/30 text-green-300 text-xs rounded-full">{{ todos.length }}</span>
-            <svg :class="['w-4 h-4 transition-transform duration-700', expandedDashPanels.todos ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <span class="text-xs md:text-sm">To Do List</span>
+            <span v-if="todos.length > 0" class="text-xs px-1.5 py-0.5 bg-green-500/30 text-green-300 rounded-full font-medium">{{ todos.length }}</span>
           </button>
 
           <!-- Calendar Button -->
@@ -63,238 +68,133 @@ export default {
             v-if="hasAnyRole('admin', 'moderator')"
             @click="toggleDashPanel('calendar')"
             :class="[
-              'group flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-700 transform hover:scale-[1.05]',
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03]',
               expandedDashPanels.calendar
                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25'
                 : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-blue-500/50'
             ]"
           >
             <div :class="[
-              'p-2 rounded-lg transition-colors duration-300',
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300',
               expandedDashPanels.calendar ? 'bg-blue-500/30' : 'bg-gray-700 group-hover:bg-blue-900/30'
             ]">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
             </div>
-            <span>Calendar</span>
-            <span v-if="calendarEvents.length > 0" class="ml-1 px-2 py-0.5 bg-blue-500/30 text-blue-300 text-xs rounded-full">{{ calendarEvents.length }}</span>
-            <svg :class="['w-4 h-4 transition-transform duration-300', expandedDashPanels.calendar ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <span class="text-xs md:text-sm">Calendar</span>
+            <span v-if="calendarEvents.length > 0" class="text-xs px-1.5 py-0.5 bg-blue-500/30 text-blue-300 rounded-full font-medium">{{ calendarEvents.length }}</span>
+          </button>
+
+          <!-- My Segments Button -->
+          <button
+            v-if="hasAnyRole('admin', 'moderator', 'user')"
+            @click="toggleDashPanel('mySegments')"
+            :class="[
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03]',
+              expandedDashPanels.mySegments
+                ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/25'
+                : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-purple-500/50'
+            ]"
+          >
+            <div :class="[
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300',
+              expandedDashPanels.mySegments ? 'bg-purple-500/30' : 'bg-gray-700 group-hover:bg-purple-900/30'
+            ]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">My Segments</span>
+            <span v-if="(upcomingSegments?.length || 0) + (otherSegments?.length || 0) > 0" class="text-xs px-1.5 py-0.5 bg-purple-500/30 text-purple-300 rounded-full font-medium">{{ (upcomingSegments?.length || 0) + (otherSegments?.length || 0) }}</span>
           </button>
 
           <!-- Notifications Button -->
           <button
-            @click="showNotifications = !showNotifications"
+            @click="toggleDashPanel('notifications')"
             :class="[
-              'group flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-700 transform hover:scale-[1.05]',
-              showNotifications
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03] relative',
+              expandedDashPanels.notifications
                 ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white shadow-lg shadow-yellow-500/25'
                 : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-yellow-500/50'
             ]"
           >
             <div :class="[
-              'p-2 rounded-lg transition-colors duration-300',
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300 relative',
               expandedDashPanels.notifications ? 'bg-yellow-500/30' : 'bg-gray-700 group-hover:bg-yellow-900/30'
             ]">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
               </svg>
+              <span v-if="notifications.unread > 0" class="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-red-500 text-white text-xs rounded-full animate-pulse font-medium">{{ notifications.unread }}</span>
             </div>
-            <span>Notifications</span>
-            <span v-if="notifications.unread > 0" class="ml-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white text-xs rounded-full animate-pulse">{{ notifications.unread }}</span>
-            <svg :class="['w-4 h-4 transition-transform duration-300', expandedDashPanels.notifications ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <span class="text-xs md:text-sm">Notifications</span>
+          </button>
+
+          <!-- Activity Button -->
+          <button
+            @click="toggleDashPanel('activity')"
+            :class="[
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03]',
+              expandedDashPanels.activity
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/25'
+                : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-indigo-500/50'
+            ]"
+          >
+            <div :class="[
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300',
+              expandedDashPanels.activity ? 'bg-indigo-500/30' : 'bg-gray-700 group-hover:bg-indigo-900/30'
+            ]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">Activity</span>
           </button>
 
           <!-- Segments Button -->
           <button
             @click="navigateTo('/segments')"
             :class="[
-              'group flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-700 transform hover:scale-[1.05]',
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03]',
               'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-purple-500/50'
             ]"
           >
             <div :class="[
-              'p-2 rounded-lg transition-colors duration-300',
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300',
               expandedDashPanels.segments ? 'bg-purple-500/30' : 'bg-gray-700 group-hover:bg-purple-900/30'
             ]">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
               </svg>
             </div>
-            <span>Segments</span>
-            <span v-if="segments.length > 0" class="ml-1 px-2 py-0.5 bg-purple-500/30 text-purple-300 text-xs rounded-full">{{ segments.length }}</span>
-            <svg :class="['w-4 h-4 transition-transform duration-300', expandedDashPanels.segments ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-
-          <!-- Activity Button -->
-          <button
-            @click="showActivity = !showActivity"
-            :class="[
-              'group flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-700 transform hover:scale-[1.05]',
-              showActivity
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/25'
-                : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-indigo-500/50'
-            ]"
-          >
-            <div :class="[
-              'p-2 rounded-lg transition-colors duration-300',
-              expandedDashPanels.activity ? 'bg-indigo-500/30' : 'bg-gray-700 group-hover:bg-indigo-900/30'
-            ]">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
-            <span>Activity</span>
-            <svg :class="['w-4 h-4 transition-transform duration-300', expandedDashPanels.activity ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <span class="text-xs md:text-sm">Segments</span>
+            <span v-if="segments.length > 0" class="text-xs px-1.5 py-0.5 bg-purple-500/30 text-purple-300 rounded-full font-medium">{{ segments.length }}</span>
           </button>
         </div>
 
-        <!-- Overview + Quick Actions Container (Side-by-Side) -->
-        <div class="grid gap-4 lg:grid-cols-2 mb-4">
-          <!-- Stats Cards - Compact Overview -->
-          <div v-if="Object.keys(stats).length > 0" class="bg-gray-800 border border-blue-500/30 rounded-lg">
-            <button
-              @click="toggleDashPanel('overview')"
-              class="w-full p-3 flex items-center justify-between text-left hover:bg-gray-750 rounded-t-lg transition-colors duration-500"
-            >
-              <h3 class="text-base font-semibold text-white">Overview</h3>
-              <svg :class="['w-4 h-4 transition-transform duration-700', expandedDashPanels.overview ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div v-show="expandedDashPanels.overview" class="p-3 border-t border-gray-700">
-              <div class="grid gap-3 grid-cols-2 md:grid-cols-3">
-                <div
-                  v-for="(value, key) in stats"
-                  :key="key"
-                  class="bg-gray-750 border border-gray-600 rounded-lg p-2"
-                >
-                  <div class="text-gray-400 text-[10px] mb-1">{{ formatStatName(key) }}</div>
-                  <div class="text-white text-lg font-bold">{{ value }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Actions for Navigation -->
-          <div class="bg-gray-800 border border-yellow-500/30 rounded-lg">
-            <button
-              @click="toggleDashPanel('quickActions')"
-              class="w-full p-3 flex items-center justify-between text-left hover:bg-gray-750 rounded-t-lg transition-colors duration-500"
-            >
-              <h3 class="text-base font-semibold text-white">Quick Actions</h3>
-              <svg :class="['w-4 h-4 transition-transform duration-700', expandedDashPanels.quickActions ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div v-show="expandedDashPanels.quickActions" class="p-3 border-t border-gray-700">
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/applications')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>👤</span>
-              <span>Applicants</span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/segments')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>🎬</span>
-              <span>Segment Planner</span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin')"
-              @click="navigateTo('/users')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>👥</span>
-              <span>Manage Users</span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/flags')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs relative"
-            >
-              <span>🚩</span>
-              <span>Flags</span>
-              <span v-if="stats.openFlags > 0" class="absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-600 text-white text-xs rounded-full font-bold">
-                {{ stats.openFlags }}
-              </span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/highlights')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>⭐</span>
-              <span>Highlights</span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/mail')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>📧</span>
-              <span>Mail</span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/dropbox')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>📁</span>
-              <span>Dropbox</span>
-            </button>
-            <button
-              @click="navigateTo('/notifications')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs"
-            >
-              <span>🔔</span>
-              <span>Notifications</span>
-            </button>
-            <button
-              v-if="hasAnyRole('admin', 'moderator')"
-              @click="navigateTo('/segments/new')"
-              class="flex items-center gap-1 px-2 py-1.5 bg-yellow-600 hover:bg-yellow-500 rounded border border-yellow-500 text-gray-900 font-medium transition-colors text-xs"
-            >
-              <span>+</span>
-              <span>New Segment</span>
-            </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Reorderable Panels Container (flex layout for dynamic ordering) - appears ABOVE Overview -->
+        <div class="flex flex-col gap-4 md:gap-6 mb-4 md:mb-6">
 
         <!-- Call-to-Actions (Urgent Items) -->
-        <div v-if="callToActions.length > 0" class="mb-4">
-          <h2 class="text-base font-semibold text-white mb-2">Action Required</h2>
-          <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div v-if="callToActions.length > 0" class="mb-0" :style="{ order: 0 }">
+          <h2 class="text-sm md:text-base font-semibold text-white mb-2">Action Required</h2>
+          <div class="grid gap-2 md:gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             <div
               v-for="action in callToActions"
               :key="action.type"
               @click="navigateTo(action.link)"
               :class="[
-                'p-2 rounded-lg border-2 cursor-pointer transition-all hover:shadow-lg',
+                'p-1.5 md:p-2 rounded-lg border-2 cursor-pointer transition-all hover:shadow-lg',
                 action.priority === 'urgent' ? 'border-red-500 bg-red-900/20' :
                 action.priority === 'high' ? 'border-orange-500 bg-orange-900/20' :
                 'border-yellow-500 bg-yellow-900/20'
               ]"
             >
               <div class="flex items-start justify-between mb-1">
-                <h3 class="text-white font-medium text-sm">{{ action.title }}</h3>
+                <h3 class="text-white font-medium text-xs md:text-sm">{{ action.title }}</h3>
                 <span :class="[
-                  'px-2 py-0.5 rounded text-xs font-bold',
+                  'px-1.5 py-0.5 rounded text-xs font-bold flex-shrink-0 ml-1',
                   action.priority === 'urgent' ? 'bg-red-600 text-white' :
                   action.priority === 'high' ? 'bg-orange-600 text-white' :
                   'bg-yellow-600 text-gray-900'
@@ -302,9 +202,9 @@ export default {
                   {{ action.priority }}
                 </span>
               </div>
-              <p class="text-gray-300 text-xs mb-2">{{ action.description }}</p>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-white text-base font-bold">{{ action.count }}</span>
+              <p class="text-gray-300 text-xs mb-1.5">{{ action.description }}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-white text-lg font-bold">{{ action.count }}</span>
                 <span class="text-blue-400 text-xs hover:text-blue-300">View →</span>
               </div>
             </div>
@@ -320,135 +220,143 @@ export default {
           leave-from-class="opacity-100 max-h-[2000px] translate-y-0"
           leave-to-class="opacity-0 max-h-0 -translate-y-8"
         >
-        <div v-show="expandedDashPanels.todos && hasAnyRole('admin', 'moderator')" class="mb-4 overflow-hidden">
-          <div class="bg-gray-800 border border-green-500/30 rounded-xl p-4 shadow-lg">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2">
-                <div class="p-2 bg-green-600/20 rounded-lg">
-                  <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div v-show="expandedDashPanels.todos && hasAnyRole('admin', 'moderator')" class="overflow-hidden" :style="{ order: getOrderFor('todos') }">
+          <div class="bg-gray-800 border border-green-500/30 rounded-xl p-3 md:p-4 shadow-lg">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-2 md:mb-2.5">
+              <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                <div class="p-1 bg-green-600/20 rounded flex-shrink-0">
+                  <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 class="text-base font-bold text-white">To Do List</h3>
-                  <p class="text-xs text-gray-400">Manage your tasks and stay organized</p>
+                <div class="min-w-0">
+                  <h3 class="text-xs md:text-sm font-bold text-white">To Do List</h3>
+                  <p class="text-xs text-gray-400 hidden sm:block">{{ todos.length }} tasks</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <select
-                  v-model="todoFilter"
-                  @change="loadTodos"
-                  class="bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="all">All Active</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
+              <select
+                v-model="todoFilter"
+                @change="loadTodos"
+                class="w-full sm:w-auto bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1 h-8 md:h-auto"
+              >
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="all">All Active</option>
+                <option value="completed">Completed</option>
+              </select>
             </div>
 
             <!-- Add Todo Form -->
-            <div class="flex gap-2 mb-3">
+            <div class="flex gap-1 mb-2 md:mb-3">
               <input
                 v-model="newTodoTitle"
                 @keyup.enter="createTodo"
                 type="text"
-                placeholder="Add a new task..."
-                class="flex-1 bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-2 placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
+                placeholder="Add task..."
+                class="flex-1 bg-gray-700 border border-gray-600 text-white text-xs md:text-sm rounded px-2 py-1 md:py-1.5 placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
               />
               <button
                 @click="createTodo"
                 :disabled="!newTodoTitle.trim()"
-                class="px-3 py-2 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium text-sm rounded transition-colors"
+                class="px-2.5 py-1 md:py-1.5 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium text-xs md:text-sm rounded transition-colors flex-shrink-0 h-8 md:h-auto flex items-center justify-center"
               >
                 Add
               </button>
             </div>
 
             <!-- Todo List -->
-            <div class="space-y-2 max-h-[75vh] overflow-y-auto animate-in">
-              <div v-if="todosLoading" class="text-center py-4">
+            <div class="space-y-0.5 md:space-y-1 max-h-[75vh] overflow-y-auto animate-in">
+              <div v-if="todosLoading" class="text-center py-3">
                 <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
               </div>
-              <div v-else-if="todos.length === 0" class="text-gray-400 text-sm text-center py-4">
+              <div v-else-if="todos.length === 0" class="text-gray-400 text-sm text-center py-3">
                 No tasks found
               </div>
               <template v-else v-for="todo in todos" :key="todo._id">
                 <!-- Todo Item -->
                 <div
                   :class="[
-                    'bg-gray-750 rounded border transition-colors',
-                    expandedTodoId === todo._id ? 'border-yellow-600' : 'border-gray-600 hover:border-gray-500'
+                    'bg-gray-750 rounded border transition-colors cursor-pointer group',
+                    expandedTodoId === todo._id ? 'border-yellow-600 bg-gray-700/50' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-750/50'
                   ]"
+                  @click="openEditTodoModal(todo)"
                 >
-                  <div class="flex items-start gap-3 p-3 group">
-                    <button
-                      @click="toggleTodo(todo)"
-                      :class="[
-                        'flex-shrink-0 w-6 h-6 rounded border-2 mt-0.5 flex items-center justify-center transition-colors',
-                        todo.status === 'completed'
-                          ? 'bg-green-600 border-green-600 text-white'
-                          : 'border-gray-500 hover:border-yellow-500'
-                      ]"
-                    >
-                      <span v-if="todo.status === 'completed'" class="text-sm">✓</span>
-                    </button>
+                  <div class="flex items-start gap-1.5 md:gap-2 p-1.5 md:p-2">
+                    <!-- Content -->
                     <div class="flex-1 min-w-0">
-                      <div class="flex items-start justify-between gap-2">
-                        <p :class="['text-sm font-medium', todo.status === 'completed' ? 'text-gray-500 line-through' : 'text-white']">
+                      <!-- Title + Buttons (Single line on mobile) -->
+                      <div class="flex items-start justify-between gap-1 mb-0.5">
+                        <p :class="['text-xs md:text-sm font-medium truncate group-hover:text-yellow-400 transition-colors', todo.status === 'completed' ? 'text-gray-500 line-through' : 'text-white']" :title="todo.title">
                           {{ todo.title }}
                         </p>
-                        <div class="flex items-center gap-2 flex-shrink-0">
+                        <!-- Actions: Compact on mobile, more spaced on desktop -->
+                        <div class="flex items-center gap-0.5 flex-shrink-0">
+                          <!-- Comments Count -->
                           <button
+                            v-if="todo.commentCount > 0"
                             @click.stop="toggleTodoComments(todo)"
                             :class="[
-                              'px-2 py-1 rounded transition-colors flex items-center gap-1 text-sm',
+                              'h-6 rounded transition-colors flex items-center justify-center text-xs flex-shrink-0',
                               expandedTodoId === todo._id
-                                ? 'bg-yellow-600 text-gray-900'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                ? 'bg-yellow-600 text-gray-900 px-1.5'
+                                : 'text-gray-400 hover:text-gray-200'
                             ]"
                             title="View comments"
                           >
-                            <span>💬</span>
-                            <span v-if="todo.commentCount > 0" class="font-semibold">{{ todo.commentCount }}</span>
-                            <span class="text-xs">{{ expandedTodoId === todo._id ? '▲' : '▼' }}</span>
+                            💬<span class="ml-0.5 font-semibold">{{ todo.commentCount }}</span>
                           </button>
-                          <button
-                            @click="openEditTodoModal(todo)"
-                            class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors text-sm flex items-center gap-1"
-                            title="Edit task"
-                          >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                          </button>
-                          <button
-                            @click="deleteTodo(todo)"
-                            class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded transition-colors text-sm"
-                            title="Delete task"
-                          >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                          </button>
+
+                          <!-- Menu Button -->
+                          <div class="relative">
+                            <button
+                              @click.stop="$data.todoMenuOpenId = $data.todoMenuOpenId === todo._id ? null : todo._id"
+                              class="h-6 w-6 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded transition-colors text-xs flex items-center justify-center flex-shrink-0"
+                              title="More options"
+                            >
+                              ⋮
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div v-if="$data.todoMenuOpenId === todo._id" class="absolute right-0 mt-0.5 w-32 bg-gray-700 border border-gray-600 rounded shadow-lg z-10">
+                              <button
+                                @click="openEditTodoModal(todo); $data.todoMenuOpenId = null"
+                                class="w-full text-left px-2.5 py-1.5 text-xs text-gray-300 hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-2"
+                              >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Edit
+                              </button>
+                              <button
+                                @click="deleteTodo(todo); $data.todoMenuOpenId = null"
+                                class="w-full text-left px-2.5 py-1.5 text-xs text-gray-300 hover:bg-red-600 hover:text-white transition-colors flex items-center gap-2 border-t border-gray-600"
+                              >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Delete
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div class="flex items-center gap-2 mt-2">
-                        <span :class="getPriorityBadgeClass(todo.priority)" class="px-2 py-0.5 text-xs rounded font-medium">
+                      <!-- Metadata (Priority + Due Date on one line) -->
+                      <div class="flex flex-wrap items-center gap-1 text-xs" :class="expandedTodoId === todo._id ? 'block' : 'hidden md:flex'">
+                        <span v-if="todo.priority" :class="getPriorityBadgeClass(todo.priority)" class="px-1 py-0.5 rounded text-xs font-medium">
                           {{ todo.priority }}
                         </span>
-                        <span v-if="todo.dueDate" :class="['text-xs', isOverdue(todo) ? 'text-red-400' : 'text-gray-400']">
+                        <span v-if="todo.dueDate" :class="['text-xs', isOverdue(todo) ? 'text-red-400 font-medium' : 'text-gray-400']">
                           📅 {{ formatDueDate(todo.dueDate) }}
                         </span>
-                        <span v-if="todo.assignedTo" class="text-xs text-blue-400">
-                          👤 {{ todo.assignedTo.firstName }} {{ todo.assignedTo.lastName }}
+                        <span v-if="todo.assignedTo" class="text-blue-400 hidden sm:inline text-xs">
+                          👤 {{ todo.assignedTo.firstName }}
                         </span>
                       </div>
-                      <p v-if="todo.description" class="text-xs text-gray-400 mt-2 line-clamp-2">
+                      <!-- Description (Hidden on mobile unless expanded) -->
+                      <p v-if="todo.description && expandedTodoId === todo._id" class="text-xs text-gray-400 mt-1">
                         {{ todo.description }}
                       </p>
-                      <div class="text-xs text-gray-500 mt-2">
+                      <!-- Creator info (Hidden on mobile unless expanded) -->
+                      <div v-if="expandedTodoId === todo._id" class="text-xs text-gray-500 mt-0.5">
                         Created by {{ todo.createdBy?.firstName ? todo.createdBy.firstName + ' ' + (todo.createdBy.lastName || '') : 'Unknown' }} • {{ formatDate(todo.createdAt) }}
                       </div>
                     </div>
@@ -457,33 +365,39 @@ export default {
                   <!-- Inline Expanded Comments Section -->
                   <div v-if="expandedTodoId === todo._id" class="border-t border-gray-600 bg-gray-800 rounded-b">
                     <!-- Comments List -->
-                    <div class="p-3 space-y-2 max-h-[60vh] overflow-y-auto">
-                      <div v-if="todoCommentsLoading" class="flex items-center justify-center py-4">
+                    <div class="p-1.5 space-y-1 max-h-[50vh] overflow-y-auto">
+                      <div v-if="todoCommentsLoading" class="flex items-center justify-center py-2">
                         <div class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                       </div>
-                      <div v-else-if="todoComments.length === 0" class="text-gray-500 text-xs text-center py-3">
-                        No comments yet. Add one below!
+                      <div v-else-if="todoComments.length === 0" class="text-gray-500 text-xs text-center py-2">
+                        No comments yet
                       </div>
                       <div
                         v-else
                         v-for="comment in todoComments"
                         :key="comment._id"
-                        class="bg-gray-750 rounded p-2 border border-gray-600"
+                        class="bg-gray-750 rounded p-1.5 border border-gray-600"
                       >
-                        <div class="flex items-start justify-between gap-2 mb-1">
-                          <div class="flex items-center gap-2">
-                            <div class="w-5 h-5 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-xs font-bold">
+                        <div class="flex items-start justify-between gap-1 mb-0.5">
+                          <div class="flex items-center gap-1 min-w-0">
+                            <!-- Avatar Image or Initials -->
+                            <div v-if="comment.author?.profile?.avatarUrl" class="w-5 h-5 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                              <img :src="comment.author.avatarUrl" :alt="comment.author.firstName" class="w-full h-full object-cover">
+                            </div>
+                            <div v-else class="w-5 h-5 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-xs font-bold flex-shrink-0">
                               {{ getInitials(comment.author) }}
                             </div>
-                            <span class="text-white text-xs font-medium">{{ comment.author?.firstName }}</span>
-                            <span v-if="comment.isEdited" class="text-gray-500 text-xs">(edited)</span>
+                            <div class="min-w-0">
+                              <span class="text-white text-xs font-medium">{{ comment.author?.firstName }}</span>
+                              <span v-if="comment.isEdited" class="text-gray-500 text-xs ml-0.5">(edited)</span>
+                            </div>
                           </div>
-                          <div class="flex items-center gap-1">
+                          <div class="flex items-center gap-0.5 flex-shrink-0 text-xs">
                             <span class="text-gray-500 text-xs">{{ formatDate(comment.createdAt) }}</span>
                             <button
                               v-if="canEditComment(comment)"
                               @click="startEditComment(comment)"
-                              class="text-gray-500 hover:text-blue-400 text-xs px-1"
+                              class="text-gray-500 hover:text-blue-400 text-xs px-0.5"
                               title="Edit"
                             >
                               ✏️
@@ -491,7 +405,7 @@ export default {
                             <button
                               v-if="canDeleteComment(comment)"
                               @click="deleteComment(comment, todo)"
-                              class="text-gray-500 hover:text-red-400 text-xs px-1"
+                              class="text-gray-500 hover:text-red-400 text-xs px-0.5"
                               title="Delete"
                             >
                               🗑️
@@ -503,9 +417,9 @@ export default {
                           <textarea
                             v-model="editCommentContent"
                             rows="2"
-                            class="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1 focus:border-yellow-500 focus:outline-none resize-none"
+                            class="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-1.5 py-1 focus:border-yellow-500 focus:outline-none resize-none"
                           ></textarea>
-                          <div class="flex justify-end gap-2 mt-1">
+                          <div class="flex justify-end gap-1.5 mt-0.5">
                             <button @click="cancelEditComment" class="px-2 py-0.5 text-xs text-gray-400 hover:text-white">
                               Cancel
                             </button>
@@ -524,19 +438,19 @@ export default {
                     </div>
 
                     <!-- Add Comment Form -->
-                    <div class="p-2 border-t border-gray-600">
-                      <div class="flex gap-2">
+                    <div class="p-1.5 border-t border-gray-600">
+                      <div class="flex gap-1">
                         <input
                           v-model="newTodoComment"
                           @keyup.enter="addTodoComment(todo)"
                           type="text"
-                          placeholder="Add a comment..."
-                          class="flex-1 bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1.5 placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
+                          placeholder="Comment..."
+                          class="flex-1 bg-gray-700 border border-gray-600 text-white text-xs rounded px-1.5 py-1 placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
                         />
                         <button
                           @click="addTodoComment(todo)"
                           :disabled="!newTodoComment.trim() || addingComment"
-                          class="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium text-xs rounded transition-colors"
+                          class="px-2 py-1 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium text-xs rounded transition-colors h-8 flex items-center justify-center"
                         >
                           {{ addingComment ? '...' : 'Post' }}
                         </button>
@@ -559,7 +473,7 @@ export default {
           leave-from-class="opacity-100 max-h-[2000px] translate-y-0"
           leave-to-class="opacity-0 max-h-0 -translate-y-8"
         >
-        <div v-show="expandedDashPanels.calendar && hasAnyRole('admin', 'moderator')" class="mb-4 overflow-hidden w-full lg:w-1/2">
+        <div v-show="expandedDashPanels.calendar && hasAnyRole('admin', 'moderator')" class="overflow-hidden w-full lg:w-1/2" :style="{ order: getOrderFor('calendar') }">
           <div class="bg-gray-800 border border-blue-500/30 rounded-xl p-3 shadow-lg">
             <div class="flex items-center justify-between mb-2">
               <h3 class="text-xs font-semibold text-white flex items-center gap-1">
@@ -689,6 +603,332 @@ export default {
           </div>
         </div>
         </transition>
+
+        <!-- Notifications Panel (Collapsible) -->
+        <transition
+          enter-active-class="transition-all duration-1000 ease-out"
+          enter-from-class="opacity-0 max-h-0 -translate-y-8"
+          enter-to-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-active-class="transition-all duration-700 ease-in"
+          leave-from-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-to-class="opacity-0 max-h-0 -translate-y-8"
+        >
+        <div v-show="expandedDashPanels.notifications && notifications.recent && notifications.recent.length > 0" class="overflow-hidden" :style="{ order: getOrderFor('notifications') }">
+          <div class="bg-gray-800 border border-yellow-500/30 rounded-xl p-3 md:p-4 shadow-lg">
+            <button
+              class="w-full flex items-center justify-between text-left"
+            >
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <span>🔔</span>
+                Recent Notifications
+                <span v-if="notifications.unread > 0" class="px-2 py-0.5 bg-red-600 text-white text-xs rounded">
+                  {{ notifications.unread }}
+                </span>
+              </h3>
+              <div class="flex items-center gap-3">
+                <span @click.stop="navigateTo('/notifications')" class="text-blue-400 hover:text-blue-300 text-xs">
+                  View All →
+                </span>
+                <svg :class="['w-4 h-4 transition-transform duration-700 flex-shrink-0', expandedDashPanels.notifications ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </button>
+            <div class="mt-2 space-y-2">
+              <div
+                v-for="notification in notifications.recent.slice(0, 5)"
+                :key="notification._id"
+                @click="handleNotificationClick(notification)"
+                :class="[
+                  'p-2 rounded border cursor-pointer transition-colors text-sm',
+                  !notification.read ? 'bg-blue-900/20 border-blue-700' : 'bg-gray-750 border-gray-600 hover:border-gray-500'
+                ]"
+              >
+                <div class="flex items-start justify-between mb-0.5">
+                  <span class="text-white font-medium text-sm">{{ notification.title }}</span>
+                  <span v-if="!notification.read" class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
+                </div>
+                <p class="text-gray-400 text-xs">{{ notification.message }}</p>
+                <p class="text-gray-500 text-xs mt-0.5">{{ formatDate(notification.createdAt) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </transition>
+
+        <!-- My Segments Panel (Collapsible) -->
+        <transition
+          enter-active-class="transition-all duration-1000 ease-out"
+          enter-from-class="opacity-0 max-h-0 -translate-y-8"
+          enter-to-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-active-class="transition-all duration-700 ease-in"
+          leave-from-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-to-class="opacity-0 max-h-0 -translate-y-8"
+        >
+        <div v-show="expandedDashPanels.mySegments && ((upcomingSegments && upcomingSegments.length > 0) || (otherSegments && otherSegments.length > 0))" class="overflow-hidden" :style="{ order: getOrderFor('mySegments') }">
+          <div class="bg-gray-800 border border-purple-500/30 rounded-xl p-3 md:p-4 shadow-lg">
+            <button class="w-full flex items-center justify-between text-left mb-3">
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <span>🎬</span>My Segments
+                <span class="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">{{ (upcomingSegments?.length || 0) + (otherSegments?.length || 0) }}</span>
+              </h3>
+              <div class="flex items-center gap-3">
+                <span @click.stop="navigateTo('/segments')" class="text-blue-400 hover:text-blue-300 text-xs">
+                  View All →
+                </span>
+                <svg :class="['w-4 h-4 transition-transform duration-700 flex-shrink-0', expandedDashPanels.mySegments ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </button>
+            <div class="space-y-2">
+              <!-- Upcoming Segments (at top) -->
+              <div v-if="upcomingSegments && upcomingSegments.length > 0">
+                <div class="text-xs text-purple-300 font-semibold mb-2 flex items-center gap-2">
+                  <span>⏰</span> Upcoming
+                </div>
+                <div
+                  v-for="segment in upcomingSegments.slice(0, 5)"
+                  :key="segment._id + '-upcoming'"
+                  @click="navigateTo('/segments/' + segment._id)"
+                  class="p-2 bg-purple-900/20 rounded border-l-4 border-purple-500 hover:bg-purple-900/30 cursor-pointer transition-colors mb-2"
+                >
+                  <div class="flex items-start justify-between mb-1">
+                    <span class="text-white font-medium text-sm">{{ segment.title }}</span>
+                    <span :class="getStatusBadgeClass(segment.status)" class="px-2 py-0.5 text-xs rounded">
+                      {{ segment.status }}
+                    </span>
+                  </div>
+                  <p class="text-purple-300 text-xs font-medium mb-2">
+                    📍 {{ formatScheduledDate(segment.scheduledDate) }}
+                  </p>
+                  <!-- VDO.ninja Join Section -->
+                  <div v-if="segment.vdoNinja?.sessionCreated && segment.vdoNinja?.enabled" class="flex items-center justify-between gap-2 bg-green-900/30 rounded p-2 border border-green-700/50">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      <span class="text-green-300 text-xs font-semibold">Video Session Ready</span>
+                    </div>
+                    <button
+                      v-if="getUserVdoJoinUrl(segment)"
+                      @click.stop="openVdoJoinUrl(segment)"
+                      class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs rounded font-semibold transition"
+                    >
+                      Join
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Other Segments (below upcoming) -->
+              <div v-if="otherSegments && otherSegments.length > 0">
+                <div v-if="upcomingSegments && upcomingSegments.length > 0" class="border-t border-gray-700 my-2 pt-2">
+                  <div class="text-xs text-gray-400 font-semibold mb-2 flex items-center gap-2">
+                    <span>📋</span> Other Segments
+                  </div>
+                </div>
+                <div
+                  v-for="segment in otherSegments.slice(0, 5)"
+                  :key="segment._id + '-other'"
+                  @click="navigateTo('/segments/' + segment._id)"
+                  class="p-2 bg-gray-750 rounded border border-gray-600 hover:border-gray-500 cursor-pointer transition-colors"
+                >
+                  <div class="flex items-start justify-between mb-1">
+                    <span class="text-white font-medium text-sm">{{ segment.title }}</span>
+                    <span :class="getStatusBadgeClass(segment.status)" class="px-2 py-0.5 text-xs rounded">
+                      {{ segment.status }}
+                    </span>
+                  </div>
+                  <p class="text-gray-400 text-xs mb-2">
+                    {{ segment.scheduledDate ? formatDate(segment.scheduledDate) : 'Not scheduled' }}
+                  </p>
+                  <!-- VDO.ninja Join Section -->
+                  <div v-if="segment.vdoNinja?.sessionCreated && segment.vdoNinja?.enabled" class="flex items-center justify-between gap-2 bg-green-900/30 rounded p-2 border border-green-700/50">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      <span class="text-green-300 text-xs font-semibold">Video Session Ready</span>
+                    </div>
+                    <button
+                      v-if="getUserVdoJoinUrl(segment)"
+                      @click.stop="openVdoJoinUrl(segment)"
+                      class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs rounded font-semibold transition"
+                    >
+                      Join
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </transition>
+
+        <!-- Activity Panel (Collapsible) -->
+        <transition
+          enter-active-class="transition-all duration-1000 ease-out"
+          enter-from-class="opacity-0 max-h-0 -translate-y-8"
+          enter-to-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-active-class="transition-all duration-700 ease-in"
+          leave-from-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-to-class="opacity-0 max-h-0 -translate-y-8"
+        >
+        <div v-show="expandedDashPanels.activity && recentActivity && recentActivity.length > 0" class="overflow-hidden" :style="{ order: getOrderFor('activity') }">
+          <div class="bg-gray-800 border border-indigo-500/30 rounded-xl p-3 md:p-4 shadow-lg">
+            <button class="w-full flex items-center justify-between text-left mb-2">
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <span>📋</span>
+                Recent Activity
+              </h3>
+              <svg :class="['w-4 h-4 transition-transform duration-700 flex-shrink-0', expandedDashPanels.activity ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="space-y-2">
+              <div
+                v-for="activity in recentActivity.slice(0, 5)"
+                :key="activity._id"
+                class="flex items-start gap-2"
+              >
+                <div class="flex-shrink-0 w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5"></div>
+                <div class="flex-1">
+                  <p class="text-white text-sm">{{ activity.description }}</p>
+                  <p class="text-gray-500 text-xs">{{ formatDate(activity.createdAt) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </transition>
+
+        </div>
+        <!-- End Reorderable Panels Container -->
+
+        <!-- Overview + Quick Actions Container (Side-by-Side) - appears BELOW reorderable panels -->
+        <div class="grid gap-2 md:gap-3 lg:grid-cols-2 mb-2 md:mb-4">
+          <!-- Stats Cards - Compact Overview -->
+          <div v-if="Object.keys(stats).length > 0" class="bg-gray-800 border border-blue-500/30 rounded-lg">
+            <button
+              @click="toggleDashPanel('overview')"
+              class="w-full p-2 md:p-2.5 flex items-center justify-between text-left hover:bg-gray-750 rounded-t-lg transition-colors duration-500"
+            >
+              <h3 class="text-sm md:text-base font-semibold text-white">Overview</h3>
+              <svg :class="['w-4 h-4 transition-transform duration-700', expandedDashPanels.overview ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div v-show="expandedDashPanels.overview" class="p-2 md:p-2.5 border-t border-gray-700">
+              <div class="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div
+                  v-for="(value, key) in stats"
+                  :key="key"
+                  class="bg-gray-750 border border-gray-600 rounded-lg p-1.5 md:p-2"
+                >
+                  <div class="text-gray-400 text-xs mb-0.5">{{ formatStatName(key) }}</div>
+                  <div class="text-white text-lg font-bold">{{ value }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions for Navigation -->
+          <div class="bg-gray-800 border border-yellow-500/30 rounded-lg">
+            <button
+              @click="toggleDashPanel('quickActions')"
+              class="w-full p-2 md:p-2.5 flex items-center justify-between text-left hover:bg-gray-750 rounded-t-lg transition-colors duration-500"
+            >
+              <h3 class="text-sm md:text-base font-semibold text-white">Quick Actions</h3>
+              <svg :class="['w-4 h-4 transition-transform duration-700', expandedDashPanels.quickActions ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div v-show="expandedDashPanels.quickActions" class="p-2 md:p-2.5 border-t border-gray-700">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-2">
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/applications')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Guest Applicants"
+            >
+              <span class="text-lg">👤</span>
+              <span class="text-xs text-center">Applicants</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/segments')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Segment Planner"
+            >
+              <span class="text-lg">🎬</span>
+              <span class="text-xs text-center">Segments</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin')"
+              @click="navigateTo('/users')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Manage Users"
+            >
+              <span class="text-lg">👥</span>
+              <span class="text-xs text-center">Users</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/flags')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs relative min-h-[56px] md:min-h-[44px]"
+              title="Moderation Flags"
+            >
+              <span class="text-lg">🚩</span>
+              <span class="text-xs text-center">Flags</span>
+              <span v-if="stats.openFlags > 0" class="absolute -top-1 -right-1 px-1 py-0.5 bg-red-600 text-white text-xs rounded-full font-bold">
+                {{ stats.openFlags }}
+              </span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/highlights')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Highlights"
+            >
+              <span class="text-lg">⭐</span>
+              <span class="text-xs text-center">Highlights</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/mail')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Email"
+            >
+              <span class="text-lg">📧</span>
+              <span class="text-xs text-center">Mail</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/dropbox')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Dropbox"
+            >
+              <span class="text-lg">📁</span>
+              <span class="text-xs text-center">Dropbox</span>
+            </button>
+            <button
+              @click="navigateTo('/notifications')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-gray-750 hover:bg-gray-700 rounded border border-gray-600 hover:border-yellow-500 text-white transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Notifications"
+            >
+              <span class="text-lg">🔔</span>
+              <span class="text-xs text-center">Notifications</span>
+            </button>
+            <button
+              v-if="hasAnyRole('admin', 'moderator')"
+              @click="navigateTo('/segments/new')"
+              class="flex flex-col items-center justify-center gap-1 px-1 py-2 bg-yellow-600 hover:bg-yellow-500 rounded border border-yellow-500 text-gray-900 font-medium transition-colors text-xs min-h-[56px] md:min-h-[44px]"
+              title="Create New Segment"
+            >
+              <span class="text-lg">➕</span>
+              <span class="text-xs text-center">New</span>
+            </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Event Modal -->
         <div v-if="showEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeEventModal">
@@ -828,46 +1068,6 @@ export default {
             </div>
           </div>
 
-          <!-- Recent Notifications - Collapsible -->
-          <div v-if="notifications.recent && notifications.recent.length > 0" class="bg-gray-800 border border-indigo-500/30 rounded-lg">
-            <button
-              @click="showNotifications = !showNotifications"
-              class="w-full p-3 flex items-center justify-between text-left hover:bg-gray-750 rounded-lg transition-colors duration-500"
-            >
-              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
-                <span>🔔</span>
-                Recent Notifications
-                <span v-if="notifications.unread > 0" class="px-2 py-0.5 bg-red-600 text-white text-xs rounded">
-                  {{ notifications.unread }}
-                </span>
-              </h3>
-              <div class="flex items-center gap-3">
-                <span @click.stop="navigateTo('/notifications')" class="text-blue-400 hover:text-blue-300 text-xs">
-                  View All →
-                </span>
-                <span class="text-gray-400 transition-transform duration-700" :class="showNotifications ? 'rotate-180' : ''">▼</span>
-              </div>
-            </button>
-            <div v-show="showNotifications" class="px-3 pb-3 space-y-2">
-              <div
-                v-for="notification in notifications.recent.slice(0, 5)"
-                :key="notification._id"
-                @click="handleNotificationClick(notification)"
-                :class="[
-                  'p-2 rounded border cursor-pointer transition-colors text-sm',
-                  !notification.read ? 'bg-blue-900/20 border-blue-700' : 'bg-gray-750 border-gray-600 hover:border-gray-500'
-                ]"
-              >
-                <div class="flex items-start justify-between mb-0.5">
-                  <span class="text-white font-medium text-sm">{{ notification.title }}</span>
-                  <span v-if="!notification.read" class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
-                </div>
-                <p class="text-gray-400 text-xs">{{ notification.message }}</p>
-                <p class="text-gray-500 text-xs mt-0.5">{{ formatDate(notification.createdAt) }}</p>
-              </div>
-            </div>
-          </div>
-
           <!-- User: My Applications -->
           <div v-if="hasAnyRole('user') && applications && applications.length > 0" class="bg-gray-800 border border-green-500/30 rounded-lg p-3">
             <div class="flex items-center justify-between mb-2">
@@ -894,194 +1094,107 @@ export default {
             </div>
           </div>
 
-          <!-- My Segments (Combined: Upcoming + All) -->
-          <div v-if="(upcomingSegments && upcomingSegments.length > 0) || (otherSegments && otherSegments.length > 0)" class="bg-gray-800 border border-purple-500/30 rounded-lg p-3">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
-                <span>📅</span> My Segments
-                <span class="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">{{ (upcomingSegments?.length || 0) + (otherSegments?.length || 0) }}</span>
-              </h3>
-              <button @click="navigateTo('/segments')" class="text-blue-400 hover:text-blue-300 text-xs">
-                View All →
-              </button>
-            </div>
-            <div class="space-y-2">
-              <!-- Upcoming Segments (at top) -->
-              <div v-if="upcomingSegments && upcomingSegments.length > 0">
-                <div class="text-xs text-purple-300 font-semibold mb-2 flex items-center gap-2">
-                  <span>⏰</span> Upcoming
-                </div>
-                <div
-                  v-for="segment in upcomingSegments.slice(0, 5)"
-                  :key="segment._id + '-upcoming'"
-                  @click="navigateTo('/segments/' + segment._id)"
-                  class="p-2 bg-purple-900/20 rounded border-l-4 border-purple-500 hover:bg-purple-900/30 cursor-pointer transition-colors mb-2"
-                >
-                  <div class="flex items-start justify-between mb-1">
-                    <span class="text-white font-medium text-sm">{{ segment.title }}</span>
-                    <span :class="getStatusBadgeClass(segment.status)" class="px-2 py-0.5 text-xs rounded">
-                      {{ segment.status }}
-                    </span>
-                  </div>
-                  <p class="text-purple-300 text-xs font-medium mb-2">
-                    📍 {{ formatScheduledDate(segment.scheduledDate) }}
-                  </p>
-                  <!-- VDO.ninja Join Section -->
-                  <div v-if="segment.vdoNinja?.sessionCreated && segment.vdoNinja?.enabled" class="flex items-center justify-between gap-2 bg-green-900/30 rounded p-2 border border-green-700/50">
-                    <div class="flex items-center gap-2">
-                      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      <span class="text-green-300 text-xs font-semibold">Video Session Ready</span>
-                    </div>
-                    <button
-                      v-if="getUserVdoJoinUrl(segment)"
-                      @click.stop="openVdoJoinUrl(segment)"
-                      class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs rounded font-semibold transition"
-                    >
-                      Join
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Other Segments (below upcoming) -->
-              <div v-if="otherSegments && otherSegments.length > 0">
-                <div v-if="upcomingSegments && upcomingSegments.length > 0" class="border-t border-gray-700 my-2 pt-2">
-                  <div class="text-xs text-gray-400 font-semibold mb-2 flex items-center gap-2">
-                    <span>📋</span> Other Segments
-                  </div>
-                </div>
-                <div
-                  v-for="segment in otherSegments.slice(0, 5)"
-                  :key="segment._id + '-other'"
-                  @click="navigateTo('/segments/' + segment._id)"
-                  class="p-2 bg-gray-750 rounded border border-gray-600 hover:border-gray-500 cursor-pointer transition-colors"
-                >
-                  <div class="flex items-start justify-between mb-1">
-                    <span class="text-white font-medium text-sm">{{ segment.title }}</span>
-                    <span :class="getStatusBadgeClass(segment.status)" class="px-2 py-0.5 text-xs rounded">
-                      {{ segment.status }}
-                    </span>
-                  </div>
-                  <p class="text-gray-400 text-xs mb-2">
-                    {{ segment.scheduledDate ? formatDate(segment.scheduledDate) : 'Not scheduled' }}
-                  </p>
-                  <!-- VDO.ninja Join Section -->
-                  <div v-if="segment.vdoNinja?.sessionCreated && segment.vdoNinja?.enabled" class="flex items-center justify-between gap-2 bg-green-900/30 rounded p-2 border border-green-700/50">
-                    <div class="flex items-center gap-2">
-                      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      <span class="text-green-300 text-xs font-semibold">Video Session Ready</span>
-                    </div>
-                    <button
-                      v-if="getUserVdoJoinUrl(segment)"
-                      @click.stop="openVdoJoinUrl(segment)"
-                      class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs rounded font-semibold transition"
-                    >
-                      Join
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Activity - Collapsible -->
-          <div v-if="recentActivity && recentActivity.length > 0" class="bg-gray-800 border border-slate-500/30 rounded-lg">
-            <button
-              @click="showActivity = !showActivity"
-              class="w-full p-3 flex items-center justify-between text-left hover:bg-gray-750 rounded-lg transition-colors duration-500"
-            >
-              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
-                <span>📋</span>
-                Recent Activity
-              </h3>
-              <span class="text-gray-400 transition-transform duration-700" :class="showActivity ? 'rotate-180' : ''">▼</span>
-            </button>
-            <div v-show="showActivity" class="px-3 pb-3 space-y-2">
-              <div
-                v-for="activity in recentActivity.slice(0, 5)"
-                :key="activity._id"
-                class="flex items-start gap-2"
-              >
-                <div class="flex-shrink-0 w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5"></div>
-                <div class="flex-1">
-                  <p class="text-white text-sm">{{ activity.description }}</p>
-                  <p class="text-gray-500 text-xs">{{ formatDate(activity.createdAt) }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         <!-- Edit Todo Modal -->
-        <div v-if="showEditTodoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div class="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full">
-            <div class="p-6">
-              <h2 class="text-xl font-bold text-white mb-2">Edit Task</h2>
-              <p v-if="editingTodo && editingTodo.createdBy" class="text-xs text-gray-400 mb-4">
+        <div v-if="showEditTodoModal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+          <div class="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="sticky top-0 bg-gray-800 border-b border-gray-700 p-3 md:p-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg md:text-xl font-bold text-white">Edit Task</h2>
+                <button
+                  @click="showEditTodoModal = false"
+                  class="text-gray-400 hover:text-white transition"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <p v-if="editingTodo && editingTodo.createdBy" class="text-xs text-gray-400 mt-1">
                 Created by {{ editingTodo.createdBy.firstName }} {{ editingTodo.createdBy.lastName }} on {{ formatDate(editingTodo.createdAt) }}
               </p>
-              <form @submit.prevent="updateTodo" class="space-y-4">
+            </div>
+
+            <!-- Form Content -->
+            <form @submit.prevent="updateTodo" class="p-3 md:p-4 space-y-3 md:space-y-4">
+              <!-- Status -->
+              <div>
+                <label class="block text-xs md:text-sm font-medium text-gray-300 mb-2">Status *</label>
+                <select
+                  v-model="editTodoForm.status"
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:border-yellow-500 focus:outline-none"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <!-- Title -->
+              <div>
+                <label class="block text-xs md:text-sm font-medium text-gray-300 mb-2">Task Title *</label>
+                <input
+                  v-model="editTodoForm.title"
+                  type="text"
+                  required
+                  placeholder="Enter task title..."
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
+                />
+              </div>
+
+              <!-- Description -->
+              <div>
+                <label class="block text-xs md:text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea
+                  v-model="editTodoForm.description"
+                  rows="3"
+                  placeholder="Add task description..."
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm placeholder-gray-400 focus:border-yellow-500 focus:outline-none resize-none"
+                ></textarea>
+              </div>
+
+              <!-- Priority & Due Date -->
+              <div class="grid grid-cols-2 gap-2 md:gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-1">Task Title *</label>
+                  <label class="block text-xs md:text-sm font-medium text-gray-300 mb-2">Priority</label>
+                  <select
+                    v-model="editTodoForm.priority"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:border-yellow-500 focus:outline-none"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs md:text-sm font-medium text-gray-300 mb-2">Due Date</label>
                   <input
-                    v-model="editTodoForm.title"
-                    type="text"
-                    required
-                    placeholder="Enter task title..."
-                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
+                    v-model="editTodoForm.dueDate"
+                    type="date"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:border-yellow-500 focus:outline-none"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                  <textarea
-                    v-model="editTodoForm.description"
-                    rows="3"
-                    placeholder="Add task description..."
-                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-yellow-500 focus:outline-none resize-none"
-                  ></textarea>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Priority</label>
-                    <select
-                      v-model="editTodoForm.priority"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-yellow-500 focus:outline-none"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Due Date</label>
-                    <input
-                      v-model="editTodoForm.dueDate"
-                      type="date"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-yellow-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
-                  <button
-                    type="button"
-                    @click="showEditTodoModal = false"
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    class="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-gray-900 font-semibold rounded-md transition"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
+              <!-- Form Actions -->
+              <div class="flex flex-col-reverse sm:flex-row gap-2 md:gap-3 pt-2 md:pt-4 border-t border-gray-700">
+                <button
+                  type="button"
+                  @click="showEditTodoModal = false"
+                  class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition text-sm min-h-[40px] flex items-center justify-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-yellow-600 hover:bg-yellow-500 text-gray-900 font-semibold rounded-md transition text-sm min-h-[40px] flex items-center justify-center"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 
@@ -1097,8 +1210,6 @@ export default {
       callToActions: [],
       notifications: { unread: 0, recent: [] },
       urgentFlags: [],
-      showNotifications: false,
-      showActivity: false,
       applications: [],
       segments: [],
       recentActivity: [],
@@ -1161,11 +1272,16 @@ export default {
         todos: false,
         calendar: false,
         notifications: false,
-        segments: false,
         activity: false,
+        mySegments: false,
+        segments: false,
         overview: true,
         quickActions: true
-      }
+      },
+
+      // Panel ordering - most recently toggled appears first
+      // Default order (for collapsed/new sessions)
+      panelOrder: ['todos', 'calendar', 'notifications', 'activity', 'mySegments']
     };
   },
 
@@ -1254,6 +1370,11 @@ export default {
         const scheduledDate = new Date(s.scheduledDate);
         return scheduledDate < now;
       }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+
+    // Get panels in order, filtering for expanded ones
+    orderedPanels() {
+      return this.panelOrder.filter(panelName => this.expandedDashPanels[panelName]);
     }
   },
 
@@ -1284,6 +1405,24 @@ export default {
 
     toggleDashPanel(panelName) {
       this.expandedDashPanels[panelName] = !this.expandedDashPanels[panelName];
+
+      // If opening (expanding) a panel, move it to the top of the order
+      if (this.expandedDashPanels[panelName]) {
+        // Remove panel from current position if it exists
+        const index = this.panelOrder.indexOf(panelName);
+        if (index > -1) {
+          this.panelOrder.splice(index, 1);
+        }
+        // Add to front
+        this.panelOrder.unshift(panelName);
+      }
+    },
+
+    // Get CSS order value for a panel (for flexbox reordering)
+    // Lower numbers appear first
+    getOrderFor(panelName) {
+      const index = this.panelOrder.indexOf(panelName);
+      return index >= 0 ? index : 999; // Default to 999 if not in order list
     },
 
     hasAnyRole(...roles) {
@@ -1474,6 +1613,7 @@ export default {
       this.editTodoForm = {
         title: todo.title,
         description: todo.description || '',
+        status: todo.status || 'pending',
         priority: todo.priority || 'medium',
         dueDate: todo.dueDate ? new Date(todo.dueDate).toISOString().split('T')[0] : ''
       };
@@ -1504,6 +1644,7 @@ export default {
         ...this.editingTodo,
         title: this.editTodoForm.title,
         description: this.editTodoForm.description,
+        status: this.editTodoForm.status,
         priority: this.editTodoForm.priority,
         dueDate: dueDateISO
       };
@@ -1514,6 +1655,7 @@ export default {
         const response = await window.api.updateTodo(todoId, {
           title: this.editTodoForm.title,
           description: this.editTodoForm.description,
+          status: this.editTodoForm.status,
           priority: this.editTodoForm.priority,
           dueDate: dueDateISO
         });
@@ -1734,11 +1876,20 @@ export default {
       if (!segment.vdoNinja?.participants) return null;
 
       const userId = this.user._id;
+      const linkedApplicationId = this.user.linkedApplication;
 
-      // Find participant that matches current user
+      // Find participant that matches current user (regular or anonymous)
       const participant = segment.vdoNinja.participants.find(p => {
-        if (p.user && p.user._id === userId) return true;
-        if (typeof p.user === 'string' && p.user === userId) return true;
+        // Check if regular user
+        if (p.user) {
+          if (p.user._id === userId) return true;
+          if (typeof p.user === 'string' && p.user === userId) return true;
+        }
+        // Check if anonymous applicant
+        if (p.applicant && linkedApplicationId) {
+          if (p.applicant._id === linkedApplicationId) return true;
+          if (typeof p.applicant === 'string' && p.applicant === linkedApplicationId) return true;
+        }
         return false;
       });
 

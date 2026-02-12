@@ -10,7 +10,6 @@
 <body class="bg-gray-900 text-gray-100">
     <div id="app"></div>
 
-    <!-- Import Vue 3 from CDN -->
     <script type="importmap">
     {
       "imports": {
@@ -19,46 +18,35 @@
     }
     </script>
 
-    <!-- Application Form -->
     <script type="module">
     import { ref, computed, createApp } from 'vue';
 
     const ApplyApp = {
       setup() {
+        const showMore = ref(false);
+        const loading = ref(false);
+        const error = ref('');
+        const success = ref(false);
+        const anonymousPasscode = ref('');
+        const anonymousHandle = ref('');
+
         const formData = ref({
-          preferAnonymous: false,
-          firstName: '',
-          lastName: '',
+          // REQUIRED
           email: '',
           phone: '',
           preferredContact: '',
+
+          // OPTIONAL
+          firstName: '',
+          lastName: '',
           state: '',
           branch: '',
-          yearsOfService: {
-            start: null,
-            end: null
-          },
+          yearsOfService: { start: '', end: '' },
           rank: '',
-          wars: [],
-          tours: 0,
-          deploymentLocations: [],
-          applicationType: 'podcast-guest',
           story: '',
-          additionalInfo: ''
-        });
-
-        const warInput = ref('');
-        const deploymentInput = ref('');
-        const loading = ref(false);
-        const success = ref(false);
-        const successData = ref(null);
-        const error = ref('');
-
-        // Check if at least one contact method is provided
-        const hasContactMethod = computed(() => {
-          return formData.value.email.trim() !== '' ||
-                 formData.value.phone.trim() !== '' ||
-                 formData.value.preferredContact.trim() !== '';
+          applicationType: 'podcast-guest',
+          preferAnonymous: false,
+          alias: ''
         });
 
         const branches = [
@@ -74,460 +62,465 @@
           'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
         ];
 
-        const addWar = () => {
-          if (warInput.value.trim()) {
-            formData.value.wars.push(warInput.value.trim());
-            warInput.value = '';
-          }
-        };
-
-        const removeWar = (index) => {
-          formData.value.wars.splice(index, 1);
-        };
-
-        const addDeployment = () => {
-          if (deploymentInput.value.trim()) {
-            formData.value.deploymentLocations.push(deploymentInput.value.trim());
-            deploymentInput.value = '';
-          }
-        };
-
-        const removeDeployment = (index) => {
-          formData.value.deploymentLocations.splice(index, 1);
-        };
+        const hasContactMethod = computed(() => {
+          return (formData.value.email.trim() ||
+                  formData.value.phone.trim() ||
+                  formData.value.preferredContact.trim());
+        });
 
         const getApiUrl = () => {
           const hostname = window.location.hostname;
           const protocol = window.location.protocol;
-
-          // Development: localhost, 127.0.0.1, or file protocol
-          if (hostname === 'localhost' ||
-              hostname === '127.0.0.1' ||
-              hostname === '' ||
-              protocol === 'file:') {
+          if (hostname === 'localhost' || hostname === '127.0.0.1' || protocol === 'file:') {
             return 'http://localhost:5000/api';
           }
-
-          // Production: use relative path (proxied through web server)
-          // This avoids hairpin NAT issues on Windows networks
           return '/api';
-        };
-
-        const submitWithFallback = async (endpoint, submissionData) => {
-          const primaryUrl = getApiUrl();
-
-          // Try primary URL first (with timeout)
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-          try {
-            const response = await fetch(`${primaryUrl}${endpoint}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(submissionData),
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            return { response, url: primaryUrl };
-          } catch (error) {
-            clearTimeout(timeoutId);
-            throw error;
-          }
         };
 
         const handleSubmit = async () => {
           error.value = '';
 
-          // Validate branch selection
-          if (!formData.value.branch || formData.value.branch.trim() === '') {
-            error.value = 'Please select a military branch.';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-
-          // Validate service start year
-          if (!formData.value.yearsOfService.start || formData.value.yearsOfService.start === '') {
-            error.value = 'Please enter your service start year.';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-
-          // Validate story
-          if (!formData.value.story || formData.value.story.trim() === '') {
-            error.value = 'Please tell us your story.';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-
-          // Validate contact method
-          if (!hasContactMethod.value) {
-            error.value = 'Please provide at least one way to contact you (email, phone, or describe your preferred contact method).';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+          // If NOT anonymous, require at least one contact method
+          // If anonymous, they can submit with no contact info (they want privacy)
+          if (!formData.value.preferAnonymous && !hasContactMethod.value) {
+            error.value = '📧 Please provide at least one way to contact you: email, phone, or other method.';
             return;
           }
 
           loading.value = true;
 
           try {
-            console.log('Starting application submission...');
-
-            // Prepare submission data with proper types
             const submissionData = {
               ...formData.value,
-              yearsOfService: {
-                start: parseInt(formData.value.yearsOfService.start),
-                ...(formData.value.yearsOfService.end ? { end: parseInt(formData.value.yearsOfService.end) } : {})
-              },
-              tours: parseInt(formData.value.tours) || 0
+              yearsOfService: formData.value.yearsOfService.start ?
+                { start: parseInt(formData.value.yearsOfService.start), ...(formData.value.yearsOfService.end ? { end: parseInt(formData.value.yearsOfService.end) } : {}) }
+                : {}
             };
 
-            console.log('Submission data:', submissionData);
+            console.log('📤 Submitting form data:', submissionData);
 
-            // Use fallback mechanism for robustness
-            const { response, url } = await submitWithFallback('/applications/submit', submissionData);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-            console.log('Submitted to:', url);
+            const response = await fetch(getApiUrl() + '/applications/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(submissionData),
+              signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
             const data = await response.json();
-            console.log('Response:', data);
+
+            console.log('📥 Server response:', response.status, data);
 
             if (!response.ok) {
-              // Show detailed validation errors
-              if (data.errors && Array.isArray(data.errors)) {
-                const errorMessages = data.errors.map(e => e.message).join('\n- ');
-                throw new Error(`Validation Error:\n- ${errorMessages}`);
-              }
-              throw new Error(data.message || 'Failed to submit application. Please try again.');
+              const errorMsg = data.errors
+                ? data.errors.map(e => `${e.field}: ${e.message}`).join('; ')
+                : data.message || 'Failed to submit application';
+              throw new Error(errorMsg);
             }
 
-            if (data.success) {
-              // Redirect to thank you page
-              window.location.href = '/application-submitted.html';
+            // Capture anonymous credentials if returned
+            if (data.data?.isAnonymous && data.data?.loginPasscode) {
+              anonymousPasscode.value = data.data.loginPasscode;
+              anonymousHandle.value = data.data.anonymousHandle;
+            }
+
+            success.value = true;
+
+            // Only redirect if not anonymous (don't auto-dismiss for anonymous users)
+            if (!data.data?.isAnonymous) {
+              setTimeout(() => {
+                window.location.href = '/application-submitted.html';
+              }, 1500);
             }
           } catch (err) {
-            console.error('Submission error:', err);
-            error.value = err.message || 'Failed to submit application. Please try again. If the problem persists, please contact us directly.';
+            console.error('❌ Error:', err);
+            error.value = err.message || 'Failed to submit. Please try again.';
           } finally {
             loading.value = false;
           }
         };
 
+        const copyCredentials = () => {
+          const credentials = `Handle: ${anonymousHandle.value}\nPasscode: ${anonymousPasscode.value}`;
+          navigator.clipboard.writeText(credentials).then(() => {
+            alert('✓ Credentials copied to clipboard!');
+          }).catch(() => {
+            console.error('Failed to copy');
+          });
+        };
+
         return {
           formData,
-          warInput,
-          deploymentInput,
+          showMore,
           loading,
-          success,
           error,
+          success,
+          hasContactMethod,
           branches,
           states,
-          hasContactMethod,
-          addWar,
-          removeWar,
-          addDeployment,
-          removeDeployment,
-          handleSubmit
+          anonymousPasscode,
+          anonymousHandle,
+          handleSubmit,
+          copyCredentials
         };
       },
+
       template: `
         <div class="min-h-screen bg-gray-900 text-gray-100">
-          <!-- Simple Navigation Header -->
-          <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
-            <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-              <div class="flex items-center space-x-3">
-                <img src="/assets/img/vs-logo.jpg" alt="VS Logo" class="w-10 h-10 rounded-lg">
-                <a href="/index.html" class="text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
-                  Veteran's Scene
-                </a>
+          <!-- Navigation -->
+          <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <img src="/assets/img/vs-logo.jpg" alt="Logo" class="w-10 h-10 rounded-lg">
+                <a href="/index.html" class="text-xl md:text-2xl font-bold text-yellow-400 hover:text-yellow-300">Veteran's Scene</a>
               </div>
-              <a href="/index.html" class="text-gray-300 hover:text-yellow-400 font-medium transition">
-                ← Back to Home
-              </a>
+              <a href="/index.html" class="text-gray-300 hover:text-yellow-400 text-sm md:text-base">← Back</a>
             </div>
           </nav>
 
-          <div class="py-12 px-4">
-          <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-8">
-              <h1 class="text-4xl font-bold text-yellow-400 mb-4">Apply to Participate</h1>
-              <p class="text-gray-300">Share your story with Veteran's Scene</p>
-            </div>
+          <!-- Main Content -->
+          <div class="py-8 md:py-12 px-4">
+            <div class="max-w-2xl mx-auto">
 
-            <div v-if="success" class="bg-green-900 border border-green-700 text-green-200 px-6 py-4 rounded-lg mb-6">
-              <h3 class="font-bold text-lg mb-2">Application Submitted Successfully!</h3>
-              <p>Thank you for your interest. We will review your application and contact you soon.</p>
-            </div>
+              <!-- Header -->
+              <div class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">Join Veteran's Scene</h1>
+                <p class="text-gray-400">Share your story • Connect with veterans • Be heard</p>
+              </div>
 
-            <div v-if="error" class="bg-red-900 border border-red-700 text-red-200 px-6 py-4 rounded-lg mb-6">
-              {{ error }}
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-8">
-              <!-- Main Form -->
-              <form @submit.prevent="handleSubmit" class="bg-gray-800 rounded-lg shadow-xl p-8 space-y-8 flex-1">
-              <!-- Personal Information -->
-              <div>
-                <h2 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-700 pb-2">Personal Information</h2>
-
-                <!-- Anonymous Option -->
-                <div class="bg-gray-700 rounded-lg p-4 mb-6 border border-gray-600">
-                  <label class="flex items-start gap-3 cursor-pointer">
-                    <input v-model="formData.preferAnonymous" type="checkbox"
-                      class="mt-1 w-5 h-5 rounded border-gray-500 bg-gray-600 text-yellow-400 focus:ring-yellow-500 focus:ring-2" />
-                    <div>
-                      <span class="text-gray-100 font-medium">I would like to remain anonymous</span>
-                      <p class="text-sm text-gray-400 mt-1">Your privacy matters. If checked, your name will not be shared publicly. We still need a way to contact you.</p>
-                    </div>
-                  </label>
+              <!-- Success Message - Anonymous Account Created -->
+              <div v-if="success && anonymousPasscode" class="space-y-6">
+                <!-- Main Success Banner -->
+                <div class="bg-gradient-to-r from-purple-900 to-purple-800 border-l-4 border-purple-300 rounded-lg p-6 md:p-8 shadow-lg">
+                  <h3 class="font-bold text-2xl md:text-3xl text-purple-200 mb-2">🎉 Your Anonymous Account is Ready!</h3>
+                  <p class="text-purple-100 text-sm md:text-base">Your application has been submitted and your secure account has been created.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">First Name <span v-if="!formData.preferAnonymous" class="text-gray-500">(optional)</span></label>
-                    <input v-model="formData.firstName" type="text"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="Enter your first name" />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Last Name <span class="text-gray-500">(optional)</span></label>
-                    <input v-model="formData.lastName" type="text"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="Enter your last name" />
-                  </div>
-                </div>
+                <!-- Your Login Code Section -->
+                <div class="bg-gray-800 border-2 border-yellow-400 rounded-lg p-6 md:p-8">
+                  <p class="text-gray-300 text-xs md:text-sm font-semibold uppercase tracking-wide mb-4">Your Unique Login Code</p>
 
-                <!-- Contact Information Section -->
-                <div class="mt-6 bg-gray-750 rounded-lg p-4 border border-gray-600" :class="{'border-yellow-500 bg-gray-700': !hasContactMethod}">
-                  <h3 class="text-lg font-semibold text-yellow-300 mb-3">How can we reach you?</h3>
-                  <p class="text-sm text-gray-400 mb-4">Please provide at least one way for us to contact you. All contact information is kept confidential.</p>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="space-y-6">
+                    <!-- Handle Display -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                      <input v-model="formData.email" type="email"
-                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                        placeholder="your.email@example.com" />
+                      <p class="text-gray-400 text-sm mb-2">📝 Your Handle (Username):</p>
+                      <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                        <div class="text-3xl md:text-4xl font-mono font-bold text-yellow-300 break-all">{{ anonymousHandle }}</div>
+                      </div>
                     </div>
+
+                    <!-- Passcode Display - LARGE AND PROMINENT -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
-                      <input v-model="formData.phone" type="tel"
-                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                        placeholder="(555) 123-4567" />
+                      <p class="text-gray-400 text-sm mb-2">🔐 Your Passcode (6 Digits):</p>
+                      <div class="bg-gradient-to-b from-yellow-900 to-yellow-950 p-6 md:p-8 rounded-lg border-2 border-yellow-500 shadow-lg">
+                        <div class="text-5xl md:text-6xl font-mono font-black text-yellow-300 tracking-widest text-center">{{ anonymousPasscode }}</div>
+                        <p class="text-yellow-200 text-xs md:text-sm text-center mt-3 font-semibold">Do not share this code with anyone</p>
+                      </div>
+                    </div>
+
+                    <!-- Copy and Store -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                      <button @click="copyCredentials" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-3 md:py-4 rounded-lg transition flex items-center justify-center gap-2 min-h-[44px]">
+                        <span>📋</span>
+                        <span>Copy Login Code</span>
+                      </button>
+                      <a href="/app.html#/login" class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-4 py-3 md:py-4 rounded-lg transition flex items-center justify-center gap-2 min-h-[44px]">
+                        <span>→</span>
+                        <span>Go to Login Now</span>
+                      </a>
                     </div>
                   </div>
-
-                  <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Preferred Contact Method</label>
-                    <textarea v-model="formData.preferredContact" rows="2" maxlength="500"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="Let us know how you'd prefer to be contacted, or provide an alternative method (e.g., 'Text only', 'Call after 5pm', 'Contact via Signal', etc.)"></textarea>
-                  </div>
-
-                  <p v-if="!hasContactMethod" class="text-yellow-400 text-sm mt-3">Please provide at least one contact method above.</p>
                 </div>
 
-                <!-- State (optional now) -->
-                <div class="mt-6">
-                  <label class="block text-sm font-medium text-gray-300 mb-2">State <span class="text-gray-500">(optional)</span></label>
-                  <select v-model="formData.state"
-                    class="w-full md:w-1/2 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                    <option value="">Select State</option>
-                    <option v-for="state in states" :key="state" :value="state">{{ state }}</option>
-                  </select>
-                </div>
-              </div>
+                <!-- How to Login Instructions -->
+                <div class="bg-blue-900/30 border border-blue-700 rounded-lg p-6 md:p-8">
+                  <h4 class="font-bold text-blue-300 mb-4 flex items-center gap-2">
+                    <span>📖</span>
+                    <span>How to Log In - 3 Simple Steps</span>
+                  </h4>
 
-              <!-- Military Service -->
-              <div>
-                <h2 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-700 pb-2">Military Service</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Branch *</label>
-                    <select v-model="formData.branch" required
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                      <option value="">Select Branch</option>
-                      <option v-for="branch in branches" :key="branch" :value="branch">{{ branch }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Rank</label>
-                    <input v-model="formData.rank" type="text"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Service Start Year *</label>
-                    <input v-model.number="formData.yearsOfService.start" type="number" required min="1900" :max="new Date().getFullYear()"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Service End Year</label>
-                    <input v-model.number="formData.yearsOfService.end" type="number" min="1900" :max="new Date().getFullYear()"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="Leave blank if currently serving" />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Number of Tours</label>
-                    <input v-model.number="formData.tours" type="number" min="0"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                  </div>
-                </div>
-
-                <div class="mt-6">
-                  <label class="block text-sm font-medium text-gray-300 mb-2">Wars/Conflicts Served</label>
-                  <div class="flex gap-2">
-                    <input v-model="warInput" type="text" @keyup.enter="addWar"
-                      class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="e.g., Vietnam, Gulf War, OEF, OIF" />
-                    <button type="button" @click="addWar"
-                      class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition">
-                      Add
-                    </button>
-                  </div>
-                  <div v-if="formData.wars.length" class="mt-2 flex flex-wrap gap-2">
-                    <span v-for="(war, index) in formData.wars" :key="index"
-                      class="inline-flex items-center gap-2 px-3 py-1 bg-gray-700 text-gray-200 rounded-full">
-                      {{ war }}
-                      <button type="button" @click="removeWar(index)" class="text-red-400 hover:text-red-300">×</button>
-                    </span>
-                  </div>
-                </div>
-
-                <div class="mt-6">
-                  <label class="block text-sm font-medium text-gray-300 mb-2">Deployment Locations</label>
-                  <div class="flex gap-2">
-                    <input v-model="deploymentInput" type="text" @keyup.enter="addDeployment"
-                      class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="e.g., Iraq, Afghanistan, Korea" />
-                    <button type="button" @click="addDeployment"
-                      class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-md font-semibold transition">
-                      Add
-                    </button>
-                  </div>
-                  <div v-if="formData.deploymentLocations.length" class="mt-2 flex flex-wrap gap-2">
-                    <span v-for="(location, index) in formData.deploymentLocations" :key="index"
-                      class="inline-flex items-center gap-2 px-3 py-1 bg-gray-700 text-gray-200 rounded-full">
-                      {{ location }}
-                      <button type="button" @click="removeDeployment(index)" class="text-red-400 hover:text-red-300">×</button>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Application Details -->
-              <div>
-                <h2 class="text-2xl font-bold text-yellow-400 mb-4 border-b border-gray-700 pb-2">Application Details</h2>
-                <div class="space-y-6">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">I'm interested in *</label>
-                    <select v-model="formData.applicationType" required
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                      <option value="podcast-guest">Being a Podcast Guest</option>
-                      <option value="volunteer">Volunteering</option>
-                      <option value="participant">General Participation</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Your Story *</label>
-                    <p class="text-sm text-gray-400 mb-2">Tell us about your military experience and what you'd like to share (max 5000 characters)</p>
-                    <textarea v-model="formData.story" required rows="8" maxlength="5000"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"></textarea>
-                    <p class="text-sm text-gray-400 mt-1">{{ formData.story.length }}/5000 characters</p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Additional Information</label>
-                    <p class="text-sm text-gray-400 mb-2">Anything else you'd like us to know (max 2000 characters)</p>
-                    <textarea v-model="formData.additionalInfo" rows="4" maxlength="2000"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"></textarea>
-                    <p class="text-sm text-gray-400 mt-1">{{ formData.additionalInfo.length }}/2000 characters</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center pt-6 border-t border-gray-700">
-                <a href="/" class="text-yellow-400 hover:text-yellow-300">&larr; Back to Home</a>
-                <button type="submit" :disabled="loading || !hasContactMethod"
-                  class="px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span v-if="loading">Submitting...</span>
-                  <span v-else>Submit Application</span>
-                </button>
-              </div>
-            </form>
-
-              <!-- Sidebar - Ways to Connect -->
-              <aside class="lg:w-80 space-y-6">
-                <!-- Ways We Can Connect -->
-                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h3 class="text-xl font-bold text-yellow-400 mb-4">Ways We Can Connect</h3>
-                  <div class="space-y-4 text-gray-300 text-sm">
-                    <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span class="text-yellow-400">1</span>
+                  <div class="space-y-4">
+                    <!-- Step 1 -->
+                    <div class="flex gap-4">
+                      <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 text-white font-bold text-sm">1</div>
                       </div>
                       <div>
-                        <p class="font-medium text-gray-100">Video Podcast</p>
-                        <p>Join us remotely via video chat from the comfort of your home.</p>
+                        <p class="font-semibold text-blue-200 mb-1">Go to the Login Page</p>
+                        <p class="text-blue-100 text-sm">Visit the Veterans Scene login page and click the <span class="bg-purple-600 px-2 py-1 rounded text-xs font-mono">🔒 Anonymous</span> tab</p>
                       </div>
                     </div>
-                    <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span class="text-yellow-400">2</span>
+
+                    <!-- Step 2 -->
+                    <div class="flex gap-4">
+                      <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</div>
                       </div>
                       <div>
-                        <p class="font-medium text-gray-100">Audio Call</p>
-                        <p>Prefer voice only? We can arrange a phone or audio-only session.</p>
+                        <p class="font-semibold text-blue-200 mb-1">Enter Your Handle</p>
+                        <p class="text-blue-100 text-sm">Type in your handle: <span class="font-mono bg-gray-800 px-2 py-1 rounded text-yellow-300">{{ anonymousHandle }}</span></p>
                       </div>
                     </div>
-                    <div class="flex items-start gap-3">
-                      <div class="w-8 h-8 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span class="text-yellow-400">3</span>
+
+                    <!-- Step 3 -->
+                    <div class="flex gap-4">
+                      <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 text-white font-bold text-sm">3</div>
                       </div>
                       <div>
-                        <p class="font-medium text-gray-100">In-Person</p>
-                        <p>Local to the area? Join us in our studio for a face-to-face conversation.</p>
+                        <p class="font-semibold text-blue-200 mb-1">Enter Your Passcode</p>
+                        <p class="text-blue-100 text-sm">Type in your 6-digit passcode: <span class="font-mono bg-gray-800 px-2 py-1 rounded text-yellow-300 font-bold">{{ anonymousPasscode }}</span></p>
                       </div>
                     </div>
                   </div>
-                  <a href="/participant-guide.html" class="mt-6 block text-center bg-gray-700 hover:bg-gray-600 text-yellow-400 font-medium py-2 px-4 rounded-lg transition">
-                    View Participant Guide &rarr;
-                  </a>
                 </div>
 
-                <!-- What to Expect -->
-                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h3 class="text-xl font-bold text-yellow-400 mb-4">What to Expect</h3>
-                  <ul class="space-y-3 text-gray-300 text-sm">
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-400 mt-0.5">&#10003;</span>
-                      <span>We'll review your application within a few days</span>
+                <!-- Critical Information Box -->
+                <div class="bg-red-900/20 border border-red-700 rounded-lg p-6">
+                  <h4 class="font-bold text-red-300 mb-3 flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>IMPORTANT - Please Read</span>
+                  </h4>
+
+                  <ul class="space-y-2 text-sm text-red-100">
+                    <li class="flex gap-2">
+                      <span class="text-red-400 font-bold">•</span>
+                      <span><strong>Save this information now</strong> - Write it down or take a screenshot. This will NOT be emailed to you.</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-400 mt-0.5">&#10003;</span>
-                      <span>A team member will reach out using your preferred contact method</span>
+                    <li class="flex gap-2">
+                      <span class="text-red-400 font-bold">•</span>
+                      <span><strong>Keep your passcode private</strong> - Only you should know it. Do not share it with anyone.</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-400 mt-0.5">&#10003;</span>
-                      <span>If selected, you'll receive a briefing call before recording</span>
+                    <li class="flex gap-2">
+                      <span class="text-red-400 font-bold">•</span>
+                      <span><strong>Your identity is protected</strong> - We will never reveal your real name or contact information.</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-400 mt-0.5">&#10003;</span>
-                      <span>No pressure - participation is always voluntary</span>
+                    <li class="flex gap-2">
+                      <span class="text-red-400 font-bold">•</span>
+                      <span><strong>Lost your code?</strong> - If you forget this information, you'll need to submit a new anonymous application.</span>
                     </li>
                   </ul>
                 </div>
 
-                <!-- Privacy Note -->
-                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h3 class="text-lg font-bold text-yellow-400 mb-3">Your Privacy Matters</h3>
-                  <p class="text-gray-400 text-sm">
-                    Your contact information is kept confidential and only used to communicate with you about your application. If you choose to remain anonymous, your identity will not be shared publicly.
+                <!-- Call to Action -->
+                <div class="text-center">
+                  <p class="text-gray-400 text-sm mb-4">Ready to access your dashboard?</p>
+                  <a href="/app.html#/login" class="inline-block bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold px-8 py-3 rounded-lg transition text-lg min-h-[44px] flex items-center justify-center">
+                    📱 Open Login Page Now →
+                  </a>
+                </div>
+              </div>
+
+              <!-- Success Message - Regular Application -->
+              <div v-else-if="success" class="bg-green-900 border-l-4 border-green-400 rounded-lg p-6 mb-8">
+                <h3 class="font-bold text-lg text-green-300 mb-2">✓ Application Submitted!</h3>
+                <p class="text-green-200 text-sm">Thank you for joining us. We'll reach out soon.</p>
+              </div>
+
+              <!-- Error Message -->
+              <div v-if="error" class="bg-red-900 border-l-4 border-red-400 rounded-lg p-4 mb-6">
+                <p class="text-red-200 text-sm">{{ error }}</p>
+              </div>
+
+              <!-- Main Form -->
+              <div v-if="!success" class="space-y-6">
+
+                <!-- SECTION 1: Contact Info (REQUIRED) -->
+                <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 md:p-8">
+                  <div class="flex items-start gap-3 mb-6">
+                    <span class="text-2xl">📧</span>
+                    <div class="flex-1">
+                      <h2 class="text-xl md:text-2xl font-bold text-white">How Can We Reach You?</h2>
+                      <p class="text-gray-400 text-sm mt-1">At least one contact method required</p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-300 mb-2">Email (Optional)</label>
+                      <input
+                        v-model="formData.email"
+                        type="email"
+                        placeholder="your@email.com"
+                        class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-300 mb-2">Phone (Optional)</label>
+                      <input
+                        v-model="formData.phone"
+                        type="tel"
+                        placeholder="(555) 123-4567"
+                        class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-300 mb-2">Other Contact Method (Optional)</label>
+                      <input
+                        v-model="formData.preferredContact"
+                        type="text"
+                        placeholder="e.g., @twitter, Signal, Discord, etc."
+                        class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition"
+                      />
+                      <p class="text-xs text-gray-400 mt-1">Social media or any way you prefer contact</p>
+                    </div>
+
+                    <!-- Anonymous -->
+                    <div class="bg-gray-700 rounded-lg p-4 mt-4">
+                      <label class="flex items-center gap-3 cursor-pointer">
+                        <input
+                          v-model="formData.preferAnonymous"
+                          type="checkbox"
+                          class="w-5 h-5 rounded bg-gray-600 border-gray-500 accent-yellow-400 cursor-pointer"
+                        />
+                        <span class="text-sm font-medium text-gray-300">Keep my name private</span>
+                      </label>
+                      <input
+                        v-if="formData.preferAnonymous"
+                        v-model="formData.alias"
+                        type="text"
+                        placeholder="Your alias (optional)"
+                        class="w-full mt-3 px-4 py-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 2: Tell Us More (OPTIONAL) -->
+                <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                  <button
+                    @click="showMore = !showMore"
+                    class="w-full px-6 md:px-8 py-4 flex items-center justify-between hover:bg-gray-750 transition group"
+                  >
+                    <div class="flex items-center gap-3 text-left">
+                      <span class="text-2xl">✨</span>
+                      <div>
+                        <h3 class="font-bold text-white group-hover:text-yellow-400 transition">Tell Us More (Optional)</h3>
+                        <p class="text-xs text-gray-400">Share at your own pace</p>
+                      </div>
+                    </div>
+                    <span :class="['text-2xl transition-transform', showMore ? 'rotate-180' : '']">▼</span>
+                  </button>
+
+                  <!-- Optional Content -->
+                  <div v-if="showMore" class="border-t border-gray-700 px-6 md:px-8 py-6 space-y-5 bg-gray-750">
+
+                    <!-- Basic Info -->
+                    <div class="space-y-4">
+                      <h4 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                        <span>👤</span> Basic Information
+                      </h4>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                          v-model="formData.firstName"
+                          type="text"
+                          placeholder="First Name"
+                          class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm"
+                        />
+                        <input
+                          v-model="formData.lastName"
+                          type="text"
+                          placeholder="Last Name"
+                          class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm"
+                        />
+                      </div>
+                      <select
+                        v-model="formData.state"
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-yellow-400 transition text-sm"
+                      >
+                        <option value="">Select State (optional)</option>
+                        <option v-for="state in states" :key="state" :value="state">{{ state }}</option>
+                      </select>
+                    </div>
+
+                    <!-- Military Service -->
+                    <div class="space-y-4 pt-4 border-t border-gray-600">
+                      <h4 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                        <span>🎖️</span> Military Service
+                      </h4>
+
+                      <select
+                        v-model="formData.branch"
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-yellow-400 transition text-sm"
+                      >
+                        <option value="">Branch (optional)</option>
+                        <option v-for="branch in branches" :key="branch" :value="branch">{{ branch }}</option>
+                      </select>
+
+                      <input
+                        v-model="formData.rank"
+                        type="text"
+                        placeholder="Rank (optional)"
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm"
+                      />
+
+                      <div class="grid grid-cols-2 gap-3">
+                        <input
+                          v-model="formData.yearsOfService.start"
+                          type="number"
+                          placeholder="Start Year"
+                          class="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm"
+                        />
+                        <input
+                          v-model="formData.yearsOfService.end"
+                          type="number"
+                          placeholder="End Year"
+                          class="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Your Story -->
+                    <div class="space-y-4 pt-4 border-t border-gray-600">
+                      <h4 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                        <span>📖</span> Your Story
+                      </h4>
+                      <textarea
+                        v-model="formData.story"
+                        placeholder="What's your story? What would you like to share?"
+                        rows="4"
+                        class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-yellow-400 transition text-sm resize-none"
+                      ></textarea>
+                      <p class="text-xs text-gray-400">{{ formData.story.length }}/1000 characters</p>
+                    </div>
+
+                    <!-- Why -->
+                    <div class="space-y-3 pt-4 border-t border-gray-600">
+                      <h4 class="text-sm font-semibold text-gray-300">Why are you interested?</h4>
+                      <select
+                        v-model="formData.applicationType"
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-yellow-400 transition text-sm"
+                      >
+                        <option value="podcast-guest">Podcast Guest / Tell My Story</option>
+                        <option value="volunteer">Community Member / Connect with Others</option>
+                        <option value="participant">Contributor / Share Expertise</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="space-y-3">
+                  <button
+                    @click="handleSubmit"
+                    :disabled="!hasContactMethod || loading"
+                    class="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-600 text-gray-900 font-bold py-4 px-6 rounded-lg transition duration-200 text-lg disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <span v-if="!loading">🚀 Submit Application</span>
+                    <span v-else>⏳ Submitting...</span>
+                  </button>
+                  <p class="text-center text-xs text-gray-400">
+                    No pressure • Share only what you're comfortable with
                   </p>
                 </div>
-              </aside>
-            </div>
+              </div>
+
             </div>
           </div>
         </div>

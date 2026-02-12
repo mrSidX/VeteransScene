@@ -8,7 +8,7 @@ import Apply from './views/Apply.js?v=20260124i';
 import Dashboard from './views/Dashboard.js?v=20260206';
 import Applications from './views/Applications.js?v=20260124i';
 import ApplicationDetail from './views/ApplicationDetail.js?v=20260124i';
-import Users from './views/Users.js?v=20260124i';
+import Users from './views/Users.js';
 import Segments from './views/Segments.js?v=20260124i';
 import SegmentDetail from './views/SegmentDetail.js?v=20260124i';
 import SegmentNew from './views/SegmentNew.js?v=20260124i';
@@ -30,6 +30,8 @@ import HighlightDisplayOBS from './views/HighlightDisplayOBS.js?v=20260203';
 import Waiver from './views/Waiver.js?v=20260206';
 import MyApplications from './views/MyApplications.js?v=20260206';
 import WaiverSign from './views/WaiverSign.js?v=20260206';
+import RecordingStudio from './views/RecordingStudio.js?v=20260211i';
+import RecordingAccessManager from './views/RecordingAccessManager.js?v=20260211';
 
 // Routes with direct component imports
 const routes = [
@@ -57,11 +59,6 @@ const routes = [
     path: '/verify-email',
     name: 'VerifyEmail',
     component: VerifyEmail
-  },
-  {
-    path: '/waiver/:applicationId',
-    name: 'Waiver',
-    component: Waiver
   },
   {
     path: '/apply',
@@ -101,6 +98,18 @@ const routes = [
     name: 'WaiverSign',
     component: WaiverSign,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/recording/:sessionId',
+    name: 'RecordingStudio',
+    component: RecordingStudio,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/recording-access',
+    name: 'RecordingAccessManager',
+    component: RecordingAccessManager,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {
     path: '/applications',

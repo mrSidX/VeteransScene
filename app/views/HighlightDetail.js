@@ -1,4 +1,4 @@
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import api from '../services/api.js';
@@ -35,6 +35,40 @@ export default {
       tags: [],
       displaySettings: {}
     });
+
+    // Unsaved changes tracking
+    const hasChanges = ref(false);
+    const originalEditForm = ref(null);
+    const navigationBlocked = ref(false);
+
+    // Unsaved changes detection methods
+    const handleBeforeUnload = (e) => {
+      if (hasChanges.value && !navigationBlocked.value) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    const setupUnsavedChangesDetection = () => {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    };
+
+    const setupRouterGuard = () => {
+      return router.beforeEach((to, from, next) => {
+        if (hasChanges.value && from.path !== to.path) {
+          const proceed = confirm('You have unsaved changes on this highlight. Do you want to leave without saving?\n\nClick OK to discard changes, or Cancel to stay on this page.');
+          if (proceed) {
+            navigationBlocked.value = true;
+            next();
+          } else {
+            next(false);
+          }
+        } else {
+          next();
+        }
+      });
+    };
 
     const fetchHighlight = async () => {
       loading.value = true;
@@ -278,37 +312,37 @@ export default {
           <span class="bg-purple-900 text-purple-200 px-3 py-1 rounded text-sm font-semibold">{{ highlight.status }}</span>
         </div>
 
-        <!-- Tabs -->
-        <div class="bg-gray-800 border-b border-gray-700 mb-6">
-          <div class="flex gap-0">
+        <!-- Tabs - Responsive & Scrollable on Mobile -->
+        <div class="bg-gray-800 border-b border-gray-700 mb-6 overflow-x-auto">
+          <div class="flex gap-0 min-w-min">
             <button
               @click="activeTab = 'basic'"
-              :class="['px-6 py-3 font-semibold transition', activeTab === 'basic' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
+              :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'basic' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
             >
               Basic Info
             </button>
             <button
               @click="activeTab = 'ai-fetch'"
-              :class="['px-6 py-3 font-semibold transition', activeTab === 'ai-fetch' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
+              :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'ai-fetch' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
             >
               AI Fetch
             </button>
             <button
               v-if="highlight.aiContent?.fetched"
               @click="activeTab = 'ai-content'"
-              :class="['px-6 py-3 font-semibold transition', activeTab === 'ai-content' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
+              :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'ai-content' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
             >
               AI Content
             </button>
             <button
               @click="activeTab = 'media'"
-              :class="['px-6 py-3 font-semibold transition', activeTab === 'media' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
+              :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'media' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
             >
               Media
             </button>
             <button
               @click="activeTab = 'display'"
-              :class="['px-6 py-3 font-semibold transition', activeTab === 'display' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
+              :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'display' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
             >
               Display
             </button>

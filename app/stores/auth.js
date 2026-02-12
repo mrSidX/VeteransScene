@@ -87,6 +87,56 @@ export const useAuthStore = () => {
     }
   };
 
+  const loginWithCode = async (email, code) => {
+    state.loading = true;
+    state.error = null;
+
+    try {
+      console.log('[Auth] Calling api.loginWithCode');
+      const response = await api.loginWithCode(email, code);
+      console.log('[Auth] api.loginWithCode response:', response);
+
+      if (response.success) {
+        console.log('[Auth] Login with code successful, setting state');
+        state.user = normalizeUser(response.data.user);
+        state.token = response.data.token;
+        state.isAuthenticated = true;
+        console.log('[Auth] State after login - isAuthenticated:', state.isAuthenticated, 'token:', !!state.token, 'user:', state.user.email);
+      }
+      return response;
+    } catch (error) {
+      state.error = error.message;
+      throw error;
+    } finally {
+      state.loading = false;
+    }
+  };
+
+  const loginAnonymous = async (handle, passcode) => {
+    state.loading = true;
+    state.error = null;
+
+    try {
+      console.log('[Auth] Calling api.loginAnonymous');
+      const response = await api.loginAnonymous(handle, passcode);
+      console.log('[Auth] api.loginAnonymous response:', response);
+
+      if (response.success) {
+        console.log('[Auth] Anonymous login successful, setting state');
+        state.user = normalizeUser(response.data.user);
+        state.token = response.data.token;
+        state.isAuthenticated = true;
+        console.log('[Auth] State after anonymous login - isAuthenticated:', state.isAuthenticated, 'token:', !!state.token, 'user:', state.user.anonymousHandle);
+      }
+      return response;
+    } catch (error) {
+      state.error = error.message;
+      throw error;
+    } finally {
+      state.loading = false;
+    }
+  };
+
   const logout = () => {
     api.logout();
     state.user = null;
@@ -152,6 +202,8 @@ export const useAuthStore = () => {
 
     // Actions
     login,
+    loginWithCode,
+    loginAnonymous,
     logout,
     setUser,
     setToken,

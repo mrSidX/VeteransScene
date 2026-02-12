@@ -74,7 +74,11 @@ export default {
             <div>
               <h3 class="text-sm font-medium text-gray-400 mb-2">Raised By</h3>
               <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-sm font-bold">
+                <!-- Avatar Image or Initials -->
+                <div v-if="flag.raisedBy?.profile?.avatarUrl" class="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                  <img :src="flag.raisedBy.avatarUrl" :alt="flag.raisedBy.firstName" class="w-full h-full object-cover">
+                </div>
+                <div v-else class="w-8 h-8 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-sm font-bold">
                   {{ getInitials(flag.raisedBy) }}
                 </div>
                 <div>
@@ -92,7 +96,11 @@ export default {
                   :key="user._id"
                   class="flex items-center gap-2 px-3 py-1 bg-gray-700 rounded"
                 >
-                  <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                  <!-- Avatar Image or Initials -->
+                  <div v-if="user.profile?.avatarUrl" class="w-6 h-6 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                    <img :src="user.profile?.avatarUrl" :alt="user.firstName" class="w-full h-full object-cover">
+                  </div>
+                  <div v-else class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {{ getInitials(user) }}
                   </div>
                   <span class="text-white text-sm">{{ getUserName(user) }}</span>
@@ -104,7 +112,11 @@ export default {
             <div v-if="flag.resolvedBy">
               <h3 class="text-sm font-medium text-gray-400 mb-2">Resolved By</h3>
               <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-bold">
+                <!-- Avatar Image or Initials -->
+                <div v-if="flag.resolvedBy?.profile?.avatarUrl" class="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                  <img :src="flag.resolvedBy.avatarUrl" :alt="flag.resolvedBy.firstName" class="w-full h-full object-cover">
+                </div>
+                <div v-else class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-bold">
                   {{ getInitials(flag.resolvedBy) }}
                 </div>
                 <div>
@@ -166,7 +178,11 @@ export default {
             >
               <div class="flex items-start justify-between gap-4 mb-2">
                 <div class="flex items-start gap-3 flex-1">
-                  <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  <!-- Avatar Image or Initials -->
+                  <div v-if="comment.author?.profile?.avatarUrl" class="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                    <img :src="comment.author.avatarUrl" :alt="comment.author.firstName" class="w-full h-full object-cover">
+                  </div>
+                  <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                     {{ getInitials(comment.author) }}
                   </div>
                   <div class="flex-1 min-w-0">

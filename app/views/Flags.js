@@ -1,9 +1,9 @@
 export default {
   name: 'Flags',
   template: `
-    <div class="container mx-auto px-4 py-6">
+    <div class="container mx-auto px-4 py-4 md:py-6">
       <!-- Back to Dashboard -->
-      <router-link to="/dashboard" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-4">
+      <router-link to="/dashboard" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-2 md:mb-4">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
@@ -11,23 +11,23 @@ export default {
       </router-link>
 
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
-        <div>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-4 mb-4 md:mb-6">
+        <div class="flex-1">
           <h1 class="text-2xl font-bold text-white mb-1">Flags</h1>
           <p class="text-gray-400 text-sm">Manage flagged items and issues</p>
         </div>
         <button
           v-if="user.role === 'admin' || user.role === 'moderator'"
           @click="showCreateModal = true"
-          class="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg transition-colors"
+          class="w-full sm:w-auto px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg transition-colors min-h-[44px] flex items-center justify-center"
         >
           + Raise Flag
         </button>
       </div>
 
       <!-- Filters -->
-      <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
             <select
@@ -97,35 +97,35 @@ export default {
       </div>
 
       <!-- Flags List -->
-      <div v-else-if="flags.length > 0" class="space-y-3">
+      <div v-else-if="flags.length > 0" class="space-y-2 md:space-y-3">
         <div
           v-for="flag in flags"
           :key="flag._id"
           @click="navigateToFlag(flag._id)"
           :class="[
-            'bg-gray-800 border rounded-lg p-4 cursor-pointer transition-all hover:shadow-lg',
+            'bg-gray-800 border rounded-lg p-2 md:p-3 cursor-pointer transition-all hover:shadow-lg',
             getPriorityBorderClass(flag.priority)
           ]"
         >
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex items-start justify-between gap-2 md:gap-4">
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-2">
-                <span :class="getPriorityBadge(flag.priority)" class="px-2 py-1 text-xs font-bold rounded">
+              <div class="flex items-center gap-1 md:gap-2 mb-1 md:mb-2 flex-wrap">
+                <span :class="getPriorityBadge(flag.priority)" class="px-1.5 md:px-2 py-1 text-xs font-bold rounded">
                   {{ flag.priority.toUpperCase() }}
                 </span>
-                <span :class="getStatusBadge(flag.status)" class="px-2 py-1 text-xs rounded">
+                <span :class="getStatusBadge(flag.status)" class="px-1.5 md:px-2 py-1 text-xs rounded">
                   {{ formatStatus(flag.status) }}
                 </span>
-                <span class="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded">
+                <span class="px-1.5 md:px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded">
                   {{ formatFlagType(flag.flagType) }}
                 </span>
-                <span class="px-2 py-1 bg-purple-900/30 text-purple-300 text-xs rounded">
+                <span class="px-1.5 md:px-2 py-1 bg-purple-900/30 text-purple-300 text-xs rounded">
                   {{ flag.resourceType }}
                 </span>
               </div>
-              <h3 class="text-white font-semibold text-lg mb-1">{{ flag.title }}</h3>
-              <p v-if="flag.description" class="text-gray-400 text-sm mb-2 line-clamp-2">{{ flag.description }}</p>
-              <div class="flex items-center gap-4 text-xs text-gray-500">
+              <h3 class="text-white font-semibold text-base md:text-lg mb-1">{{ flag.title }}</h3>
+              <p v-if="flag.description" class="text-gray-400 text-sm mb-1 md:mb-2 line-clamp-2">{{ flag.description }}</p>
+              <div class="flex items-center gap-2 md:gap-4 text-xs text-gray-500">
                 <span>Raised by {{ getUserName(flag.raisedBy) }}</span>
                 <span>•</span>
                 <span>{{ formatDate(flag.createdAt) }}</span>
@@ -163,7 +163,7 @@ export default {
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.pages > 1" class="flex items-center justify-center gap-2 mt-6">
+      <div v-if="pagination.pages > 1" class="flex items-center justify-center gap-2 mt-4 md:mt-6">
         <button
           @click="changePage(pagination.page - 1)"
           :disabled="pagination.page === 1"
@@ -185,14 +185,14 @@ export default {
 
       <!-- Create Flag Modal -->
       <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeCreateModal">
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-white">Raise a Flag</h2>
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-3 md:mb-4">
+            <h2 class="text-lg md:text-xl font-bold text-white">Raise a Flag</h2>
             <button @click="closeCreateModal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
           </div>
 
-          <form @submit.prevent="createFlag" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+          <form @submit.prevent="createFlag" class="space-y-3 md:space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Resource Type <span class="text-gray-500">(optional)</span></label>
                 <select
@@ -221,7 +221,7 @@ export default {
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Flag Type *</label>
                 <select
@@ -280,18 +280,18 @@ export default {
               ></textarea>
             </div>
 
-            <div class="flex justify-end gap-2 pt-2">
+            <div class="flex justify-end gap-1 md:gap-2 pt-2 md:pt-3">
               <button
                 type="button"
                 @click="closeCreateModal"
-                class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
+                class="px-3 md:px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 :disabled="creating"
-                class="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 text-gray-900 font-medium text-sm rounded transition-colors"
+                class="px-3 md:px-4 py-2 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 text-gray-900 font-medium text-sm rounded transition-colors"
               >
                 {{ creating ? 'Creating...' : 'Create Flag' }}
               </button>

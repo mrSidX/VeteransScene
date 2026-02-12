@@ -1,4 +1,4 @@
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import api from '../services/api.js';
@@ -55,6 +55,20 @@ export default {
     const sendingEmail = ref(null); // participantId being sent to
     const sendingEmailAll = ref(false); // bulk send in progress
 
+    // Export state
+    const showExportModal = ref(false);
+    const exportEncrypted = ref(false);
+    const exportPasskey = ref('');
+    const exportLoading = ref(false);
+
+    // Enhanced delete modal state
+    const showDeleteModal = ref(false);
+    const deleteConfirmText = ref('');
+    const deletePreview = ref(null);
+    const loadingDeletePreview = ref(false);
+    const exportBeforeDelete = ref(false);
+    const deletingSegment = ref(false);
+
     // Toggle panel expansion
     const togglePanel = (panel) => {
       expandedPanels.value[panel] = !expandedPanels.value[panel];
@@ -62,6 +76,11 @@ export default {
 
     // Edit form data
     const formData = ref({});
+
+    // Unsaved changes tracking
+    const hasChanges = ref(false);
+    const originalFormData = ref(null);
+    const navigationBlocked = ref(false);
 
     const isCreator = computed(() => {
       return segment.value?.creator?._id === authStore.user.value?._id;
@@ -119,6 +138,10 @@ export default {
             tags: segment.value.tags?.join(', ') || '',
             technicalReviewRequested: segment.value.technicalReviewRequested || false
           };
+
+          // Save original form state for change detection
+          originalFormData.value = JSON.parse(JSON.stringify(formData.value));
+          hasChanges.value = false;
         }
       } catch (err) {
         error.value = 'Failed to load segment';
@@ -160,6 +183,10 @@ export default {
         if (response.success) {
           segment.value = response.data.segment;
           editMode.value = false;
+          // Reset unsaved changes tracking
+          originalFormData.value = JSON.parse(JSON.stringify(formData.value));
+          hasChanges.value = false;
+          navigationBlocked.value = false;
           alert('Segment updated successfully!');
         }
       } catch (err) {
@@ -169,18 +196,57 @@ export default {
       }
     };
 
-    const deleteSegment = async () => {
-      if (!confirm('Are you sure you want to delete this segment? This action cannot be undone.')) {
+    const openDeleteModal = async () => {
+      try {
+        loadingDeletePreview.value = true;
+        deleteConfirmText.value = '';
+        exportBeforeDelete.value = false;
+        const response = await api.getSegmentDeletePreview(route.params.id);
+        if (response.success) {
+          deletePreview.value = response.data;
+          showDeleteModal.value = true;
+        }
+      } catch (err) {
+        alert('Failed to load delete preview: ' + err.message);
+      } finally {
+        loadingDeletePreview.value = false;
+      }
+    };
+
+    const closeDeleteModal = () => {
+      showDeleteModal.value = false;
+      deleteConfirmText.value = '';
+      deletePreview.value = null;
+      exportBeforeDelete.value = false;
+    };
+
+    const confirmDeleteSegment = async () => {
+      if (deleteConfirmText.value !== 'DELETE') {
+        alert('Please type "DELETE" to confirm');
         return;
       }
 
       try {
+        deletingSegment.value = true;
+
+        // Export before delete if checked
+        if (exportBeforeDelete.value) {
+          await downloadSegmentExport(false);
+        }
+
         await api.deleteSegment(route.params.id);
         alert('Segment deleted successfully');
+        closeDeleteModal();
         router.push('/segments');
       } catch (err) {
         alert('Failed to delete segment: ' + err.message);
+      } finally {
+        deletingSegment.value = false;
       }
+    };
+
+    const deleteSegment = async () => {
+      openDeleteModal();
     };
 
     const toggleUpvote = async () => {
@@ -608,8 +674,109 @@ export default {
       }
     };
 
+    // Export functions
+    const downloadSegmentExport = async (showModal = true) => {
+      if (showModal && !exportPasskey.value && exportEncrypted.value) {
+        alert('Please enter a passkey for encryption');
+        return;
+      }
+
+      try {
+        exportLoading.value = true;
+        const blob = await api.exportSegment(
+          route.params.id,
+          exportEncrypted.value,
+          exportEncrypted.value ? exportPasskey.value : null
+        );
+
+        // Trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const timestamp = new Date().getTime();
+        link.download = `segment-${segment.value.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${timestamp}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        if (showModal) {
+          alert('Export downloaded successfully!');
+          closeExportModal();
+        }
+      } catch (err) {
+        alert('Failed to export segment: ' + err.message);
+      } finally {
+        exportLoading.value = false;
+      }
+    };
+
+    const openExportModal = () => {
+      exportEncrypted.value = false;
+      exportPasskey.value = '';
+      showExportModal.value = true;
+    };
+
+    const closeExportModal = () => {
+      showExportModal.value = false;
+      exportEncrypted.value = false;
+      exportPasskey.value = '';
+    };
+
+    // Unsaved changes detection methods
+    const handleBeforeUnload = (e) => {
+      if (hasChanges.value && !navigationBlocked.value) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    const setupUnsavedChangesDetection = () => {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    };
+
+    const setupRouterGuard = () => {
+      return router.beforeEach((to, from, next) => {
+        if (hasChanges.value && from.path !== to.path) {
+          const noPromptRoutes = ['/login', '/logout', '/'];
+          if (noPromptRoutes.includes(to.path)) {
+            navigationBlocked.value = true;
+            next();
+            return;
+          }
+
+          const proceed = confirm(
+            'You have unsaved changes on this segment. Do you want to leave without saving?\n\nClick OK to discard changes, or Cancel to stay on this page.'
+          );
+
+          if (proceed) {
+            navigationBlocked.value = true;
+            next();
+          } else {
+            next(false);
+          }
+        } else {
+          next();
+        }
+      });
+    };
+
+    // Watch for form changes
+    watch(() => formData.value, () => {
+      if (originalFormData.value) {
+        hasChanges.value = JSON.stringify(formData.value) !== JSON.stringify(originalFormData.value);
+      }
+    }, { deep: true });
+
     onMounted(() => {
       fetchSegment();
+      setupUnsavedChangesDetection();
+      setupRouterGuard();
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     });
 
     return {
@@ -669,9 +836,33 @@ export default {
       sendingEmailAll,
       sendVdoEmail,
       sendVdoEmailToAll,
+      // Export & Delete
+      showExportModal,
+      exportEncrypted,
+      exportPasskey,
+      exportLoading,
+      openExportModal,
+      closeExportModal,
+      downloadSegmentExport,
+      showDeleteModal,
+      deleteConfirmText,
+      deletePreview,
+      loadingDeletePreview,
+      exportBeforeDelete,
+      deletingSegment,
+      openDeleteModal,
+      closeDeleteModal,
+      confirmDeleteSegment,
       // Collapsible panels
       expandedPanels,
-      togglePanel
+      togglePanel,
+      // Unsaved changes tracking
+      hasChanges,
+      originalFormData,
+      navigationBlocked,
+      setupUnsavedChangesDetection,
+      setupRouterGuard,
+      handleBeforeUnload
     };
   },
   template: `
@@ -699,100 +890,106 @@ export default {
           </router-link>
 
           <!-- Header -->
-          <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
-            <div class="flex justify-between items-start mb-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                  <h1 v-if="!editMode" class="text-3xl font-bold text-yellow-400">{{ segment.title }}</h1>
-                  <input v-else v-model="formData.title" type="text"
-                    class="text-3xl font-bold bg-gray-700 border border-gray-600 rounded px-3 py-2 text-yellow-400 w-full"
-                    placeholder="Segment Title" />
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-2.5 md:p-4 mb-3 md:mb-6">
+            <!-- Title Row -->
+            <div class="mb-2 md:mb-3">
+              <h1 v-if="!editMode" class="text-xl md:text-3xl font-bold text-yellow-400 truncate mb-1.5 md:mb-2">{{ segment.title }}</h1>
+              <input v-else v-model="formData.title" type="text"
+                class="text-xl md:text-3xl font-bold bg-gray-700 border border-gray-600 rounded px-3 py-2 text-yellow-400 w-full mb-2"
+                placeholder="Segment Title" />
 
-                  <span v-if="segment.isTemplate" class="px-3 py-1 bg-purple-900 text-purple-200 text-sm rounded font-semibold">
-                    TEMPLATE
-                  </span>
-                  <span v-if="segment.parentSegment" class="px-3 py-1 bg-blue-900 text-blue-200 text-sm rounded font-semibold">
-                    VARIATION
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-4 text-sm text-gray-400 mb-3">
-                  <span>Created by {{ segment.creator?.firstName }} {{ segment.creator?.lastName }}</span>
-                  <span>•</span>
-                  <span>{{ formatDate(segment.createdAt) }}</span>
-                </div>
-
-                <p v-if="!editMode" class="text-gray-300 text-lg">{{ segment.description }}</p>
-                <textarea v-else v-model="formData.description" rows="4"
-                  class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-300"
-                  placeholder="Segment description..."></textarea>
-              </div>
-
-              <div class="flex flex-col gap-2 ml-6">
-                <button @click="toggleUpvote"
+              <!-- Badges and Quick Info Row -->
+              <div class="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                <span v-if="segment.isTemplate" class="px-2 md:px-2.5 py-0.5 md:py-1 bg-purple-900 text-purple-200 text-xs md:text-sm rounded font-semibold flex-shrink-0">
+                  Template
+                </span>
+                <span v-if="segment.parentSegment" class="px-2 md:px-2.5 py-0.5 md:py-1 bg-blue-900 text-blue-200 text-xs md:text-sm rounded font-semibold flex-shrink-0">
+                  Variation
+                </span>
+                <span v-if="!editMode" :class="getStatusColor(segment.status)"
+                  class="px-2 md:px-2.5 py-0.5 md:py-1 rounded text-xs md:text-sm font-semibold uppercase flex-shrink-0">
+                  {{ segment.status.replace(/-/g, ' ') }}
+                </span>
+                <button v-if="!editMode" @click="toggleUpvote"
                   :class="[
-                    'flex items-center gap-2 px-4 py-2 rounded transition-all duration-300',
+                    'flex items-center gap-1 px-2 md:px-2.5 py-0.5 md:py-1 rounded text-xs md:text-sm transition-all duration-300 flex-shrink-0',
                     hasUpvoted
                       ? 'bg-yellow-600 text-white hover:bg-yellow-500'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-yellow-400'
                   ]">
-                  <svg class="w-5 h-5 transition-transform duration-300 hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                  <svg class="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
                   </svg>
                   {{ segment.upvoteCount || 0 }}
                 </button>
-
-                <span v-if="!editMode" :class="getStatusColor(segment.status)"
-                  class="px-3 py-2 rounded text-sm font-semibold uppercase text-center">
-                  {{ segment.status.replace(/-/g, ' ') }}
-                </span>
               </div>
             </div>
 
+            <!-- Meta Info -->
+            <div class="flex items-center gap-1.5 md:gap-3 text-xs md:text-sm text-gray-400 mb-2 md:mb-3 hidden sm:flex">
+              <span>Created {{ formatDate(segment.createdAt) }}</span>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-2 md:mb-3">
+              <p v-if="!editMode" class="text-gray-300 text-sm md:text-base">{{ segment.description }}</p>
+              <textarea v-else v-model="formData.description" rows="3"
+                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-300 text-sm"
+                placeholder="Segment description..."></textarea>
+            </div>
+
             <!-- Action Buttons -->
-            <div class="flex gap-3 mt-4 pt-4 border-t border-gray-700">
+            <div class="flex flex-wrap gap-1.5 md:gap-2 mt-2 md:mt-3 pt-2 md:pt-3 border-t border-gray-700">
               <button v-if="!editMode" @click="toggleEdit"
-                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-semibold transition">
-                Edit Segment
+                class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition text-xs md:text-sm">
+                Edit
               </button>
               <button v-if="editMode" @click="saveChanges" :disabled="saving"
-                class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded font-semibold transition disabled:opacity-50">
-                {{ saving ? 'Saving...' : 'Save Changes' }}
+                class="bg-green-600 hover:bg-green-500 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition disabled:opacity-50 text-xs md:text-sm">
+                {{ saving ? 'Saving...' : 'Save' }}
               </button>
               <button v-if="editMode" @click="toggleEdit"
-                class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded font-semibold transition">
+                class="bg-gray-600 hover:bg-gray-500 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition text-xs md:text-sm">
                 Cancel
               </button>
 
               <button v-if="segment.isTemplate && !editMode" @click="createVariation"
-                class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded font-semibold transition">
-                Create Variation
+                class="bg-purple-600 hover:bg-purple-500 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition text-xs md:text-sm">
+                Variation
               </button>
 
               <button v-if="!editMode" @click="raiseFlag"
-                class="bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-4 py-2 rounded font-semibold transition flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition flex items-center gap-0.5 md:gap-1 text-xs md:text-sm">
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
                 </svg>
-                Raise Flag
+                Flag
+              </button>
+
+              <button v-if="!editMode" @click="openExportModal"
+                class="bg-green-600 hover:bg-green-500 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition flex items-center gap-0.5 md:gap-1 text-xs md:text-sm">
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Export
               </button>
 
               <button v-if="canDelete && !editMode" @click="deleteSegment"
-                class="ml-auto bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded font-semibold transition">
-                Delete Segment
+                class="md:ml-auto bg-red-600 hover:bg-red-500 text-white px-2.5 md:px-3 py-1.5 md:py-2 rounded font-semibold transition text-xs md:text-sm">
+                Delete
               </button>
             </div>
           </div>
 
           <!-- Main Content Grid -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <!-- Left Column - Main Details -->
-            <div class="lg:col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-4 md:space-y-6">
               <!-- Production Details -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h2 class="text-xl font-bold text-yellow-400 mb-4">Production Details</h2>
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-400 mb-3 md:mb-4">Production Details</h2>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
                   <div>
                     <label class="block text-sm text-gray-400 mb-1">Production Type</label>
                     <select v-if="editMode" v-model="formData.productionType"
@@ -851,10 +1048,10 @@ export default {
               </div>
 
               <!-- Planning Details -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h2 class="text-xl font-bold text-yellow-400 mb-4">Planning & Goals</h2>
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-400 mb-3 md:mb-4">Planning & Goals</h2>
 
-                <div class="space-y-4">
+                <div class="space-y-3 md:space-y-4">
                   <div>
                     <label class="block text-sm text-gray-400 mb-1">Target Audience</label>
                     <textarea v-if="editMode" v-model="formData.targetAudience" rows="2"
@@ -891,11 +1088,11 @@ export default {
 
               <!-- Guest Speakers -->
               <div v-if="segment.guestSpeakers && segment.guestSpeakers.length"
-                class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h2 class="text-xl font-bold text-yellow-400 mb-4">Guest Speakers</h2>
-                <div class="space-y-3">
+                class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-400 mb-3 md:mb-4">Guest Speakers</h2>
+                <div class="space-y-2 md:space-y-3">
                   <div v-for="guest in segment.guestSpeakers" :key="guest._id"
-                    class="flex items-center justify-between p-3 bg-gray-700 rounded">
+                    class="flex items-center justify-between p-2 md:p-3 bg-gray-700 rounded">
                     <div>
                       <p class="text-gray-300 font-semibold">
                         {{ guest.user ? \`\${guest.user.firstName} \${guest.user.lastName}\` :
@@ -916,12 +1113,12 @@ export default {
 
               <!-- Variations -->
               <div v-if="segment.variations && segment.variations.length"
-                class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h2 class="text-xl font-bold text-yellow-400 mb-4">Variations ({{ segment.variations.length }})</h2>
-                <div class="space-y-2">
+                class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-400 mb-3 md:mb-4">Variations ({{ segment.variations.length }})</h2>
+                <div class="space-y-1 md:space-y-2">
                   <router-link v-for="variation in segment.variations" :key="variation._id"
                     :to="\`/segments/\${variation._id}\`"
-                    class="block p-3 bg-gray-700 hover:bg-gray-600 rounded transition">
+                    class="block p-2 md:p-3 bg-gray-700 hover:bg-gray-600 rounded transition">
                     <p class="text-gray-300 font-semibold">{{ variation.title }}</p>
                     <p class="text-sm text-gray-400">{{ variation.status.replace(/-/g, ' ') }}</p>
                   </router-link>
@@ -930,14 +1127,14 @@ export default {
             </div>
 
             <!-- Right Column - Sidebar -->
-            <div class="space-y-6">
+            <div class="space-y-4 md:space-y-6">
               <!-- Status & Priority -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-bold text-yellow-400 mb-4">Status & Priority</h3>
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h3 class="text-base md:text-lg font-bold text-yellow-400 mb-3 md:mb-4">Status & Priority</h3>
 
-                <div class="space-y-4">
+                <div class="space-y-3 md:space-y-4">
                   <div>
-                    <div class="flex items-center gap-2 mb-2">
+                    <div class="flex items-center gap-1 md:gap-2 mb-2">
                       <label class="block text-sm text-gray-400">Status</label>
                       <info-helper topic-slug="segment-status-workflow" size="sm" />
                     </div>
@@ -974,9 +1171,9 @@ export default {
                   </div>
 
                   <!-- Technical Review Request -->
-                  <div class="pt-4 border-t border-gray-700">
+                  <div class="pt-2 md:pt-4 border-t border-gray-700">
                     <div class="flex items-center justify-between mb-2">
-                      <label class="text-sm text-gray-400 flex items-center gap-2">
+                      <label class="text-sm text-gray-400 flex items-center gap-1 md:gap-2">
                         Request Technical Review
                         <info-helper topic-slug="technical-review-feature" size="sm" />
                       </label>
@@ -1004,23 +1201,23 @@ export default {
                           ]"
                         ></span>
                       </button>
-                      <span class="ml-3 text-sm text-gray-300">
+                      <span class="ml-2 md:ml-3 text-sm text-gray-300">
                         {{ formData.technicalReviewRequested ? 'Enabled' : 'Disabled' }}
                       </span>
                     </div>
 
                     <!-- Display Mode Status -->
                     <div v-else>
-                      <div v-if="segment.technicalReviewRequested" class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-yellow-900 text-yellow-200 rounded text-xs font-semibold">
+                      <div v-if="segment.technicalReviewRequested" class="flex items-center gap-1 md:gap-2">
+                        <span class="px-1.5 md:px-2 py-1 bg-yellow-900 text-yellow-200 rounded text-xs font-semibold">
                           REVIEW REQUESTED
                         </span>
                         <span v-if="segment.technicalReviewRequestedBy" class="text-xs text-gray-400">
                           by {{ segment.technicalReviewRequestedBy.firstName }}
                         </span>
                       </div>
-                      <div v-else-if="segment.technicalReviewCompletedAt" class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-green-900 text-green-200 rounded text-xs font-semibold">
+                      <div v-else-if="segment.technicalReviewCompletedAt" class="flex items-center gap-1 md:gap-2">
+                        <span class="px-1.5 md:px-2 py-1 bg-green-900 text-green-200 rounded text-xs font-semibold">
                           REVIEW COMPLETED
                         </span>
                         <span v-if="segment.technicalReviewCompletedBy" class="text-xs text-gray-400">
@@ -1033,7 +1230,7 @@ export default {
                       <button
                         v-if="segment.technicalReviewRequested && canDismissTechReview"
                         @click="dismissTechReview"
-                        class="mt-2 px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded font-semibold transition"
+                        class="mt-1 md:mt-2 px-2 md:px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded font-semibold transition"
                       >
                         Mark Review Complete
                       </button>
@@ -1043,12 +1240,12 @@ export default {
               </div>
 
               <!-- Tags -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-bold text-yellow-400 mb-4">Tags</h3>
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h3 class="text-base md:text-lg font-bold text-yellow-400 mb-3 md:mb-4">Tags</h3>
                 <input v-if="editMode" v-model="formData.tags" type="text"
                   class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-300 mb-2"
                   placeholder="tag1, tag2, tag3" />
-                <div v-else-if="segment.tags && segment.tags.length" class="flex flex-wrap gap-2">
+                <div v-else-if="segment.tags && segment.tags.length" class="flex flex-wrap gap-1 md:gap-2">
                   <span v-for="tag in segment.tags" :key="tag"
                     class="px-2 py-1 bg-gray-700 text-gray-300 rounded text-sm">
                     {{ tag }}
@@ -1058,23 +1255,23 @@ export default {
               </div>
 
               <!-- Assigned Team -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <div class="flex items-center justify-between mb-4">
-                  <h3 class="text-lg font-bold text-yellow-400">Assigned Team</h3>
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <div class="flex items-center justify-between mb-3 md:mb-4">
+                  <h3 class="text-base md:text-lg font-bold text-yellow-400">Assigned Team</h3>
                   <button @click="openUserModal"
-                    class="px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded text-sm font-semibold transition">
-                    + Add User
+                    class="px-2 md:px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded text-xs md:text-sm font-semibold transition">
+                    + Add
                   </button>
                 </div>
-                <div v-if="segment.assignedUsers && segment.assignedUsers.length" class="space-y-2">
+                <div v-if="segment.assignedUsers && segment.assignedUsers.length" class="space-y-1 md:space-y-2">
                   <div v-for="assigned in segment.assignedUsers" :key="assigned._id"
-                    class="flex items-center justify-between p-3 bg-gray-700 rounded">
+                    class="flex items-center justify-between p-2 md:p-3 bg-gray-700 rounded">
                     <div>
-                      <p class="text-gray-300 font-medium">{{ assigned.user?.firstName }} {{ assigned.user?.lastName }}</p>
+                      <p class="text-gray-300 font-medium text-sm">{{ assigned.user?.firstName }} {{ assigned.user?.lastName }}</p>
                       <p class="text-xs text-gray-400 uppercase">{{ assigned.role }}</p>
                     </div>
                     <button @click="removeUser(assigned.user?._id)"
-                      class="px-2 py-1 bg-red-700 hover:bg-red-600 text-red-200 rounded text-xs font-semibold transition">
+                      class="px-1.5 md:px-2 py-1 bg-red-700 hover:bg-red-600 text-red-200 rounded text-xs font-semibold transition">
                       Remove
                     </button>
                   </div>
@@ -1083,10 +1280,10 @@ export default {
               </div>
 
               <!-- Template Info -->
-              <div v-if="segment.parentSegment" class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-bold text-yellow-400 mb-4">Template Source</h3>
+              <div v-if="segment.parentSegment" class="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4">
+                <h3 class="text-base md:text-lg font-bold text-yellow-400 mb-3 md:mb-4">Template Source</h3>
                 <router-link :to="\`/segments/\${segment.parentSegment._id}\`"
-                  class="block p-3 bg-gray-700 hover:bg-gray-600 rounded transition">
+                  class="block p-2 md:p-3 bg-gray-700 hover:bg-gray-600 rounded transition">
                   <p class="text-gray-300 font-semibold">{{ segment.parentSegment.title }}</p>
                   <p class="text-sm text-gray-400">View Template</p>
                 </router-link>
@@ -1095,28 +1292,29 @@ export default {
           </div>
 
           <!-- Tools Navigation Bar -->
-          <div class="mt-6 flex flex-wrap gap-3">
+          <div class="mt-4 md:mt-6 flex flex-wrap gap-2 md:gap-3">
             <!-- Video Chat Button -->
             <button
               @click="togglePanel('videoChat')"
               :class="[
-                'group flex items-center gap-3 px-5 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02]',
+                'group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-[1.02]',
                 expandedPanels.videoChat
                   ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/25'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-gray-200 border border-gray-700 hover:border-purple-500/50'
               ]"
             >
               <div :class="[
-                'p-2 rounded-lg transition-colors duration-300',
+                'p-1.5 md:p-2 rounded-lg transition-colors duration-300',
                 expandedPanels.videoChat ? 'bg-purple-500/30' : 'bg-gray-700 group-hover:bg-purple-900/30'
               ]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                 </svg>
               </div>
-              <span>Video Chat</span>
-              <span v-if="segment.vdoNinja?.sessionCreated" class="ml-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              <svg :class="['w-4 h-4 transition-transform duration-300', expandedPanels.videoChat ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span class="hidden md:inline">Video Chat</span>
+              <span class="md:hidden">Chat</span>
+              <span v-if="segment.vdoNinja?.sessionCreated" class="ml-1 w-1.5 md:w-2 h-1.5 md:h-2 bg-green-400 rounded-full animate-pulse"></span>
+              <svg :class="['w-3 md:w-4 h-3 md:h-4 transition-transform duration-300', expandedPanels.videoChat ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </button>
@@ -1125,22 +1323,23 @@ export default {
             <button
               @click="togglePanel('obsScenes')"
               :class="[
-                'group flex items-center gap-3 px-5 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02]',
+                'group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-[1.02]',
                 expandedPanels.obsScenes
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-gray-200 border border-gray-700 hover:border-blue-500/50'
               ]"
             >
               <div :class="[
-                'p-2 rounded-lg transition-colors duration-300',
+                'p-1.5 md:p-2 rounded-lg transition-colors duration-300',
                 expandedPanels.obsScenes ? 'bg-blue-500/30' : 'bg-gray-700 group-hover:bg-blue-900/30'
               ]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
               </div>
-              <span>OBS Scenes</span>
-              <svg :class="['w-4 h-4 transition-transform duration-300', expandedPanels.obsScenes ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span class="hidden md:inline">OBS Scenes</span>
+              <span class="md:hidden">OBS</span>
+              <svg :class="['w-3 md:w-4 h-3 md:h-4 transition-transform duration-300', expandedPanels.obsScenes ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </button>
@@ -1149,22 +1348,22 @@ export default {
             <button
               @click="togglePanel('files')"
               :class="[
-                'group flex items-center gap-3 px-5 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02]',
+                'group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-[1.02]',
                 expandedPanels.files
                   ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/25'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-gray-200 border border-gray-700 hover:border-green-500/50'
               ]"
             >
               <div :class="[
-                'p-2 rounded-lg transition-colors duration-300',
+                'p-1.5 md:p-2 rounded-lg transition-colors duration-300',
                 expandedPanels.files ? 'bg-green-500/30' : 'bg-gray-700 group-hover:bg-green-900/30'
               ]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                 </svg>
               </div>
               <span>Files</span>
-              <svg :class="['w-4 h-4 transition-transform duration-300', expandedPanels.files ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg :class="['w-3 md:w-4 h-3 md:h-4 transition-transform duration-300', expandedPanels.files ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </button>
@@ -1173,22 +1372,22 @@ export default {
             <button
               @click="togglePanel('comments')"
               :class="[
-                'group flex items-center gap-3 px-5 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02]',
+                'group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-[1.02]',
                 expandedPanels.comments
                   ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white shadow-lg shadow-yellow-500/25'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-gray-200 border border-gray-700 hover:border-yellow-500/50'
               ]"
             >
               <div :class="[
-                'p-2 rounded-lg transition-colors duration-300',
+                'p-1.5 md:p-2 rounded-lg transition-colors duration-300',
                 expandedPanels.comments ? 'bg-yellow-500/30' : 'bg-gray-700 group-hover:bg-yellow-900/30'
               ]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                 </svg>
               </div>
               <span>Comments</span>
-              <svg :class="['w-4 h-4 transition-transform duration-300', expandedPanels.comments ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg :class="['w-3 md:w-4 h-3 md:h-4 transition-transform duration-300', expandedPanels.comments ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </button>
@@ -1279,7 +1478,7 @@ export default {
                       Created {{ formatDate(segment.vdoNinja.sessionCreatedAt) }}
                     </span>
                   </div>
-                  <div class="grid grid-cols-2 gap-3 text-sm">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div>
                       <span class="text-gray-500">Room ID:</span>
                       <span class="ml-2 text-gray-300 font-mono">{{ segment.vdoNinja.roomId }}</span>
@@ -1377,8 +1576,8 @@ export default {
                       :key="participant._id"
                       class="p-4 bg-gray-900 rounded-lg border border-gray-700"
                     >
-                      <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-3">
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2 flex-wrap">
                           <span class="font-semibold text-gray-200">
                             {{ participant.user?.firstName ? \`\${participant.user.firstName} \${participant.user.lastName}\` :
                                participant.applicant?.firstName ? \`\${participant.applicant.firstName} \${participant.applicant.lastName}\` :
@@ -1392,11 +1591,11 @@ export default {
                             Connected
                           </span>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                           <select
                             :value="participant.role"
                             @change="updateVdoParticipantRole(participant._id, $event.target.value)"
-                            class="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-300"
+                            class="flex-1 sm:flex-none px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-300"
                           >
                             <option value="director">Director</option>
                             <option value="participant">Participant</option>
@@ -1407,7 +1606,7 @@ export default {
                           </select>
                           <button
                             @click="removeVdoParticipant(participant._id)"
-                            class="px-2 py-1 bg-red-700 hover:bg-red-600 text-red-200 rounded text-xs font-semibold transition"
+                            class="flex-1 sm:flex-none px-2 py-1 bg-red-700 hover:bg-red-600 text-red-200 rounded text-xs font-semibold transition min-h-[44px] sm:min-h-auto flex items-center justify-center"
                             title="Remove participant"
                           >
                             Remove
@@ -1417,8 +1616,8 @@ export default {
 
                       <!-- Join URL -->
                       <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                          <span class="text-xs text-gray-500 w-16">Join URL:</span>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span class="text-xs text-gray-500 sm:w-16">Join URL:</span>
                           <button
                             @click="toggleUrlReveal('join-' + participant._id)"
                             class="flex-1 text-left px-2 py-1 bg-gray-800 rounded text-xs font-mono truncate"
@@ -1429,15 +1628,15 @@ export default {
                           <button
                             v-if="revealedUrls['join-' + participant._id]"
                             @click="copyToClipboard(participant.joinUrl, 'Join URL')"
-                            class="px-2 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-semibold transition"
+                            class="px-2 py-1 sm:py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-semibold transition min-h-[44px] sm:min-h-auto flex items-center justify-center"
                           >
                             Copy
                           </button>
                         </div>
 
                         <!-- View URL (for OBS individual sources) -->
-                        <div v-if="participant.viewUrl" class="flex items-center gap-2">
-                          <span class="text-xs text-gray-500 w-16">View URL:</span>
+                        <div v-if="participant.viewUrl" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span class="text-xs text-gray-500 sm:w-16">View URL:</span>
                           <button
                             @click="toggleUrlReveal('view-' + participant._id)"
                             class="flex-1 text-left px-2 py-1 bg-gray-800 rounded text-xs font-mono truncate"
@@ -1448,15 +1647,15 @@ export default {
                           <button
                             v-if="revealedUrls['view-' + participant._id]"
                             @click="copyToClipboard(participant.viewUrl, 'View URL')"
-                            class="px-2 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs font-semibold transition"
+                            class="px-2 py-1 sm:py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs font-semibold transition min-h-[44px] sm:min-h-auto flex items-center justify-center"
                           >
                             Copy
                           </button>
                         </div>
 
                         <!-- Scene URL (for OBS lower-third overlay) -->
-                        <div v-if="participant.sceneUrl" class="flex items-center gap-2">
-                          <span class="text-xs text-gray-500 w-16">Scene:</span>
+                        <div v-if="participant.sceneUrl" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span class="text-xs text-gray-500 sm:w-16">Scene:</span>
                           <button
                             @click="toggleUrlReveal('scene-' + participant._id)"
                             class="flex-1 text-left px-2 py-1 bg-gray-800 rounded text-xs font-mono truncate"
@@ -1464,29 +1663,31 @@ export default {
                           >
                             {{ revealedUrls['scene-' + participant._id] ? participant.sceneUrl : 'Click to reveal OBS scene...' }}
                           </button>
-                          <button
-                            v-if="revealedUrls['scene-' + participant._id]"
-                            @click="copyToClipboard(participant.sceneUrl, 'Scene URL')"
-                            class="px-2 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold transition"
-                          >
-                            Copy
-                          </button>
-                          <a
-                            v-if="revealedUrls['scene-' + participant._id]"
-                            :href="participant.sceneUrl"
-                            target="_blank"
-                            class="px-2 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold transition"
-                            title="Preview scene"
-                          >
-                            Preview
-                          </a>
+                          <div class="flex gap-1">
+                            <button
+                              v-if="revealedUrls['scene-' + participant._id]"
+                              @click="copyToClipboard(participant.sceneUrl, 'Scene URL')"
+                              class="flex-1 sm:flex-none px-2 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold transition min-h-[44px] sm:min-h-auto flex items-center justify-center"
+                            >
+                              Copy
+                            </button>
+                            <a
+                              v-if="revealedUrls['scene-' + participant._id]"
+                              :href="participant.sceneUrl"
+                              target="_blank"
+                              class="flex-1 sm:flex-none px-2 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold transition min-h-[44px] sm:min-h-auto flex items-center justify-center"
+                              title="Preview scene"
+                            >
+                              Preview
+                            </a>
+                          </div>
                         </div>
                       </div>
 
                       <!-- Email Status & Send Button -->
                       <div class="pt-3 border-t border-gray-700 mt-3">
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div class="flex flex-wrap items-center gap-2">
                             <div v-if="participant.emailSent" class="flex items-center gap-2 text-sm">
                               <span class="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
                               <span class="text-gray-300">Email sent</span>
@@ -1502,7 +1703,7 @@ export default {
                           <button
                             @click="sendVdoEmail(participant._id)"
                             :disabled="sendingEmail === participant._id"
-                            class="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white text-sm rounded transition-colors"
+                            class="w-full sm:w-auto px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white text-sm rounded transition-colors min-h-[44px] sm:min-h-auto flex items-center justify-center"
                           >
                             {{ sendingEmail === participant._id ? 'Sending...' : participant.emailSent ? 'Resend Email' : 'Send Email' }}
                           </button>
@@ -1740,6 +1941,106 @@ export default {
                 class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md font-semibold transition">
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div v-if="showExportModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4">
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold text-yellow-400 mb-2">Export Segment</h3>
+            <p class="text-gray-400 text-sm mb-6">Download this segment's data as a JSON file</p>
+
+            <div class="space-y-4">
+              <!-- Admin-only encryption option -->
+              <div v-if="authStore.isAdmin.value" class="border border-gray-700 rounded-lg p-4 bg-gray-900">
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input v-model="exportEncrypted" type="checkbox" class="rounded"/>
+                  <span class="text-gray-300 font-semibold">Encrypt with passkey (AES-256-GCM)</span>
+                </label>
+                <p class="text-gray-500 text-sm mt-2">Requires a passkey to decrypt</p>
+
+                <div v-if="exportEncrypted" class="mt-4">
+                  <label class="block text-sm text-gray-400 mb-2">Encryption Passkey (8+ characters)</label>
+                  <input v-model="exportPasskey" type="password"
+                    class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-300"
+                    placeholder="Enter secure passkey..." />
+                  <p class="text-yellow-500 text-xs mt-2">Save your passkey securely - you'll need it to decrypt</p>
+                </div>
+              </div>
+
+              <!-- Non-admin info -->
+              <p v-if="!authStore.isAdmin.value" class="text-gray-400 text-sm">
+                Only admin users can encrypt exports.
+              </p>
+            </div>
+
+            <div class="flex flex-col-reverse sm:flex-row gap-3 mt-6">
+              <button @click="downloadSegmentExport()" :disabled="exportLoading || (exportEncrypted && !exportPasskey)"
+                class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 sm:py-2 rounded-md font-semibold transition disabled:opacity-50 min-h-[44px] sm:min-h-auto flex items-center justify-center">
+                {{ exportLoading ? 'Exporting...' : 'Export' }}
+              </button>
+              <button @click="closeExportModal"
+                class="flex-1 sm:flex-none px-4 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md font-semibold transition min-h-[44px] sm:min-h-auto flex items-center justify-center">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Delete Modal -->
+        <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4">
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-md w-full max-h-96 overflow-y-auto">
+            <div v-if="loadingDeletePreview" class="text-center py-8">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+              <p class="mt-2 text-gray-400">Loading preview...</p>
+            </div>
+
+            <div v-else-if="deletePreview">
+              <h3 class="text-xl font-bold text-red-400 mb-2">Delete "{{ deletePreview.segment.title }}"?</h3>
+              <p class="text-gray-400 text-sm mb-4">This action cannot be undone.</p>
+
+              <!-- Warnings -->
+              <div v-if="deletePreview.warnings.length > 0" class="space-y-2 mb-4">
+                <div v-for="warning in deletePreview.warnings" :key="warning.type"
+                  :class="[
+                    'p-3 rounded-lg text-sm border',
+                    warning.severity === 'critical' ? 'bg-red-950 border-red-700 text-red-200' :
+                    warning.severity === 'warning' ? 'bg-yellow-950 border-yellow-700 text-yellow-200' :
+                    'bg-blue-950 border-blue-700 text-blue-200'
+                  ]">
+                  <p class="font-semibold">{{ warning.title }}</p>
+                  <p class="text-xs mt-1">{{ warning.message }}</p>
+                  <p v-if="warning.type === 'variations'" class="text-xs mt-2">
+                    • {{ warning.data.length }} variation(s): {{ warning.data.map(v => v.title).join(', ') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Export before delete checkbox -->
+              <label class="flex items-center gap-2 mb-4 p-3 bg-gray-900 rounded-lg border border-gray-700">
+                <input v-model="exportBeforeDelete" type="checkbox" class="rounded" />
+                <span class="text-gray-300 text-sm">Export as backup before deleting</span>
+              </label>
+
+              <!-- Type to confirm -->
+              <div class="mb-4">
+                <label class="block text-sm text-gray-400 mb-2">Type "DELETE" to confirm</label>
+                <input v-model="deleteConfirmText" type="text"
+                  class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-300"
+                  placeholder="Type DELETE..." />
+              </div>
+
+              <div class="flex flex-col-reverse sm:flex-row gap-3">
+                <button @click="confirmDeleteSegment" :disabled="deletingSegment || deleteConfirmText !== 'DELETE'"
+                  class="flex-1 bg-red-600 hover:bg-red-500 text-white px-4 py-2 sm:py-2 rounded-md font-semibold transition disabled:opacity-50 min-h-[44px] sm:min-h-auto flex items-center justify-center">
+                  {{ deletingSegment ? 'Deleting...' : 'Delete' }}
+                </button>
+                <button @click="closeDeleteModal" :disabled="deletingSegment"
+                  class="flex-1 sm:flex-none px-4 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md font-semibold transition disabled:opacity-50 min-h-[44px] sm:min-h-auto flex items-center justify-center">
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

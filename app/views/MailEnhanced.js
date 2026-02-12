@@ -404,7 +404,7 @@ export default {
     };
   },
   template: `
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="w-full px-2 sm:px-3 md:px-4 lg:px-6 py-4 md:py-6 lg:py-8">
       <!-- Back Button -->
       <router-link to="/dashboard" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-4">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,14 +414,14 @@ export default {
       </router-link>
 
       <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-4xl font-bold text-white mb-2">✉️ Mail Center</h1>
-        <p class="text-gray-300">Send emails with templates, mailing lists, and attachments</p>
+      <div class="mb-4 md:mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">✉️ Mail Center</h1>
+        <p class="text-sm sm:text-base text-gray-300">Send emails with templates, mailing lists, and attachments</p>
       </div>
 
       <!-- Email Service Status -->
-      <div v-if="emailStatus" class="mb-8 rounded-lg border-2 p-5" :class="emailStatus.configured ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
-        <div class="flex items-center gap-4">
+      <div v-if="emailStatus" class="mb-4 md:mb-6 rounded-lg border-2 p-3 md:p-4" :class="emailStatus.configured ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
+        <div class="flex items-center gap-2 md:gap-3">
           <div class="flex-shrink-0">
             <svg v-if="emailStatus.configured" class="h-6 w-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -439,44 +439,44 @@ export default {
       </div>
 
       <!-- Tabs -->
-      <div class="mb-8 border-b-2 border-gray-700">
-        <nav class="-mb-px flex gap-8">
+      <div class="mb-3 md:mb-6 border-b-2 border-gray-700 overflow-x-auto">
+        <nav class="-mb-px flex gap-1 md:gap-3 min-w-min">
           <button
             @click="currentTab = 'compose'"
             :class="currentTab === 'compose' ? 'border-b-4 border-yellow-400 text-white' : 'border-transparent text-gray-400 hover:text-gray-300'"
-            class="whitespace-nowrap py-4 px-1 font-semibold text-base transition-colors">
+            class="whitespace-nowrap py-2 md:py-3 px-1 md:px-2 font-semibold text-xs md:text-sm transition-colors flex-shrink-0">
             📝 Compose
           </button>
           <button
             @click="currentTab = 'templates'"
             :class="currentTab === 'templates' ? 'border-b-4 border-yellow-400 text-white' : 'border-transparent text-gray-400 hover:text-gray-300'"
-            class="whitespace-nowrap py-4 px-1 font-semibold text-base transition-colors">
+            class="whitespace-nowrap py-2 md:py-3 px-1 md:px-2 font-semibold text-xs md:text-sm transition-colors flex-shrink-0">
             📋 Templates
           </button>
           <button
             @click="currentTab = 'lists'"
             :class="currentTab === 'lists' ? 'border-b-4 border-yellow-400 text-white' : 'border-transparent text-gray-400 hover:text-gray-300'"
-            class="whitespace-nowrap py-4 px-1 font-semibold text-base transition-colors">
-            📬 Mailing Lists
+            class="whitespace-nowrap py-2 md:py-3 px-1 md:px-2 font-semibold text-xs md:text-sm transition-colors flex-shrink-0">
+            📬 Lists
           </button>
           <button
             @click="currentTab = 'history'"
             :class="currentTab === 'history' ? 'border-b-4 border-yellow-400 text-white' : 'border-transparent text-gray-400 hover:text-gray-300'"
-            class="whitespace-nowrap py-4 px-1 font-semibold text-base transition-colors">
-            📊 Sent History
+            class="whitespace-nowrap py-2 md:py-3 px-1 md:px-2 font-semibold text-xs md:text-sm transition-colors flex-shrink-0">
+            📊 History
           </button>
         </nav>
       </div>
 
       <!-- Compose Tab -->
-      <div v-show="currentTab === 'compose'" class="space-y-6">
+      <div v-show="currentTab === 'compose'" class="space-y-3 md:space-y-4 lg:space-y-6">
         <!-- Templates Selector -->
-        <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <label class="block text-sm font-semibold text-gray-300 mb-2">📋 Use Template (Optional)</label>
-          <div class="flex gap-3">
+        <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-2.5 md:p-4">
+          <label class="block text-xs md:text-sm font-semibold text-gray-300 mb-2">📋 Use Template (Optional)</label>
+          <div class="flex flex-col gap-2">
             <select
               v-model="templateId"
-              class="flex-1 px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:outline-none transition">
+              class="w-full px-2 md:px-4 py-2 md:py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white text-xs md:text-sm focus:border-yellow-500 focus:outline-none transition">
               <option value="">-- No template --</option>
               <option v-for="template in templates" :key="template._id" :value="template._id">
                 {{ template.name }} ({{ template.category }})
@@ -485,7 +485,7 @@ export default {
             <button
               @click="applyTemplate"
               :disabled="!templateId"
-              class="px-6 py-3 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-700 text-gray-900 disabled:text-gray-500 rounded-lg font-semibold transition">
+              class="w-full px-3 md:px-6 py-2 md:py-3 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-700 text-gray-900 disabled:text-gray-500 rounded-lg font-semibold transition min-h-[40px] text-xs md:text-sm flex items-center justify-center">
               Apply
             </button>
           </div>
@@ -496,30 +496,30 @@ export default {
 
         <!-- Subject -->
         <div>
-          <label class="block text-sm font-semibold text-gray-300 mb-2">📌 Subject</label>
+          <label class="block text-xs md:text-sm font-semibold text-gray-300 mb-1.5">📌 Subject</label>
           <input
             v-model="subject"
             type="text"
-            placeholder="Email subject"
+            placeholder="Subject"
             maxlength="200"
-            class="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition">
+            class="w-full px-2 md:px-4 py-1.5 md:py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white text-xs md:text-sm placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition">
           <div class="flex justify-between items-center text-xs mt-1">
-            <p class="text-gray-400">Keep it clear and concise</p>
+            <p class="text-gray-400">Clear & concise</p>
             <p :class="subject.length > 150 ? 'text-yellow-500' : 'text-gray-500'">{{ subject.length }}/200</p>
           </div>
         </div>
 
         <!-- Body -->
         <div>
-          <label class="block text-sm font-semibold text-gray-300 mb-2">💬 Message</label>
+          <label class="block text-xs md:text-sm font-semibold text-gray-300 mb-1.5">💬 Message</label>
           <textarea
             v-model="body"
-            rows="10"
-            placeholder="Write your message here..."
+            rows="6"
+            placeholder="Your message..."
             maxlength="10000"
-            class="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition resize-none"></textarea>
+            class="w-full px-2 md:px-4 py-1.5 md:py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white text-xs md:text-sm placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition resize-none"></textarea>
           <div class="flex justify-between items-center text-xs mt-1">
-            <p class="text-gray-400">Plain text format</p>
+            <p class="text-gray-400">Plain text</p>
             <p :class="body.length > 9000 ? 'text-yellow-500' : 'text-gray-500'">{{ body.length }}/10000</p>
           </div>
         </div>
@@ -528,48 +528,48 @@ export default {
         <file-uploader @filesChanged="attachedFiles = $event" />
 
         <!-- Recipient Count Display -->
-        <div class="p-4 bg-blue-900/30 border-2 border-blue-600 rounded-lg">
-          <p class="text-sm text-blue-300">👥 Recipients: <span class="font-semibold">{{ recipientCount }}</span></p>
+        <div class="p-1.5 md:p-3 bg-blue-900/30 border-2 border-blue-600 rounded-lg">
+          <p class="text-xs text-blue-300">👥 Recipients: <span class="font-semibold">{{ recipientCount }}</span></p>
         </div>
 
         <!-- Messages -->
-        <div v-if="sendMessage" class="p-4 bg-green-900/30 border-2 border-green-600 rounded-lg">
-          <p class="text-sm text-green-400">{{ sendMessage }}</p>
+        <div v-if="sendMessage" class="p-1.5 md:p-3 bg-green-900/30 border-2 border-green-600 rounded-lg">
+          <p class="text-xs text-green-400">{{ sendMessage }}</p>
         </div>
 
-        <div v-if="sendError" class="p-4 bg-red-900/30 border-2 border-red-600 rounded-lg">
-          <p class="text-sm text-red-400">❌ {{ sendError }}</p>
+        <div v-if="sendError" class="p-1.5 md:p-3 bg-red-900/30 border-2 border-red-600 rounded-lg">
+          <p class="text-xs text-red-400">❌ {{ sendError }}</p>
         </div>
 
         <!-- Send Button -->
-        <div class="flex justify-end gap-3 pt-4">
+        <div class="flex flex-col-reverse sm:flex-row gap-1.5 md:gap-3 pt-2 md:pt-3">
           <button
             @click="templateId = null; subject = ''; body = ''; attachedFiles = []; recipients = { type: 'custom_emails', customEmails: [], roles: [], mailingListId: null, userIds: [], excludeUserIds: [] }"
             type="button"
-            class="px-6 py-3 border-2 border-gray-700 rounded-lg text-gray-300 font-semibold hover:bg-gray-800 hover:border-gray-600 transition">
+            class="flex-1 px-2 md:px-6 py-1.5 md:py-3 border-2 border-gray-700 rounded-lg text-gray-300 font-semibold hover:bg-gray-800 hover:border-gray-600 transition min-h-[40px] text-xs md:text-sm flex items-center justify-center">
             Clear
           </button>
           <button
             @click="sendEmail"
             :disabled="sending || !canSend"
             :class="sending || !canSend ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-yellow-500 text-gray-900 hover:bg-yellow-400 shadow-lg shadow-yellow-500/30'"
-            class="px-8 py-3 rounded-lg font-bold transition flex items-center gap-2">
+            class="flex-1 px-2 md:px-8 py-1.5 md:py-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 min-h-[40px] text-xs md:text-sm">
             <span v-if="sending">🔄 Sending...</span>
-            <span v-else>📤 Send Email</span>
+            <span v-else>📤 Send</span>
           </button>
         </div>
       </div>
 
       <!-- Templates Tab -->
-      <div v-show="currentTab === 'templates'" class="space-y-6">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-            <h2 class="text-2xl font-bold text-white">Email Templates</h2>
+      <div v-show="currentTab === 'templates'" class="space-y-3 md:space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 md:gap-3 mb-3 md:mb-4">
+          <div class="flex items-center gap-2 md:gap-3">
+            <h2 class="text-xl md:text-2xl font-bold text-white">Email Templates</h2>
             <info-helper topic-slug="email-templates-guide" size="sm" />
           </div>
           <button
             @click="editingTemplate = null; showTemplateEditor = true"
-            class="px-4 py-2 bg-yellow-500 text-gray-900 rounded-lg font-semibold hover:bg-yellow-400 transition">
+            class="w-full sm:w-auto px-3 md:px-4 py-2 md:py-2.5 bg-yellow-500 text-gray-900 rounded-lg font-semibold hover:bg-yellow-400 transition min-h-[40px] flex items-center justify-center">
             ➕ New Template
           </button>
         </div>
@@ -582,31 +582,31 @@ export default {
           <p class="text-gray-400">No templates yet. Create one to get started!</p>
         </div>
 
-        <div v-else class="grid gap-4">
+        <div v-else class="grid gap-3 md:gap-4">
           <div
             v-for="template in templateList"
             :key="template._id"
-            class="bg-gray-800 border-2 border-gray-700 rounded-lg p-5 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition">
-            <div class="flex items-start justify-between gap-4">
+            class="bg-gray-800 border-2 border-gray-700 rounded-lg p-3 md:p-4 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition">
+            <div class="flex items-start justify-between gap-3 md:gap-4">
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-3">
-                  <span class="inline-block px-3 py-1 bg-yellow-900/50 border border-yellow-600 rounded-full text-xs text-yellow-300">
+                <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+                  <span class="inline-block px-2 md:px-3 py-0.5 md:py-1 bg-yellow-900/50 border border-yellow-600 rounded-full text-xs text-yellow-300">
                     {{ template.category }}
                   </span>
-                  <h3 class="text-lg font-bold text-white">{{ template.name }}</h3>
+                  <h3 class="text-base md:text-lg font-bold text-white break-words">{{ template.name }}</h3>
                 </div>
-                <p class="mt-2 text-sm text-gray-300 line-clamp-2">{{ template.subject }}</p>
-                <p class="mt-2 text-xs text-gray-500">Used {{ template.usageCount }} times</p>
+                <p class="mt-1.5 md:mt-2 text-xs md:text-sm text-gray-300 line-clamp-2">{{ template.subject }}</p>
+                <p class="mt-1 md:mt-2 text-xs text-gray-500">Used {{ template.usageCount }} times</p>
               </div>
-              <div class="flex gap-2 flex-shrink-0">
+              <div class="flex gap-1.5 md:gap-2 flex-shrink-0">
                 <button
                   @click="editingTemplate = template; showTemplateEditor = true"
-                  class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-sm">
+                  class="px-2 md:px-3 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-sm min-h-[36px] flex items-center">
                   ✏️
                 </button>
                 <button
                   @click="deleteTemplate(template._id)"
-                  class="px-3 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-sm">
+                  class="px-2 md:px-3 py-1.5 md:py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-sm min-h-[36px] flex items-center">
                   🗑️
                 </button>
               </div>
@@ -616,15 +616,15 @@ export default {
       </div>
 
       <!-- Mailing Lists Tab -->
-      <div v-show="currentTab === 'lists'" class="space-y-6">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-            <h2 class="text-2xl font-bold text-white">Mailing Lists</h2>
+      <div v-show="currentTab === 'lists'" class="space-y-3 md:space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 md:gap-3 mb-3 md:mb-4">
+          <div class="flex items-center gap-2 md:gap-3">
+            <h2 class="text-xl md:text-2xl font-bold text-white">Mailing Lists</h2>
             <info-helper topic-slug="mailing-lists-explained" size="sm" />
           </div>
           <button
             @click="editingMailingList = null; showMailingListEditor = true"
-            class="px-4 py-2 bg-yellow-500 text-gray-900 rounded-lg font-semibold hover:bg-yellow-400 transition">
+            class="w-full sm:w-auto px-3 md:px-4 py-2 md:py-2.5 bg-yellow-500 text-gray-900 rounded-lg font-semibold hover:bg-yellow-400 transition min-h-[40px] flex items-center justify-center">
             ➕ New List
           </button>
         </div>
@@ -637,31 +637,31 @@ export default {
           <p class="text-gray-400">No mailing lists yet. Create one to get started!</p>
         </div>
 
-        <div v-else class="grid gap-4">
+        <div v-else class="grid gap-3 md:gap-4">
           <div
             v-for="list in mailingListsList"
             :key="list._id"
-            class="bg-gray-800 border-2 border-gray-700 rounded-lg p-5 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition">
-            <div class="flex items-start justify-between gap-4">
+            class="bg-gray-800 border-2 border-gray-700 rounded-lg p-3 md:p-4 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition">
+            <div class="flex items-start justify-between gap-3 md:gap-4">
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-3">
-                  <span class="inline-block px-3 py-1" :class="list.isDynamic ? 'bg-blue-900/50 border border-blue-600 text-blue-300' : 'bg-purple-900/50 border border-purple-600 text-purple-300'" >
+                <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+                  <span class="inline-block px-2 md:px-3 py-0.5 md:py-1" :class="list.isDynamic ? 'bg-blue-900/50 border border-blue-600 text-blue-300' : 'bg-purple-900/50 border border-purple-600 text-purple-300'" >
                     <span class="text-xs">{{ list.isDynamic ? 'Dynamic' : 'Static' }}</span>
                   </span>
-                  <h3 class="text-lg font-bold text-white">{{ list.name }}</h3>
+                  <h3 class="text-base md:text-lg font-bold text-white break-words">{{ list.name }}</h3>
                 </div>
-                <p v-if="list.description" class="mt-2 text-sm text-gray-300">{{ list.description }}</p>
-                <p class="mt-2 text-xs text-gray-500">{{ list.recipientCount }} recipient(s) • Used {{ list.usageCount }} times</p>
+                <p v-if="list.description" class="mt-1.5 md:mt-2 text-xs md:text-sm text-gray-300">{{ list.description }}</p>
+                <p class="mt-1 md:mt-2 text-xs text-gray-500">{{ list.recipientCount }} recipient(s) • Used {{ list.usageCount }} times</p>
               </div>
-              <div class="flex gap-2 flex-shrink-0">
+              <div class="flex gap-1.5 md:gap-2 flex-shrink-0">
                 <button
                   @click="editingMailingList = list; showMailingListEditor = true"
-                  class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-sm">
+                  class="px-2 md:px-3 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-sm min-h-[36px] flex items-center">
                   ✏️
                 </button>
                 <button
                   @click="deleteMailingList(list._id)"
-                  class="px-3 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-sm">
+                  class="px-2 md:px-3 py-1.5 md:py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-sm min-h-[36px] flex items-center">
                   🗑️
                 </button>
               </div>
@@ -671,8 +671,8 @@ export default {
       </div>
 
       <!-- Sent History Tab -->
-      <div v-show="currentTab === 'history'" class="space-y-6">
-        <h2 class="text-2xl font-bold text-white">Sent History</h2>
+      <div v-show="currentTab === 'history'" class="space-y-3 md:space-y-4">
+        <h2 class="text-lg md:text-2xl font-bold text-white">Sent History</h2>
 
         <div v-if="logsLoading" class="text-center py-8 text-gray-400">
           Loading history...
@@ -682,48 +682,48 @@ export default {
           <p class="text-gray-400">No emails sent yet</p>
         </div>
 
-        <div v-else class="space-y-4">
+        <div v-else class="space-y-1.5 md:space-y-3">
           <div
             v-for="log in emailLogs"
             :key="log._id"
-            class="bg-gray-800 border-2 border-gray-700 rounded-lg p-5 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition">
-            <div class="flex items-start justify-between gap-4">
+            class="bg-gray-800 border-2 border-gray-700 rounded-lg p-2 md:p-3 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition">
+            <div class="flex items-start justify-between gap-2 md:gap-3">
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-3">
-                  <span :class="'inline-block px-3 py-1 border rounded-full text-xs font-semibold ' + getStatusColor(log.status)">
+                <div class="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                  <span :class="'inline-block px-1.5 md:px-3 py-0.5 border rounded-full text-xs font-semibold ' + getStatusColor(log.status)">
                     {{ log.status === 'sent' ? '✓' : log.status === 'failed' ? '✗' : '⊙' }} {{ log.status.toUpperCase() }}
                   </span>
-                  <h3 class="text-base font-bold text-white truncate">{{ log.subject }}</h3>
+                  <h3 class="text-xs md:text-sm font-bold text-white truncate">{{ log.subject }}</h3>
                 </div>
-                <p class="mt-2 text-sm text-gray-300">
-                  {{ log.recipients.length }} recipient(s) • {{ formatDate(log.createdAt) }}
+                <p class="mt-1 text-xs text-gray-300">
+                  {{ log.recipients.length }} • {{ formatDate(log.createdAt) }}
                 </p>
-                <p v-if="log.templateName" class="text-xs text-gray-500 mt-1">📋 {{ log.templateName }}</p>
+                <p v-if="log.templateName" class="text-xs text-gray-500 mt-0.5">📋 {{ log.templateName }}</p>
               </div>
-              <div class="flex gap-2 flex-shrink-0">
+              <div class="flex gap-1 flex-shrink-0">
                 <button
                   @click="viewLogDetail(log)"
-                  class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-sm">
+                  class="px-1.5 md:px-2 py-1 md:py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-xs min-h-[32px] flex items-center">
                   👁️
                 </button>
                 <button
                   @click="archiveLog(log._id)"
-                  class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-sm">
+                  class="px-1.5 md:px-2 py-1 md:py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition text-xs min-h-[32px] flex items-center">
                   📦
                 </button>
                 <button
                   @click="deleteLog(log._id)"
-                  class="px-3 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-sm">
+                  class="px-1.5 md:px-2 py-1 md:py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-xs min-h-[32px] flex items-center">
                   🗑️
                 </button>
               </div>
             </div>
           </div>
 
-          <div v-if="hasMoreLogs" class="text-center pt-4">
+          <div v-if="hasMoreLogs" class="text-center pt-1.5 md:pt-3">
             <button
               @click="loadMoreLogs"
-              class="px-6 py-3 border-2 border-gray-700 rounded-lg text-gray-300 font-semibold hover:bg-gray-800 hover:border-yellow-500/50 transition">
+              class="px-2 md:px-6 py-1.5 md:py-3 border-2 border-gray-700 rounded-lg text-gray-300 font-semibold hover:bg-gray-800 hover:border-yellow-500/50 transition min-h-[40px] text-xs md:text-sm flex items-center justify-center">
               📥 Load More
             </button>
           </div>
@@ -747,44 +747,44 @@ export default {
       <!-- Log Detail Modal -->
       <div v-if="showLogDetail && selectedLog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-900 border-2 border-gray-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between p-6 border-b border-gray-700 sticky top-0 bg-gray-900">
-            <h2 class="text-2xl font-bold text-white">📧 Email Details</h2>
+          <div class="flex items-center justify-between p-3 md:p-4 border-b border-gray-700 sticky top-0 bg-gray-900">
+            <h2 class="text-lg md:text-2xl font-bold text-white">📧 Email Details</h2>
             <button
               @click="showLogDetail = false"
-              class="text-gray-400 hover:text-gray-300">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              class="text-gray-400 hover:text-gray-300 flex-shrink-0">
+              <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           </div>
 
-          <div class="p-6 space-y-4">
+          <div class="p-2.5 md:p-4 space-y-2 md:space-y-3">
             <div>
               <p class="text-xs text-gray-400 font-semibold uppercase">Subject</p>
-              <p class="text-white font-semibold">{{ selectedLog.subject }}</p>
+              <p class="text-white font-semibold text-xs md:text-sm">{{ selectedLog.subject }}</p>
             </div>
 
             <div>
               <p class="text-xs text-gray-400 font-semibold uppercase">Status</p>
-              <span :class="'inline-block px-3 py-1 border rounded-full text-xs font-semibold ' + getStatusColor(selectedLog.status)">
+              <span :class="'inline-block px-1.5 md:px-3 py-0.5 border rounded-full text-xs font-semibold ' + getStatusColor(selectedLog.status)">
                 {{ selectedLog.status.toUpperCase() }}
               </span>
             </div>
 
             <div>
               <p class="text-xs text-gray-400 font-semibold uppercase">Recipients</p>
-              <p class="text-white">{{ selectedLog.recipients.length }} recipient(s)</p>
+              <p class="text-white text-xs md:text-sm">{{ selectedLog.recipients.length }} recipient(s)</p>
             </div>
 
             <div v-if="selectedLog.templateName">
               <p class="text-xs text-gray-400 font-semibold uppercase">Template</p>
-              <p class="text-white">{{ selectedLog.templateName }}</p>
+              <p class="text-white text-xs md:text-sm">{{ selectedLog.templateName }}</p>
             </div>
 
             <div v-if="selectedLog.attachments && selectedLog.attachments.length > 0">
               <p class="text-xs text-gray-400 font-semibold uppercase">Attachments</p>
-              <div class="space-y-1">
-                <div v-for="(attachment, idx) in selectedLog.attachments" :key="idx" class="text-sm text-white">
+              <div class="space-y-0.5">
+                <div v-for="(attachment, idx) in selectedLog.attachments" :key="idx" class="text-xs text-white">
                   📎 {{ attachment.originalName }} ({{ (attachment.size / 1024).toFixed(1) }}KB)
                 </div>
               </div>
@@ -792,14 +792,14 @@ export default {
 
             <div>
               <p class="text-xs text-gray-400 font-semibold uppercase">Sent At</p>
-              <p class="text-white">{{ new Date(selectedLog.sentAt).toLocaleString() }}</p>
+              <p class="text-white text-xs md:text-sm">{{ new Date(selectedLog.sentAt).toLocaleString() }}</p>
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-700">
+          <div class="flex items-center justify-end gap-1.5 md:gap-3 p-2.5 md:p-4 border-t border-gray-700">
             <button
               @click="showLogDetail = false"
-              class="px-6 py-3 border-2 border-gray-700 rounded-lg text-gray-300 font-semibold hover:bg-gray-800 transition">
+              class="px-3 md:px-6 py-2 md:py-3 border-2 border-gray-700 rounded-lg text-gray-300 font-semibold hover:bg-gray-800 transition min-h-[40px] text-xs md:text-sm flex items-center justify-center">
               Close
             </button>
           </div>

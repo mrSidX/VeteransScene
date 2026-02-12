@@ -50,7 +50,11 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Request failed');
+        console.error('API Response Error:', { status: response.status, data });
+        const error = new Error(data.message || data.error || 'Request failed');
+        error.status = response.status;
+        error.data = data;
+        throw error;
       }
 
       return data;
@@ -106,6 +110,24 @@ class ApiService {
   // Auth methods
   async login(email, password) {
     const response = await this.post(API_CONFIG.ENDPOINTS.LOGIN, { email, password }, { auth: false });
+    if (response.success && response.data.token) {
+      this.setToken(response.data.token);
+      localStorage.setItem(APP_CONFIG.USER_KEY, JSON.stringify(response.data.user));
+    }
+    return response;
+  }
+
+  async loginWithCode(email, code) {
+    const response = await this.post('/auth/login-with-code', { email, code }, { auth: false });
+    if (response.success && response.data.token) {
+      this.setToken(response.data.token);
+      localStorage.setItem(APP_CONFIG.USER_KEY, JSON.stringify(response.data.user));
+    }
+    return response;
+  }
+
+  async loginAnonymous(handle, passcode) {
+    const response = await this.post('/auth/login-anonymous', { handle, passcode }, { auth: false });
     if (response.success && response.data.token) {
       this.setToken(response.data.token);
       localStorage.setItem(APP_CONFIG.USER_KEY, JSON.stringify(response.data.user));
@@ -303,6 +325,39 @@ class ApiService {
 
   async sendVdoEmailToAll(segmentId) {
     return this.post(`/segments/${segmentId}/vdo/email-all`);
+  }
+
+  // ===== Export & Backup API =====
+  async exportSegment(segmentId, encrypt = false, passkey = null) {
+    const queryParams = new URLSearchParams();
+    if (encrypt) {
+      queryParams.append('encrypt', 'true');
+    }
+    const endpoint = `/segments/${segmentId}/export${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+    const response = await this.request(endpoint, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ passkey })
+    });
+
+    // Convert response to Blob for download
+    return new Blob([JSON.stringify(response)], { type: 'application/json' });
+  }
+
+  async exportSegmentsBulk(filters, encrypt = false, passkey = null) {
+    const response = await this.post('/segments/export/bulk', {
+      filters,
+      encrypt,
+      passkey
+    });
+
+    // Convert response to Blob for download
+    return new Blob([JSON.stringify(response)], { type: 'application/json' });
+  }
+
+  async getSegmentDeletePreview(segmentId) {
+    return this.get(`/segments/${segmentId}/delete-preview`);
   }
 
   // ===== Comments API =====
@@ -933,6 +988,165 @@ class ApiService {
 
   async reorderHighlightGallery(highlightId, imageOrder) {
     return this.put(`/highlights/${highlightId}/media/gallery/reorder`, { imageOrder });
+  }
+
+  // Segment methods - participant access
+  async getMySegments() {
+    return this.get('/segments/mine');
+  }
+
+  // User dashboard methods
+  async getDashboardData() {
+    return this.get('/users/me/dashboard');
+  }
+
+  // ========== RECORDING METHODS ==========
+
+  // Recording Session Management
+  async grantRecordingAccess(data) {
+    return this.post('/recordings/sessions/grant', data);
+  }
+
+  async getAllSessions(filters = {}) {
+    const queryString = new URLSearchParams(filters).toString();
+    return this.get(`/recordings/sessions/all${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getMySessions() {
+    return this.get('/recordings/sessions/my-sessions');
+  }
+
+  async getSession(sessionId) {
+    return this.get(`/recordings/sessions/${sessionId}`);
+  }
+
+  async canRecord(sessionId) {
+    return this.get(`/recordings/sessions/${sessionId}/can-record`);
+  }
+
+  async startRecording(sessionId) {
+    return this.post(`/recordings/sessions/${sessionId}/start`);
+  }
+
+  async revokeRecordingAccess(sessionId) {
+    return this.post(`/recordings/sessions/${sessionId}/revoke`);
+  }
+
+  // Recording Upload - Simple and Chunked
+  async uploadRecording(sessionId, file, onProgress = null) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.uploadFile(`/recordings/sessions/${sessionId}/upload`, formData, onProgress);
+  }
+
+  async initializeChunkedUpload(sessionId, fileInfo) {
+    return this.post(`/recordings/sessions/${sessionId}/upload/init`, fileInfo);
+  }
+
+  async uploadChunk(sessionId, chunkData, chunkNumber, totalChunks, onProgress = null) {
+    const formData = new FormData();
+    formData.append('chunk', chunkData);
+    formData.append('chunkNumber', chunkNumber);
+    formData.append('totalChunks', totalChunks);
+
+    return this.uploadFile(`/recordings/sessions/${sessionId}/upload/chunk`, formData, onProgress);
+  }
+
+  async completeChunkedUpload(sessionId, uploadData) {
+    return this.post(`/recordings/sessions/${sessionId}/upload/complete`, uploadData);
+  }
+
+  // Streaming and File Management
+  async getStreamingUrl(fileId, expiresIn = 3600) {
+    return this.get(`/recordings/files/${fileId}/stream?expiresIn=${expiresIn}`);
+  }
+
+  async getSegmentRecordings(segmentId) {
+    return this.get(`/recordings/segments/${segmentId}/files`);
+  }
+
+  // List all recordings (admin/moderator)
+  async listRecordings(sortBy = 'createdAt', order = 'desc', limit = 50, skip = 0) {
+    const queryString = new URLSearchParams({
+      sortBy,
+      order,
+      limit,
+      skip
+    }).toString();
+    return this.get(`/recordings/list?${queryString}`);
+  }
+
+  // Get signed URL for viewing/downloading a recording
+  async getRecordingSignedUrl(recordingId, forDownload = false, expiresIn = 3600) {
+    const queryString = new URLSearchParams({
+      forDownload,
+      expiresIn
+    }).toString();
+    return this.get(`/recordings/${recordingId}/signed-url?${queryString}`);
+  }
+
+  // Download a recording (local storage only)
+  async downloadRecording(recordingId) {
+    return this.get(`/recordings/${recordingId}/download`);
+  }
+
+  // Delete a recording
+  async deleteRecording(recordingId) {
+    return this.delete(`/recordings/${recordingId}`);
+  }
+
+  // Helper method for file uploads with progress tracking
+  async uploadFile(endpoint, formData, onProgress = null) {
+    const url = `${this.baseURL}${endpoint}`;
+    const token = this.getToken();
+
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      // Track upload progress
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            onProgress(percentComplete);
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            resolve(data);
+          } catch (error) {
+            reject(new Error('Invalid response format'));
+          }
+        } else {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            reject(new Error(data.message || `Upload failed with status ${xhr.status}`));
+          } catch (error) {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Upload failed due to network error'));
+      });
+
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Upload was cancelled'));
+      });
+
+      xhr.open('POST', url);
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+
+      xhr.send(formData);
+    });
   }
 }
 

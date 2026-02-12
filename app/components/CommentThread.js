@@ -1,27 +1,27 @@
 export default {
   name: 'CommentThread',
   template: `
-    <div class="comment-thread bg-gray-800 border border-yellow-500/30 rounded-xl p-6 shadow-lg">
+    <div class="comment-thread bg-gray-800 border border-yellow-500/30 rounded-xl p-2.5 md:p-4 lg:p-6 shadow-lg">
       <!-- Comments Header -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-yellow-600/20 rounded-lg">
-            <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-3 mb-3 md:mb-4">
+        <div class="flex items-center gap-2 md:gap-3">
+          <div class="p-1.5 md:p-2 bg-yellow-600/20 rounded-lg flex-shrink-0">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
           </div>
-          <div>
-            <h3 class="text-xl font-bold text-white">{{ commentType === 'internal' ? 'Internal Notes' : 'Comments' }}</h3>
-            <p class="text-sm text-gray-400">{{ totalComments }} {{ totalComments === 1 ? 'comment' : 'comments' }} in this thread</p>
+          <div class="min-w-0">
+            <h3 class="text-lg md:text-xl font-bold text-white">{{ commentType === 'internal' ? 'Notes' : 'Comments' }}</h3>
+            <p class="text-xs md:text-sm text-gray-400">{{ totalComments }} {{ totalComments === 1 ? 'comment' : 'comments' }}</p>
           </div>
         </div>
 
         <!-- Toggle for admins/moderators -->
-        <div v-if="canViewInternal" class="flex gap-1 bg-gray-900/50 rounded-lg p-1 border border-gray-700">
+        <div v-if="canViewInternal" class="flex gap-0.5 md:gap-1 bg-gray-900/50 rounded-lg p-0.5 md:p-1 border border-gray-700 flex-shrink-0">
           <button
             @click="commentType = 'public'"
             :class="[
-              'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300',
+              'px-2 md:px-4 py-1 md:py-2 rounded text-xs md:text-sm font-medium transition-all duration-300 whitespace-nowrap',
               commentType === 'public'
                 ? 'bg-blue-600 text-white shadow-lg'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
@@ -32,7 +32,7 @@ export default {
           <button
             @click="commentType = 'internal'"
             :class="[
-              'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300',
+              'px-2 md:px-4 py-1 md:py-2 rounded text-xs md:text-sm font-medium transition-all duration-300 whitespace-nowrap',
               commentType === 'internal'
                 ? 'bg-yellow-600 text-white shadow-lg'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
@@ -44,102 +44,104 @@ export default {
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="text-center py-8">
+      <div v-if="loading" class="text-center py-6 md:py-8">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p class="text-gray-400 mt-2">Loading comments...</p>
+        <p class="text-gray-400 mt-2 text-xs md:text-sm">Loading comments...</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-4">
-        <p class="text-red-400">{{ error }}</p>
+      <div v-else-if="error" class="bg-red-900/20 border border-red-500 rounded-lg p-2.5 md:p-4 mb-3 md:mb-4">
+        <p class="text-red-400 text-xs md:text-sm">{{ error }}</p>
       </div>
 
       <!-- Comments List -->
       <div v-else>
         <!-- New Comment Form -->
-        <div class="mb-6">
-          <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="mb-3 md:mb-4">
+          <div class="bg-gray-800 rounded-lg p-2.5 md:p-4 border border-gray-700">
             <textarea
               v-model="newCommentContent"
-              :placeholder="commentType === 'internal' ? 'Add an internal note (staff only)...' : 'Add a comment...'"
-              rows="3"
-              class="w-full bg-gray-900 text-white rounded-lg p-3 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+              :placeholder="commentType === 'internal' ? 'Add note...' : 'Add comment...'"
+              rows="2"
+              class="w-full bg-gray-900 text-white rounded-lg p-2 md:p-3 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none text-xs md:text-sm"
               @keydown.ctrl.enter="submitComment"
               @keydown.meta.enter="submitComment"
             ></textarea>
 
-            <div class="flex items-center justify-between mt-3">
-              <p class="text-sm text-gray-400">
-                {{ commentType === 'internal' ? '🔒 Only visible to admins and moderators' : '👥 Visible to all team members' }}
-                <span class="ml-2 text-gray-500">• Use @[Name](userId) to mention someone</span>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-3 mt-2 md:mt-3">
+              <p class="text-xs md:text-sm text-gray-400 min-w-0">
+                <span class="block md:inline">{{ commentType === 'internal' ? '🔒 Staff only' : '👥 All members' }}</span>
               </p>
               <button
                 @click="submitComment"
                 :disabled="!newCommentContent.trim() || submitting"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                class="px-3 md:px-4 py-1.5 md:py-2 bg-blue-600 text-white rounded text-xs md:text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
-                {{ submitting ? 'Posting...' : 'Post Comment' }}
+                {{ submitting ? 'Posting...' : 'Post' }}
               </button>
             </div>
           </div>
         </div>
 
         <!-- Comments -->
-        <div v-if="filteredComments.length === 0" class="text-center py-8 text-gray-400">
-          <p class="text-lg mb-2">{{ commentType === 'internal' ? '📝' : '💬' }}</p>
-          <p>{{ commentType === 'internal' ? 'No internal notes yet' : 'No comments yet' }}</p>
-          <p class="text-sm mt-1">Be the first to {{ commentType === 'internal' ? 'add a note' : 'comment' }}!</p>
+        <div v-if="filteredComments.length === 0" class="text-center py-6 md:py-8 text-gray-400">
+          <p class="text-lg mb-1">{{ commentType === 'internal' ? '📝' : '💬' }}</p>
+          <p class="text-xs md:text-sm">{{ commentType === 'internal' ? 'No notes' : 'No comments' }}</p>
         </div>
 
-        <div v-else class="space-y-4">
+        <div v-else class="space-y-2 md:space-y-3">
           <div
             v-for="comment in filteredComments"
             :key="comment._id"
             :class="[
-              'bg-gray-800 rounded-lg p-4 border transition-colors',
+              'bg-gray-800 rounded-lg p-2 md:p-3 border transition-colors',
               comment.isPinned ? 'border-yellow-500 bg-gray-800/80' : 'border-gray-700',
               comment.type === 'internal' ? 'border-l-4 border-l-yellow-500' : ''
             ]"
           >
             <!-- Pinned Badge -->
-            <div v-if="comment.isPinned" class="flex items-center gap-2 text-yellow-500 text-sm mb-2">
+            <div v-if="comment.isPinned" class="flex items-center gap-2 text-yellow-500 text-xs md:text-sm mb-1.5">
               <span>📌</span>
               <span class="font-medium">Pinned</span>
             </div>
 
             <!-- Comment Header -->
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+            <div class="flex items-start justify-between gap-2 mb-2 md:mb-3">
+              <div class="flex items-start gap-2 min-w-0 flex-1">
+                <!-- Avatar Image or Initials -->
+                <div v-if="comment.author?.profile?.avatarUrl" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                  <img :src="comment.author.avatarUrl" :alt="comment.author.firstName" class="w-full h-full object-cover">
+                </div>
+                <div v-else class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs md:text-sm flex-shrink-0">
                   {{ getInitials(comment.author) }}
                 </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold text-white">
-                      {{ comment.author.firstName }} {{ comment.author.lastName }}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1 flex-wrap">
+                    <span class="font-semibold text-white text-xs md:text-sm">
+                      {{ comment.author.firstName }}
                     </span>
-                    <span v-if="comment.author.role" class="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300">
+                    <span v-if="comment.author.role" class="text-xs px-1.5 py-0.5 rounded bg-gray-700 text-gray-300 hidden sm:inline">
                       {{ comment.author.role }}
                     </span>
-                    <span v-if="comment.type === 'internal'" class="text-xs px-2 py-1 rounded bg-yellow-900 text-yellow-300">
-                      🔒 Internal
+                    <span v-if="comment.type === 'internal'" class="text-xs px-1.5 py-0.5 rounded bg-yellow-900 text-yellow-300">
+                      🔒
                     </span>
                   </div>
-                  <div class="text-xs text-gray-400 mt-1">
+                  <div class="text-xs text-gray-400 mt-0.5">
                     {{ formatDate(comment.createdAt) }}
-                    <span v-if="comment.isEdited" class="ml-2">(edited)</span>
+                    <span v-if="comment.isEdited" class="ml-1">(edited)</span>
                   </div>
                 </div>
               </div>
 
               <!-- Actions -->
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1 flex-shrink-0">
                 <!-- Pin button (moderators only) -->
                 <button
                   v-if="canModerate"
                   @click="togglePin(comment)"
-                  class="text-gray-400 hover:text-yellow-500 transition-colors"
-                  :title="comment.isPinned ? 'Unpin comment' : 'Pin comment'"
+                  class="text-gray-400 hover:text-yellow-500 transition-colors text-sm"
+                  :title="comment.isPinned ? 'Unpin' : 'Pin'"
                 >
                   {{ comment.isPinned ? '📌' : '📍' }}
                 </button>
@@ -148,8 +150,8 @@ export default {
                 <button
                   v-if="isAuthor(comment)"
                   @click="startEdit(comment)"
-                  class="text-gray-400 hover:text-blue-500 transition-colors"
-                  title="Edit comment"
+                  class="text-gray-400 hover:text-blue-500 transition-colors text-sm"
+                  title="Edit"
                 >
                   ✏️
                 </button>
@@ -158,8 +160,8 @@ export default {
                 <button
                   v-if="canDelete(comment)"
                   @click="deleteComment(comment)"
-                  class="text-gray-400 hover:text-red-500 transition-colors"
-                  title="Delete comment"
+                  class="text-gray-400 hover:text-red-500 transition-colors text-sm"
+                  title="Delete"
                 >
                   🗑️
                 </button>
@@ -167,76 +169,76 @@ export default {
             </div>
 
             <!-- Comment Content -->
-            <div v-if="editingCommentId === comment._id" class="mb-3">
+            <div v-if="editingCommentId === comment._id" class="mb-2 md:mb-3">
               <textarea
                 v-model="editContent"
-                rows="3"
-                class="w-full bg-gray-900 text-white rounded-lg p-3 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                rows="2"
+                class="w-full bg-gray-900 text-white rounded-lg p-2 md:p-3 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none text-xs md:text-sm"
               ></textarea>
-              <div class="flex gap-2 mt-2">
+              <div class="flex gap-1 md:gap-2 mt-1.5 md:mt-2">
                 <button
                   @click="saveEdit(comment)"
-                  class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                  class="px-2 md:px-3 py-1 bg-blue-600 text-white text-xs md:text-sm rounded hover:bg-blue-700 transition-colors"
                 >
                   Save
                 </button>
                 <button
                   @click="cancelEdit"
-                  class="px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  class="px-2 md:px-3 py-1 bg-gray-700 text-white text-xs md:text-sm rounded hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             </div>
-            <div v-else class="text-gray-200 mb-3 whitespace-pre-wrap" v-html="renderContent(comment.content)"></div>
+            <div v-else class="text-gray-200 text-xs md:text-sm mb-2 md:mb-3 whitespace-pre-wrap break-words" v-html="renderContent(comment.content)"></div>
 
-            <!-- Reactions -->
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2">
+            <!-- Reactions & Reply -->
+            <div class="flex flex-wrap items-center gap-1 md:gap-2 text-xs md:text-sm">
+              <div class="flex flex-wrap items-center gap-1">
                 <button
                   v-for="emoji in availableEmojis"
                   :key="emoji"
                   @click="toggleReaction(comment, emoji)"
                   :class="[
-                    'px-2 py-1 rounded transition-colors text-sm',
+                    'px-1.5 md:px-2 py-0.5 md:py-1 rounded transition-colors text-xs md:text-sm',
                     hasReacted(comment, emoji)
                       ? 'bg-blue-900 border border-blue-500'
                       : 'bg-gray-700 hover:bg-gray-600 border border-transparent'
                   ]"
                   :title="getReactionUsers(comment, emoji)"
                 >
-                  {{ emoji }} {{ getReactionCount(comment, emoji) }}
+                  {{ emoji }}<span class="hidden sm:inline"> {{ getReactionCount(comment, emoji) }}</span>
                 </button>
               </div>
 
               <!-- Reply button -->
               <button
                 @click="startReply(comment)"
-                class="text-sm text-gray-400 hover:text-blue-500 transition-colors"
+                class="text-xs md:text-sm text-gray-400 hover:text-blue-500 transition-colors whitespace-nowrap"
               >
                 💬 Reply
               </button>
             </div>
 
             <!-- Reply Form -->
-            <div v-if="replyingToId === comment._id" class="mt-4 ml-8 bg-gray-900 rounded-lg p-3 border border-gray-700">
+            <div v-if="replyingToId === comment._id" class="mt-2 md:mt-3 ml-4 md:ml-6 bg-gray-900 rounded-lg p-2 md:p-3 border border-gray-700">
               <textarea
                 v-model="replyContent"
-                placeholder="Write a reply..."
+                placeholder="Write reply..."
                 rows="2"
-                class="w-full bg-gray-800 text-white rounded-lg p-2 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                class="w-full bg-gray-800 text-white rounded-lg p-2 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none text-xs md:text-sm"
               ></textarea>
-              <div class="flex gap-2 mt-2">
+              <div class="flex gap-1 md:gap-2 mt-1.5 md:mt-2">
                 <button
                   @click="submitReply(comment)"
                   :disabled="!replyContent.trim()"
-                  class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  class="px-2 md:px-3 py-1 bg-blue-600 text-white text-xs md:text-sm rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   Reply
                 </button>
                 <button
                   @click="cancelReply"
-                  class="px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  class="px-2 md:px-3 py-1 bg-gray-700 text-white text-xs md:text-sm rounded hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -244,20 +246,24 @@ export default {
             </div>
 
             <!-- Replies -->
-            <div v-if="comment.replies && comment.replies.length > 0" class="mt-4 ml-8 space-y-3">
+            <div v-if="comment.replies && comment.replies.length > 0" class="mt-2 md:mt-3 ml-4 md:ml-6 space-y-1.5 md:space-y-2">
               <div
                 v-for="reply in comment.replies"
                 :key="reply._id"
-                class="bg-gray-900 rounded-lg p-3 border border-gray-700"
+                class="bg-gray-900 rounded-lg p-2 md:p-3 border border-gray-700"
               >
-                <div class="flex items-start justify-between mb-2">
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white text-sm font-semibold">
+                <div class="flex items-start justify-between gap-1 mb-1">
+                  <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                    <!-- Avatar Image or Initials -->
+                    <div v-if="reply.author?.profile?.avatarUrl" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                      <img :src="reply.author.avatarUrl" :alt="reply.author.firstName" class="w-full h-full object-cover">
+                    </div>
+                    <div v-else class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white text-xs md:text-sm font-semibold flex-shrink-0">
                       {{ getInitials(reply.author) }}
                     </div>
-                    <div>
-                      <span class="font-semibold text-white text-sm">
-                        {{ reply.author.firstName }} {{ reply.author.lastName }}
+                    <div class="min-w-0 flex-1">
+                      <span class="font-semibold text-white text-xs md:text-sm">
+                        {{ reply.author.firstName }}
                       </span>
                       <div class="text-xs text-gray-400">{{ formatDate(reply.createdAt) }}</div>
                     </div>
@@ -265,12 +271,12 @@ export default {
                   <button
                     v-if="canDelete(reply)"
                     @click="deleteComment(reply)"
-                    class="text-gray-400 hover:text-red-500 transition-colors text-sm"
+                    class="text-gray-400 hover:text-red-500 transition-colors text-sm flex-shrink-0"
                   >
                     🗑️
                   </button>
                 </div>
-                <div class="text-gray-200 text-sm whitespace-pre-wrap" v-html="renderContent(reply.content)"></div>
+                <div class="text-gray-200 text-xs md:text-sm whitespace-pre-wrap break-words" v-html="renderContent(reply.content)"></div>
               </div>
             </div>
           </div>
