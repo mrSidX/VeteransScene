@@ -1148,6 +1148,32 @@ class ApiService {
       xhr.send(formData);
     });
   }
+
+  // ===== Invitation API =====
+  async sendInvitations(data) {
+    return this.post('/invitations', data);
+  }
+
+  async redeemInvitation(token) {
+    return this.post('/invitations/redeem', { token }, { auth: false });
+  }
+
+  async completeRegistration(data) {
+    return this.post('/invitations/complete-registration', data);
+  }
+
+  async listInvitations(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.get(`/invitations${queryString ? '?' + queryString : ''}`);
+  }
+
+  async revokeInvitation(id) {
+    return this.patch(`/invitations/${id}/revoke`, {});
+  }
+
+  async resendInvitation(id) {
+    return this.post(`/invitations/${id}/resend`, {});
+  }
 }
 
 export default new ApiService();

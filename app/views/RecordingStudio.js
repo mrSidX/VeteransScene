@@ -40,6 +40,12 @@ export default {
     const volumeLevel = ref(0);
     const volumeMeterInterval = ref(null);
 
+    // Upload mode state
+    const uploadMode = ref('record'); // 'record' | 'upload'
+    const selectedUploadFile = ref(null);
+    const uploadFilePreviewUrl = ref(null);
+    const uploadFileError = ref(null);
+
     // Computed
     const sessionStatus = computed(() => {
       if (!session.value) return 'Loading...';
@@ -423,6 +429,110 @@ export default {
       }
     };
 
+    const selectUploadFile = (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      uploadFileError.value = null;
+
+      // Validate MIME type
+      if (!file.type.startsWith('video/')) {
+        uploadFileError.value = 'Please select a video file (MP4, MOV, WebM, AVI, etc.)';
+        return;
+      }
+
+      // Validate file size (warn if > 2GB, backend limit is 5GB)
+      const fileSizeGB = file.size / (1024 * 1024 * 1024);
+      if (fileSizeGB > 5) {
+        uploadFileError.value = `File is too large (${fileSizeGB.toFixed(2)}GB). Maximum size is 5GB.`;
+        return;
+      }
+      if (fileSizeGB > 2) {
+        console.warn(`[RecordingStudio] Selected file is large: ${fileSizeGB.toFixed(2)}GB. Upload may take time.`);
+      }
+
+      selectedUploadFile.value = file;
+      uploadFilePreviewUrl.value = URL.createObjectURL(file);
+      console.log('[RecordingStudio] File selected:', { name: file.name, size: file.size, type: file.type });
+    };
+
+    const clearUploadFile = () => {
+      if (uploadFilePreviewUrl.value) {
+        URL.revokeObjectURL(uploadFilePreviewUrl.value);
+      }
+      selectedUploadFile.value = null;
+      uploadFilePreviewUrl.value = null;
+      uploadFileError.value = null;
+    };
+
+    const uploadSelectedFile = async () => {
+      if (!selectedUploadFile.value) {
+        uploadFileError.value = 'No file selected';
+        return;
+      }
+
+      uploading.value = true;
+      uploadProgress.value = 0;
+      uploadError.value = null;
+      uploadFileError.value = null;
+
+      try {
+        console.log('[RecordingStudio] Starting file upload. File size:', selectedUploadFile.value.size, 'bytes');
+
+        uploadingStatus.value = 'Uploading video file...';
+        const formData = new FormData();
+        formData.append('file', selectedUploadFile.value);
+
+        // Use correct endpoint with sessionId
+        const endpoint = `/recordings/sessions/${sessionId.value}/upload`;
+        const url = `${window.api.baseURL}${endpoint}`;
+        console.log('[RecordingStudio] Uploading to:', url);
+
+        // Get auth token
+        const token = localStorage.getItem('vs_auth_token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        // Use fetch directly for FormData
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        console.log('[RecordingStudio] Upload response status:', response.status);
+
+        const responseData = await response.json();
+        console.log('[RecordingStudio] Upload response:', responseData);
+
+        if (!response.ok) {
+          const errorMsg = responseData.message || responseData.error || `Upload failed with status ${response.status}`;
+          console.error('[RecordingStudio] Backend error:', errorMsg);
+          throw new Error(errorMsg);
+        }
+
+        if (responseData.success) {
+          uploadedFile.value = responseData.data.file;
+          uploadProgress.value = 100;
+          uploadingStatus.value = '✅ Upload complete! Thank you for your submission.';
+          console.log('[RecordingStudio] File upload successful');
+          // Clear the selected file after successful upload
+          clearUploadFile();
+        } else {
+          throw new Error(responseData.message || 'Upload failed');
+        }
+      } catch (err) {
+        console.error('[RecordingStudio] File upload error:', err);
+        uploadFileError.value = err.message || 'Failed to upload file';
+        uploading.value = false;
+        uploadingStatus.value = '';
+        error.value = `Upload Error: ${err.message}`;
+      }
+    };
+
     // Lifecycle
     onMounted(async () => {
       try {
@@ -462,6 +572,9 @@ export default {
       if (recordedBlobUrl.value) {
         URL.revokeObjectURL(recordedBlobUrl.value);
       }
+      if (uploadFilePreviewUrl.value) {
+        URL.revokeObjectURL(uploadFilePreviewUrl.value);
+      }
       if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
         mediaRecorder.value.stop();
       }
@@ -494,6 +607,10 @@ export default {
       selectedMicrophone,
       deviceStatus,
       volumeLevel,
+      uploadMode,
+      selectedUploadFile,
+      uploadFilePreviewUrl,
+      uploadFileError,
       loadSession,
       enumerateDevices,
       startMediaStream,
@@ -503,7 +620,10 @@ export default {
       startRecording,
       stopRecording,
       resetRecording,
-      uploadRecording
+      uploadRecording,
+      selectUploadFile,
+      clearUploadFile,
+      uploadSelectedFile
     };
   },
   template: `
@@ -547,8 +667,32 @@ export default {
           <p class="text-gray-300 text-lg">{{ session?.purpose || 'Record your message' }}</p>
         </div>
 
-        <!-- Main Content Area -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Mode Selector Tabs -->
+        <div class="flex gap-2 mb-6">
+          <button
+            @click="uploadMode='record'"
+            :class="[
+              'flex-1 py-3 px-4 rounded-lg font-bold transition duration-200 min-h-[44px] flex items-center justify-center gap-2',
+              uploadMode === 'record'
+                ? 'bg-yellow-400 text-gray-900 shadow-lg'
+                : 'bg-gray-700 hover:bg-gray-600 text-white'
+            ]">
+            🎥 Record with Webcam
+          </button>
+          <button
+            @click="uploadMode='upload'"
+            :class="[
+              'flex-1 py-3 px-4 rounded-lg font-bold transition duration-200 min-h-[44px] flex items-center justify-center gap-2',
+              uploadMode === 'upload'
+                ? 'bg-yellow-400 text-gray-900 shadow-lg'
+                : 'bg-gray-700 hover:bg-gray-600 text-white'
+            ]">
+            📁 Upload Pre-Recorded Video
+          </button>
+        </div>
+
+        <!-- Main Content Area (Record Mode) -->
+        <div v-if="uploadMode === 'record'" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <!-- Left: Video Preview (spans 2 columns) -->
           <div class="lg:col-span-2">
             <div class="bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-700">
@@ -632,8 +776,8 @@ export default {
           </div>
         </div>
 
-        <!-- Device Setup Section -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
+        <!-- Device Setup Section (Record Mode) -->
+        <div v-if="uploadMode === 'record'" class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
           <h2 class="text-xl font-bold text-yellow-400 mb-4">⚙️ Device Settings</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -657,8 +801,8 @@ export default {
           </div>
         </div>
 
-        <!-- Review/Upload Section -->
-        <div v-if="recordedBlob" class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+        <!-- Review/Upload Section (Record Mode) -->
+        <div v-if="uploadMode === 'record' && recordedBlob" class="bg-gray-800 border border-gray-700 rounded-lg p-6">
           <h2 class="text-xl font-bold text-yellow-400 mb-4">✓ Review & Upload</h2>
 
           <!-- Recorded Video Preview -->
@@ -692,6 +836,105 @@ export default {
               class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]">
               📤 Upload Recording
             </button>
+          </div>
+        </div>
+
+        <!-- Upload Mode UI -->
+        <div v-if="uploadMode === 'upload'" class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+          <h2 class="text-xl font-bold text-yellow-400 mb-6">📁 Upload Pre-Recorded Video</h2>
+
+          <!-- Accepted Formats Info -->
+          <div class="bg-blue-900 border-l-4 border-blue-400 rounded-lg p-4 mb-6">
+            <p class="text-blue-300 text-sm">
+              <strong>Accepted formats:</strong> MP4, MOV, WebM, AVI, and other common video formats<br>
+              <strong>Maximum file size:</strong> 5GB
+            </p>
+          </div>
+
+          <!-- File Selection Area -->
+          <div v-if="!selectedUploadFile" class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center mb-6 hover:border-yellow-400 hover:bg-gray-700/50 transition">
+            <div class="mb-4">
+              <p class="text-4xl mb-2">📹</p>
+              <p class="text-gray-300 font-semibold mb-2">Select a video file to upload</p>
+              <p class="text-gray-400 text-sm mb-4">Click below to browse your computer</p>
+            </div>
+            <input
+              type="file"
+              accept="video/*"
+              @change="selectUploadFile"
+              class="hidden"
+              ref="fileInput"
+              id="uploadFileInput">
+            <label
+              for="uploadFileInput"
+              class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-6 rounded-lg cursor-pointer transition duration-200 inline-block min-h-[44px] flex items-center">
+              Choose Video File
+            </label>
+          </div>
+
+          <!-- Upload Error -->
+          <div v-if="uploadFileError" class="bg-red-900 border-l-4 border-red-400 rounded-lg p-4 mb-6">
+            <p class="text-red-300 text-sm">{{ uploadFileError }}</p>
+          </div>
+
+          <!-- Selected File Preview -->
+          <div v-if="selectedUploadFile" class="space-y-4 mb-6">
+            <!-- File Info -->
+            <div class="bg-gray-700 rounded-lg p-4">
+              <div class="flex justify-between items-start mb-3">
+                <div>
+                  <p class="text-white font-semibold">{{ selectedUploadFile.name }}</p>
+                  <p class="text-gray-400 text-sm">{{ (selectedUploadFile.size / (1024 * 1024)).toFixed(2) }} MB</p>
+                </div>
+                <button
+                  v-if="!uploading"
+                  @click="clearUploadFile"
+                  class="text-gray-400 hover:text-red-400 transition">
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <!-- Video Preview -->
+            <div v-if="uploadFilePreviewUrl" class="rounded-lg overflow-hidden border-2 border-gray-700">
+              <video
+                :src="uploadFilePreviewUrl"
+                controls
+                class="w-full bg-black"
+                style="max-height: 400px; object-fit: contain;">
+              </video>
+            </div>
+
+            <!-- Upload Status -->
+            <div v-if="uploading" class="space-y-3">
+              <p class="text-gray-300 font-semibold">{{ uploadingStatus }}</p>
+              <div class="w-full bg-gray-700 rounded-full h-3">
+                <div class="bg-yellow-400 h-3 rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+              </div>
+            </div>
+
+            <!-- Success Message -->
+            <div v-if="uploadedFile" class="bg-green-900 border-l-4 border-green-400 rounded-lg p-4">
+              <p class="text-green-300 font-semibold text-lg">✅ Upload Complete!</p>
+              <p class="text-green-200 text-sm">Thank you for your submission. Your recording has been received.</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+              <button
+                v-if="!uploadedFile"
+                @click="clearUploadFile"
+                :disabled="uploading"
+                class="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]">
+                🔄 Select Different File
+              </button>
+              <button
+                v-if="!uploading && !uploadedFile"
+                @click="uploadSelectedFile"
+                class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]">
+                📤 Upload Video
+              </button>
+            </div>
           </div>
         </div>
       </div>

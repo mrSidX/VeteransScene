@@ -291,19 +291,20 @@ export default {
                         </p>
                         <!-- Actions: Compact on mobile, more spaced on desktop -->
                         <div class="flex items-center gap-0.5 flex-shrink-0">
-                          <!-- Comments Count -->
+                          <!-- Comments Button (Always visible) -->
                           <button
-                            v-if="todo.commentCount > 0"
                             @click.stop="toggleTodoComments(todo)"
                             :class="[
-                              'h-6 rounded transition-colors flex items-center justify-center text-xs flex-shrink-0',
+                              'h-6 rounded transition-colors flex items-center justify-center text-xs flex-shrink-0 font-medium',
                               expandedTodoId === todo._id
                                 ? 'bg-yellow-600 text-gray-900 px-1.5'
-                                : 'text-gray-400 hover:text-gray-200'
+                                : todo.commentCount > 0
+                                  ? 'bg-blue-600/30 text-blue-300 hover:bg-blue-600/50 px-1.5'
+                                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 px-1.5'
                             ]"
-                            title="View comments"
+                            :title="todo.commentCount > 0 ? 'View comments' : 'Add a note'"
                           >
-                            💬<span class="ml-0.5 font-semibold">{{ todo.commentCount }}</span>
+                            💬<span class="ml-0.5">{{ todo.commentCount > 0 ? todo.commentCount : '+' }}</span>
                           </button>
 
                           <!-- Menu Button -->
@@ -363,41 +364,44 @@ export default {
                   </div>
 
                   <!-- Inline Expanded Comments Section -->
-                  <div v-if="expandedTodoId === todo._id" class="border-t border-gray-600 bg-gray-800 rounded-b">
+                  <div v-if="expandedTodoId === todo._id" @click.stop class="border-t border-gray-600 bg-gray-800 rounded-b">
                     <!-- Comments List -->
-                    <div class="p-1.5 space-y-1 max-h-[50vh] overflow-y-auto">
-                      <div v-if="todoCommentsLoading" class="flex items-center justify-center py-2">
+                    <div class="p-3 md:p-4 space-y-2 md:space-y-2.5 max-h-[50vh] overflow-y-auto">
+                      <div v-if="todoCommentsLoading" class="flex items-center justify-center py-3">
                         <div class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                       </div>
-                      <div v-else-if="todoComments.length === 0" class="text-gray-500 text-xs text-center py-2">
-                        No comments yet
+                      <div v-else-if="todoComments.length === 0" class="text-gray-500 text-xs text-center py-3">
+                        <p class="font-medium">No notes yet</p>
+                        <p class="text-gray-600 text-xs mt-1">Be the first to add a note to this task</p>
                       </div>
                       <div
                         v-else
                         v-for="comment in todoComments"
                         :key="comment._id"
-                        class="bg-gray-750 rounded p-1.5 border border-gray-600"
+                        class="bg-gray-750 rounded p-2.5 md:p-3 border border-gray-600 hover:border-gray-500 transition-colors"
                       >
-                        <div class="flex items-start justify-between gap-1 mb-0.5">
-                          <div class="flex items-center gap-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 mb-1.5">
+                          <div class="flex items-center gap-2 min-w-0 flex-1">
                             <!-- Avatar Image or Initials -->
-                            <div v-if="comment.author?.profile?.avatarUrl" class="w-5 h-5 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
+                            <div v-if="comment.author?.profile?.avatarUrl" class="w-6 h-6 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
                               <img :src="comment.author.avatarUrl" :alt="comment.author.firstName" class="w-full h-full object-cover">
                             </div>
-                            <div v-else class="w-5 h-5 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-xs font-bold flex-shrink-0">
+                            <div v-else class="w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-xs font-bold flex-shrink-0">
                               {{ getInitials(comment.author) }}
                             </div>
                             <div class="min-w-0">
-                              <span class="text-white text-xs font-medium">{{ comment.author?.firstName }}</span>
-                              <span v-if="comment.isEdited" class="text-gray-500 text-xs ml-0.5">(edited)</span>
+                              <div class="flex items-center gap-1 flex-wrap">
+                                <span class="text-white text-sm font-medium">{{ comment.author?.firstName }}</span>
+                                <span v-if="comment.isEdited" class="text-gray-500 text-xs">(edited)</span>
+                              </div>
+                              <span class="text-gray-500 text-xs">{{ formatDate(comment.createdAt) }}</span>
                             </div>
                           </div>
-                          <div class="flex items-center gap-0.5 flex-shrink-0 text-xs">
-                            <span class="text-gray-500 text-xs">{{ formatDate(comment.createdAt) }}</span>
+                          <div class="flex items-center gap-1 flex-shrink-0 text-xs">
                             <button
                               v-if="canEditComment(comment)"
                               @click="startEditComment(comment)"
-                              class="text-gray-500 hover:text-blue-400 text-xs px-0.5"
+                              class="text-gray-500 hover:text-blue-400 hover:bg-blue-600/20 p-1 rounded transition-colors"
                               title="Edit"
                             >
                               ✏️
@@ -405,7 +409,7 @@ export default {
                             <button
                               v-if="canDeleteComment(comment)"
                               @click="deleteComment(comment, todo)"
-                              class="text-gray-500 hover:text-red-400 text-xs px-0.5"
+                              class="text-gray-500 hover:text-red-400 hover:bg-red-600/20 p-1 rounded transition-colors"
                               title="Delete"
                             >
                               🗑️
@@ -416,41 +420,41 @@ export default {
                         <div v-if="editingComment && editingComment._id === comment._id">
                           <textarea
                             v-model="editCommentContent"
-                            rows="2"
-                            class="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-1.5 py-1 focus:border-yellow-500 focus:outline-none resize-none"
+                            rows="3"
+                            class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded px-2.5 py-1.5 focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-400/30 resize-none"
                           ></textarea>
-                          <div class="flex justify-end gap-1.5 mt-0.5">
-                            <button @click="cancelEditComment" class="px-2 py-0.5 text-xs text-gray-400 hover:text-white">
+                          <div class="flex justify-end gap-2 mt-1.5">
+                            <button @click="cancelEditComment" class="px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
                               Cancel
                             </button>
                             <button
                               @click="saveEditComment()"
                               :disabled="!editCommentContent.trim()"
-                              class="px-2 py-0.5 text-xs bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 text-gray-900 font-medium rounded"
+                              class="px-3 py-1.5 text-xs bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium rounded transition-colors"
                             >
                               Save
                             </button>
                           </div>
                         </div>
                         <!-- Display Mode -->
-                        <p v-else class="text-gray-300 text-xs whitespace-pre-wrap">{{ comment.content }}</p>
+                        <p v-else class="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">{{ comment.content }}</p>
                       </div>
                     </div>
 
                     <!-- Add Comment Form -->
-                    <div class="p-1.5 border-t border-gray-600">
-                      <div class="flex gap-1">
+                    <div class="p-3 md:p-4 border-t border-gray-600 bg-gray-800/50">
+                      <div class="flex gap-2 flex-col md:flex-row">
                         <input
                           v-model="newTodoComment"
                           @keyup.enter="addTodoComment(todo)"
                           type="text"
-                          placeholder="Comment..."
-                          class="flex-1 bg-gray-700 border border-gray-600 text-white text-xs rounded px-1.5 py-1 placeholder-gray-400 focus:border-yellow-500 focus:outline-none"
+                          placeholder="Add a note or update..."
+                          class="flex-1 bg-gray-700 border border-gray-600 text-white text-sm md:text-xs rounded px-3 py-2 md:py-1.5 placeholder-gray-400 focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-400/30 min-h-10 md:min-h-8 transition-colors"
                         />
                         <button
                           @click="addTodoComment(todo)"
                           :disabled="!newTodoComment.trim() || addingComment"
-                          class="px-2 py-1 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium text-xs rounded transition-colors h-8 flex items-center justify-center"
+                          class="px-3 md:px-2 py-2 md:py-1 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-medium text-sm md:text-xs rounded transition-colors min-h-10 md:min-h-8 flex items-center justify-center whitespace-nowrap"
                         >
                           {{ addingComment ? '...' : 'Post' }}
                         </button>
@@ -1379,6 +1383,12 @@ export default {
   },
 
   async mounted() {
+    // Redirect temporary users to guest dashboard
+    if (this.$root.authStore?.user?.value?.isTemporary) {
+      await this.$router.push('/guest-dashboard');
+      return;
+    }
+
     await this.loadDashboard();
     if (this.hasAnyRole('admin', 'moderator')) {
       await Promise.all([

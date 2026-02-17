@@ -31,6 +31,8 @@ import HighlightDisplayRandom from './views/HighlightDisplayRandom.js?v=20260211
 import HighlightDisplayOBS from './views/HighlightDisplayOBS.js?v=20260211';
 import RecordingAccessManager from './views/RecordingAccessManager.js?v=20260211d';
 import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260211';
+import InviteRedeem from './views/InviteRedeem.js?v=20260212';
+import GuestDashboard from './views/GuestDashboard.js?v=20260212';
 
 // User portal routes - full route set with role-based access control
 const routes = [
@@ -60,9 +62,20 @@ const routes = [
     component: VerifyEmail
   },
   {
+    path: '/invite/:token',
+    name: 'InviteRedeem',
+    component: InviteRedeem
+  },
+  {
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/guest-dashboard',
+    name: 'GuestDashboard',
+    component: GuestDashboard,
     meta: { requiresAuth: true }
   },
   {

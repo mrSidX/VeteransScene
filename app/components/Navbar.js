@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/auth.js';
 import { useRouter } from 'vue-router';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 export default {
   name: 'Navbar',
@@ -10,6 +10,8 @@ export default {
     const showMobileMenu = ref(false);
     const showContentMenu = ref(false);
     const showModerationMenu = ref(false);
+
+    const isTemporaryUser = computed(() => authStore.user.value?.isTemporary === true);
 
     const handleLogout = async () => {
       authStore.logout();
@@ -44,7 +46,8 @@ export default {
       showModerationMenu,
       closeMobileMenu,
       navigateTo,
-      getAvatarUrl
+      getAvatarUrl,
+      isTemporaryUser
     };
   },
   template: `
@@ -59,13 +62,24 @@ export default {
 
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-4">
-          <template v-if="!authStore.isAuthenticated.value">
+          <!-- Guest Account Navigation -->
+          <template v-if="authStore.isAuthenticated.value && isTemporaryUser">
+            <router-link to="/guest-dashboard" class="py-2 text-yellow-400 font-semibold hover:text-yellow-300 transition">
+              My Dashboard
+            </router-link>
+            <span class="text-gray-400 text-sm">Guest Account</span>
+            <button @click="handleLogout" class="text-gray-300 hover:text-red-400 text-sm font-medium transition">
+              Logout
+            </button>
+          </template>
+
+          <template v-else-if="!authStore.isAuthenticated.value">
             <router-link to="/login" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 rounded-md font-semibold transition">
               Login
             </router-link>
           </template>
 
-          <template v-else>
+          <template v-else-if="!isTemporaryUser">
             <router-link to="/dashboard" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
               Dashboard
             </router-link>

@@ -32,6 +32,8 @@ import MyApplications from './views/MyApplications.js?v=20260206';
 import WaiverSign from './views/WaiverSign.js?v=20260206';
 import RecordingStudio from './views/RecordingStudio.js?v=20260211i';
 import RecordingAccessManager from './views/RecordingAccessManager.js?v=20260211';
+import InviteRedeem from './views/InviteRedeem.js?v=20260212';
+import GuestDashboard from './views/GuestDashboard.js?v=20260212';
 
 // Routes with direct component imports
 const routes = [
@@ -61,6 +63,11 @@ const routes = [
     component: VerifyEmail
   },
   {
+    path: '/invite/:token',
+    name: 'InviteRedeem',
+    component: InviteRedeem
+  },
+  {
     path: '/apply',
     name: 'Apply',
     beforeEnter: () => {
@@ -85,6 +92,12 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/guest-dashboard',
+    name: 'GuestDashboard',
+    component: GuestDashboard,
     meta: { requiresAuth: true }
   },
   {

@@ -5,7 +5,7 @@ export default {
   name: 'RecordingAccessManager',
   setup() {
     const authStore = useAuthStore();
-    const activeTab = ref('grant'); // 'grant' or 'manage'
+    const activeTab = ref('grant'); // 'grant', 'manage', or 'invite'
     const users = ref([]);
     const filteredUsers = ref([]);
     const allSessions = ref([]);
@@ -15,6 +15,25 @@ export default {
     const showGrantModal = ref(false);
     const showDeleteModal = ref(false);
     const sessionToDelete = ref(null);
+
+    // Invitation form state
+    const inviteForm = ref({
+      emailInput: '',
+      emails: [],
+      personalMessage: '',
+      sessionType: 'one-time',
+      sessionDurationHours: 24
+    });
+    const invitations = ref([]);
+    const inviteLoading = ref(false);
+    const inviteError = ref('');
+    const inviteSuccess = ref('');
+
+    const getAvatarUrl = (user) => {
+      if (!user?.profile?.avatarUrl || !user?.id) return '';
+      const url = `${window.APP_CONFIG?.API_URL || 'http://localhost:5000/api'}/auth/avatar/${user.id}`;
+      return `${url}?v=${encodeURIComponent(user.profile.avatarUrl)}`;
+    };
 
     const grantForm = ref({
       sessionType: 'time-limited',
@@ -29,10 +48,6 @@ export default {
       { value: 'time-limited', label: 'Time-Limited', description: 'Access expires on specified date' },
       { value: 'unlimited', label: 'Unlimited', description: 'User can upload multiple recordings' }
     ];
-
-    onMounted(async () => {
-      await loadUsers();
-    });
 
     const loadUsers = async () => {
       loading.value = true;
@@ -189,6 +204,95 @@ export default {
       });
     };
 
+    const parseEmails = () => {
+      const input = inviteForm.value.emailInput;
+      const emailList = input
+        .split(/[,;\n]/)
+        .map(e => e.trim())
+        .filter(e => e.length > 0);
+
+      inviteForm.value.emails = emailList;
+    };
+
+    const sendInvites = async () => {
+      if (inviteForm.value.emails.length === 0) {
+        inviteError.value = 'Please enter at least one email address';
+        return;
+      }
+
+      inviteLoading.value = true;
+      inviteError.value = '';
+      inviteSuccess.value = '';
+
+      try {
+        const response = await window.api.sendInvitations({
+          emails: inviteForm.value.emails,
+          personalMessage: inviteForm.value.personalMessage,
+          sessionType: inviteForm.value.sessionType,
+          sessionDurationHours: inviteForm.value.sessionType === 'time-limited' ? inviteForm.value.sessionDurationHours : undefined
+        });
+
+        if (response.success) {
+          inviteSuccess.value = `✅ Invitations sent to ${inviteForm.value.emails.length} recipient(s)`;
+          inviteForm.value = {
+            emailInput: '',
+            emails: [],
+            personalMessage: '',
+            sessionType: 'one-time',
+            sessionDurationHours: 24
+          };
+          await loadInvitations();
+        }
+      } catch (error) {
+        console.error('Error sending invitations:', error);
+        inviteError.value = error.message || 'Failed to send invitations';
+      } finally {
+        inviteLoading.value = false;
+      }
+    };
+
+    const loadInvitations = async () => {
+      try {
+        const response = await window.api.listInvitations({ limit: 50 });
+        if (response.success) {
+          invitations.value = response.data.invitations || [];
+        }
+      } catch (error) {
+        console.error('Error loading invitations:', error);
+      }
+    };
+
+    const revokeInvitation = async (id) => {
+      if (!confirm('Are you sure you want to revoke this invitation?')) return;
+
+      try {
+        const response = await window.api.revokeInvitation(id);
+        if (response.success) {
+          await loadInvitations();
+        }
+      } catch (error) {
+        console.error('Error revoking invitation:', error);
+        alert('Failed to revoke invitation');
+      }
+    };
+
+    const resendInvitation = async (id) => {
+      try {
+        const response = await window.api.resendInvitation(id);
+        if (response.success) {
+          await loadInvitations();
+        }
+      } catch (error) {
+        console.error('Error resending invitation:', error);
+        alert('Failed to resend invitation');
+      }
+    };
+
+    onMounted(async () => {
+      await loadUsers();
+      await loadInvitations();
+    });
+
     return {
       activeTab,
       users,
@@ -210,7 +314,19 @@ export default {
       openDeleteModal,
       deleteSession,
       formatDate,
-      authStore
+      getAvatarUrl,
+      authStore,
+      // Invitation methods and state
+      inviteForm,
+      invitations,
+      inviteLoading,
+      inviteError,
+      inviteSuccess,
+      parseEmails,
+      sendInvites,
+      loadInvitations,
+      revokeInvitation,
+      resendInvitation
     };
   },
   template: `
@@ -246,6 +362,17 @@ export default {
           >
             🗂️ Manage Sessions
           </button>
+          <button
+            @click="activeTab = 'invite'"
+            :class="[
+              'px-4 py-3 font-semibold transition border-b-2',
+              activeTab === 'invite'
+                ? 'text-yellow-400 border-yellow-400'
+                : 'text-gray-400 border-transparent hover:text-gray-300'
+            ]"
+          >
+            📧 Invite by Email
+          </button>
         </div>
 
         <!-- Grant Access Tab -->
@@ -270,8 +397,8 @@ export default {
           >
             <!-- User Info -->
             <div class="flex items-start gap-3 mb-3">
-              <div v-if="user.profile?.avatarUrl" class="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                <img :src="user.profile.avatarUrl" :alt="user.firstName" class="w-full h-full object-cover">
+              <div v-if="getAvatarUrl(user)" class="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                <img :src="getAvatarUrl(user)" :alt="user.firstName" class="w-full h-full object-cover">
               </div>
               <div v-else class="w-10 h-10 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-sm font-bold flex-shrink-0">
                 {{ user.firstName[0] }}{{ user.lastName[0] }}
@@ -396,6 +523,146 @@ export default {
           <div v-else class="text-center py-12 bg-gray-800 border border-gray-700 rounded-lg p-6">
             <p class="text-gray-400 mb-2">No recording sessions found</p>
             <p class="text-sm text-gray-500">Click "Refresh" to load sessions, or grant access to users above.</p>
+          </div>
+        </div>
+
+        <!-- Invite Tab -->
+        <div v-show="activeTab === 'invite'" class="space-y-6">
+          <!-- Email Input Section -->
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-4">Send Recording Invitations</h2>
+
+            <!-- Error Alert -->
+            <div v-if="inviteError" class="bg-red-900/30 border border-red-600 text-red-200 p-4 rounded-lg mb-4">
+              {{ inviteError }}
+            </div>
+
+            <!-- Success Alert -->
+            <div v-if="inviteSuccess" class="bg-green-900/30 border border-green-600 text-green-200 p-4 rounded-lg mb-4">
+              {{ inviteSuccess }}
+            </div>
+
+            <div class="space-y-4">
+              <!-- Email Addresses -->
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Email Addresses *</label>
+                <textarea
+                  v-model="inviteForm.emailInput"
+                  @blur="parseEmails"
+                  placeholder="One per line, or comma/semicolon-separated"
+                  rows="4"
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                ></textarea>
+                <p v-if="inviteForm.emails.length > 0" class="text-xs text-gray-400 mt-1">
+                  {{ inviteForm.emails.length }} email(s) parsed
+                </p>
+              </div>
+
+              <!-- Personal Message -->
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Personal Message (Optional)</label>
+                <textarea
+                  v-model="inviteForm.personalMessage"
+                  maxlength="500"
+                  placeholder="Add a custom message to the invitation email"
+                  rows="3"
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                ></textarea>
+                <p class="text-xs text-gray-400 mt-1">{{ inviteForm.personalMessage.length }}/500</p>
+              </div>
+
+              <!-- Session Type -->
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Session Type</label>
+                <select
+                  v-model="inviteForm.sessionType"
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                >
+                  <option value="one-time">One Recording</option>
+                  <option value="time-limited">Time-Limited (24-48 hours)</option>
+                  <option value="unlimited">Unlimited Access</option>
+                </select>
+              </div>
+
+              <!-- Duration for time-limited sessions -->
+              <div v-if="inviteForm.sessionType === 'time-limited'">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Session Duration (Hours)</label>
+                <input
+                  v-model.number="inviteForm.sessionDurationHours"
+                  type="number"
+                  min="1"
+                  max="240"
+                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              <!-- Send Button -->
+              <button
+                @click="sendInvites"
+                :disabled="inviteLoading || inviteForm.emails.length === 0"
+                class="w-full px-4 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="inviteLoading">⏳ Sending...</span>
+                <span v-else>📧 Send Invitations</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sent Invitations Table -->
+          <div v-if="invitations.length > 0" class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Sent Invitations</h3>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="border-b border-gray-700">
+                  <tr class="text-gray-300">
+                    <th class="text-left py-2">Email</th>
+                    <th class="text-left py-2">Status</th>
+                    <th class="text-left py-2">Sent By</th>
+                    <th class="text-left py-2">Sent Date</th>
+                    <th class="text-left py-2">Expires</th>
+                    <th class="text-left py-2">Recordings</th>
+                    <th class="text-right py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="inv in invitations" :key="inv._id" class="border-b border-gray-700 hover:bg-gray-700/50">
+                    <td class="py-3">{{ inv.email }}</td>
+                    <td class="py-3">
+                      <span :class="[
+                        'text-xs font-bold px-2 py-1 rounded',
+                        inv.status === 'pending' ? 'bg-blue-900 text-blue-200' :
+                        inv.status === 'redeemed' ? 'bg-green-900 text-green-200' :
+                        inv.status === 'expired' ? 'bg-red-900 text-red-200' :
+                        'bg-gray-700 text-gray-300'
+                      ]">
+                        {{ inv.status }}
+                      </span>
+                    </td>
+                    <td class="py-3 text-gray-400">{{ inv.invitedBy?.firstName }}</td>
+                    <td class="py-3 text-gray-400">{{ formatDate(inv.createdAt) }}</td>
+                    <td class="py-3 text-gray-400">{{ formatDate(inv.expiresAt) }}</td>
+                    <td class="py-3 text-gray-400">{{ inv.recordingsCompleted || 0 }}</td>
+                    <td class="py-3 text-right space-x-2">
+                      <button
+                        v-if="inv.status === 'pending'"
+                        @click="resendInvitation(inv._id)"
+                        class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition"
+                      >
+                        Resend
+                      </button>
+                      <button
+                        v-if="inv.status !== 'revoked'"
+                        @click="revokeInvitation(inv._id)"
+                        class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition"
+                      >
+                        Revoke
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
