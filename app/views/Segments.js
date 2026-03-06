@@ -86,6 +86,34 @@ export default {
       router.push('/segments/new');
     };
 
+    // Storage status
+    const storageStatus = ref(null);
+
+    const loadStorageStatus = async () => {
+      try {
+        const res = await api.getRecordingDiskStatus();
+        if (res.success) {
+          storageStatus.value = res.data;
+        }
+      } catch (err) {
+        console.warn('[Segments] Failed to load storage status:', err.message);
+      }
+    };
+
+    const formatStorageBytes = (bytes) => {
+      if (!bytes || bytes === 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+    };
+
+    const storageColor = computed(() => {
+      if (!storageStatus.value) return 'gray';
+      if (storageStatus.value.status === 'critical') return 'red';
+      if (storageStatus.value.status === 'warning') return 'yellow';
+      return 'green';
+    });
+
     // Bulk export state
     const showBulkExportModal = ref(false);
     const bulkExportEncrypted = ref(false);
@@ -182,6 +210,7 @@ export default {
 
     onMounted(() => {
       fetchSegments();
+      loadStorageStatus();
     });
 
     return {
@@ -203,6 +232,10 @@ export default {
       navigateToSegment,
       createNewSegment,
       toggleUpvote,
+      // Storage
+      storageStatus,
+      storageColor,
+      formatStorageBytes,
       // Bulk export
       showBulkExportModal,
       bulkExportEncrypted,
@@ -230,6 +263,46 @@ export default {
                 <info-helper topic-slug="upvoting-segments" size="md" />
               </div>
               <p class="text-xs md:text-sm text-gray-400 hidden sm:block">Manage production segments from concept to completion</p>
+              <!-- Storage Indicator -->
+              <div v-if="storageStatus" class="mt-2 inline-flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs">
+                <div :class="[
+                  'w-2 h-2 rounded-full flex-shrink-0',
+                  storageColor === 'red' ? 'bg-red-500 animate-pulse' : '',
+                  storageColor === 'yellow' ? 'bg-yellow-500' : '',
+                  storageColor === 'green' ? 'bg-green-500' : '',
+                  storageColor === 'gray' ? 'bg-gray-500' : ''
+                ]"></div>
+                <div class="flex items-center gap-2">
+                  <span :class="[
+                    storageColor === 'red' ? 'text-red-400' : '',
+                    storageColor === 'yellow' ? 'text-yellow-400' : '',
+                    storageColor === 'green' ? 'text-gray-400' : '',
+                    storageColor === 'gray' ? 'text-gray-500' : ''
+                  ]">Storage</span>
+                  <div class="w-16 sm:w-24 bg-gray-700 rounded-full h-1.5">
+                    <div :class="[
+                      'h-1.5 rounded-full transition-all',
+                      storageColor === 'red' ? 'bg-red-500' : '',
+                      storageColor === 'yellow' ? 'bg-yellow-500' : '',
+                      storageColor === 'green' ? 'bg-green-500' : '',
+                      storageColor === 'gray' ? 'bg-gray-500' : ''
+                    ]" :style="{ width: storageStatus.percentUsed + '%' }"></div>
+                  </div>
+                  <span :class="[
+                    'font-mono whitespace-nowrap',
+                    storageColor === 'red' ? 'text-red-400' : '',
+                    storageColor === 'yellow' ? 'text-yellow-400' : '',
+                    storageColor === 'green' ? 'text-green-400' : '',
+                    storageColor === 'gray' ? 'text-gray-500' : ''
+                  ]">{{ formatStorageBytes(storageStatus.available) }} free</span>
+                </div>
+                <router-link to="/storage" class="text-gray-500 hover:text-yellow-400 transition ml-1" title="Storage Manager">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </router-link>
+              </div>
             </div>
             <div class="flex flex-wrap gap-2 md:gap-3 flex-shrink-0">
               <a href="/topics-generator.html"

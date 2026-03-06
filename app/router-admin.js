@@ -23,6 +23,9 @@ import MyApplications from './views/MyApplications.js?v=20260206';
 import RecordingAccessManager from './views/RecordingAccessManager.js?v=20260211d';
 import RecordingStudio from './views/RecordingStudio.js?v=20260211i';
 import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260211';
+import StorageManager from './views/StorageManager.js?v=20260224';
+import S3Browser from './views/S3Browser.js?v=20260224';
+import HighlightDisplayOBS from './views/HighlightDisplayOBS.js';
 
 // Admin-only routes - no password reset functionality
 const routes = [
@@ -167,6 +170,24 @@ const routes = [
     name: 'RecordingsBrowser',
     component: RecordingsBrowser,
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
+    path: '/storage',
+    name: 'StorageManager',
+    component: StorageManager,
+    meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/s3-browser',
+    name: 'S3Browser',
+    component: S3Browser,
+    meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/highlight-obs/:id',
+    name: 'HighlightDisplayOBS',
+    component: HighlightDisplayOBS,
+    meta: { requiresAuth: false }
   }
 ];
 

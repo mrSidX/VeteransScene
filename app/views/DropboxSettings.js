@@ -11,6 +11,8 @@ export default {
     const success = ref('');
     const runningCleanup = ref(false);
     const cleanupResult = ref(null);
+    const ftpTesting = ref(false);
+    const ftpTestResult = ref(null);
 
     // Form data
     const formData = ref({
@@ -28,6 +30,17 @@ export default {
         maxStoragePerUser: 1024 * 1024 * 1024
       },
       allowedExtensions: [],
+      ftp: {
+        enabled: false,
+        protocol: 'sftp',
+        host: '',
+        port: 22,
+        username: '',
+        password: '',
+        privateKeyPath: '',
+        secure: false,
+        basePath: '/'
+      },
       autoDelete: {
         enabled: false,
         period: 'monthly',
@@ -98,6 +111,10 @@ export default {
             autoDelete: settings.value.autoDelete || formData.value.autoDelete,
             features: settings.value.features || formData.value.features
           });
+          // Populate FTP settings from backends
+          if (settings.value.backends && settings.value.backends.ftp) {
+            Object.assign(formData.value.ftp, settings.value.backends.ftp);
+          }
         }
       } catch (err) {
         error.value = 'Failed to load settings: ' + err.message;
@@ -113,7 +130,12 @@ export default {
         error.value = '';
         success.value = '';
 
-        const response = await api.updateDropboxSettings(formData.value);
+        // Include FTP settings in backends
+        const payload = { ...formData.value };
+        payload.backends = { ...payload.backends, ftp: formData.value.ftp };
+        delete payload.ftp;
+
+        const response = await api.updateDropboxSettings(payload);
         if (response.success) {
           success.value = 'Settings saved successfully';
           settings.value = response.data.settings;
@@ -170,6 +192,36 @@ export default {
       }
     };
 
+    const onFtpProtocolChange = () => {
+      if (formData.value.ftp.protocol === 'sftp') {
+        formData.value.ftp.port = 22;
+      } else {
+        formData.value.ftp.port = 21;
+      }
+    };
+
+    const testFtpConnection = async () => {
+      try {
+        ftpTesting.value = true;
+        ftpTestResult.value = null;
+        const response = await api.testFtpConnection({
+          protocol: formData.value.ftp.protocol,
+          host: formData.value.ftp.host,
+          port: formData.value.ftp.port,
+          username: formData.value.ftp.username,
+          password: formData.value.ftp.password,
+          privateKeyPath: formData.value.ftp.privateKeyPath,
+          secure: formData.value.ftp.secure,
+          basePath: formData.value.ftp.basePath
+        });
+        ftpTestResult.value = { success: true, message: response.message, data: response.data };
+      } catch (err) {
+        ftpTestResult.value = { success: false, message: err.message || 'Connection failed' };
+      } finally {
+        ftpTesting.value = false;
+      }
+    };
+
     const formatBytes = (bytes) => {
       if (bytes === 0) return '0 Bytes';
       const k = 1024;
@@ -197,6 +249,10 @@ export default {
       periodOptions,
       runningCleanup,
       cleanupResult,
+      ftpTesting,
+      ftpTestResult,
+      onFtpProtocolChange,
+      testFtpConnection,
       saveSettings,
       addExtension,
       removeExtension,
@@ -246,6 +302,7 @@ export default {
                 class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="local">Local Filesystem</option>
+                <option value="ftp">FTP / SFTP</option>
                 <option value="s3" disabled>Amazon S3 (Coming Soon)</option>
                 <option value="google-drive" disabled>Google Drive (Coming Soon)</option>
               </select>
@@ -271,6 +328,117 @@ export default {
                   step="0.1"
                   class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 />
+              </div>
+            </div>
+
+            <!-- FTP/SFTP Config -->
+            <div v-if="formData.activeBackend === 'ftp'" class="space-y-4 mt-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm text-gray-400 mb-2">Protocol</label>
+                  <select
+                    v-model="formData.ftp.protocol"
+                    @change="onFtpProtocolChange"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="sftp">SFTP (SSH)</option>
+                    <option value="ftp">FTP / FTPS</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-400 mb-2">Host</label>
+                  <input
+                    v-model="formData.ftp.host"
+                    type="text"
+                    placeholder="ftp.example.com"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-400 mb-2">Port</label>
+                  <input
+                    v-model.number="formData.ftp.port"
+                    type="number"
+                    min="1"
+                    max="65535"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-400 mb-2">Username</label>
+                  <input
+                    v-model="formData.ftp.username"
+                    type="text"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-400 mb-2">Password</label>
+                  <input
+                    v-model="formData.ftp.password"
+                    type="password"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+                <div v-if="formData.ftp.protocol === 'sftp'">
+                  <label class="block text-sm text-gray-400 mb-2">Private Key Path</label>
+                  <input
+                    v-model="formData.ftp.privateKeyPath"
+                    type="text"
+                    placeholder="/path/to/id_rsa"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">Absolute path to SSH private key (optional if using password)</p>
+                </div>
+                <div v-if="formData.ftp.protocol === 'ftp'">
+                  <label class="flex items-center gap-3 cursor-pointer mt-6">
+                    <button
+                      type="button"
+                      @click="formData.ftp.secure = !formData.ftp.secure"
+                      :class="[
+                        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                        formData.ftp.secure ? 'bg-green-600' : 'bg-gray-600'
+                      ]"
+                    >
+                      <span
+                        :class="[
+                          'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                          formData.ftp.secure ? 'translate-x-6' : 'translate-x-1'
+                        ]"
+                      ></span>
+                    </button>
+                    <span class="text-gray-300">Use TLS/SSL (FTPS)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Base Path</label>
+                <input
+                  v-model="formData.ftp.basePath"
+                  type="text"
+                  placeholder="/"
+                  class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <p class="text-xs text-gray-500 mt-1">Remote directory to store files in</p>
+              </div>
+
+              <!-- Test Connection -->
+              <div>
+                <button
+                  @click="testFtpConnection"
+                  :disabled="ftpTesting || !formData.ftp.host || !formData.ftp.username"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded font-semibold transition"
+                >
+                  {{ ftpTesting ? 'Testing...' : 'Test Connection' }}
+                </button>
+
+                <div v-if="ftpTestResult" class="mt-3 p-3 rounded" :class="ftpTestResult.success ? 'bg-green-900/50 border border-green-700 text-green-200' : 'bg-red-900/50 border border-red-700 text-red-200'">
+                  {{ ftpTestResult.message }}
+                  <span v-if="ftpTestResult.success && ftpTestResult.data" class="block text-sm mt-1 text-gray-400">
+                    {{ ftpTestResult.data.itemsInDirectory }} items found in base directory
+                  </span>
+                </div>
               </div>
             </div>
           </div>

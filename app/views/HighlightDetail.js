@@ -3,6 +3,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import api from '../services/api.js';
 import HighlightMediaManager from '../components/HighlightMediaManager.js';
+import FollowButton from '../components/FollowButton.js';
 
 export default {
   name: 'HighlightDetail',
@@ -260,7 +261,8 @@ export default {
   },
 
   components: {
-    HighlightMediaManager
+    HighlightMediaManager,
+    FollowButton
   },
 
   template: `
@@ -272,7 +274,10 @@ export default {
             <router-link to="/highlights" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-4">
               ← Back to Highlights
             </router-link>
-            <h1 class="text-4xl font-bold text-yellow-400">{{ highlight.title }}</h1>
+            <div class="flex items-center gap-3">
+              <h1 class="text-4xl font-bold text-yellow-400">{{ highlight.title }}</h1>
+              <follow-button v-if="highlight._id" resource-type="highlight" :resource-id="highlight._id" />
+            </div>
           </div>
           <div class="flex gap-2">
             <button

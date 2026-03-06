@@ -38,6 +38,34 @@ export default {
         <!-- Recording Notification Banner -->
         <recording-notification-banner />
 
+        <!-- Active Server Recordings Banner -->
+        <div v-if="activeServerRecordings.length > 0" class="mb-4">
+          <div
+            v-for="rec in activeServerRecordings"
+            :key="rec.recordingId"
+            class="rounded-lg p-3 md:p-4 bg-red-900/40 border border-red-600/60 flex items-center justify-between gap-3 mb-2"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="flex-shrink-0 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              <div class="min-w-0">
+                <p class="text-red-100 font-semibold text-sm md:text-base truncate">
+                  Now Recording<span v-if="rec.segmentTitle"> — {{ rec.segmentTitle }}</span>
+                </p>
+                <p class="text-red-300/70 text-xs mt-0.5">
+                  Started {{ formatRecDuration(rec.startedAt) }} ago
+                </p>
+              </div>
+            </div>
+            <router-link
+              v-if="rec.segmentId"
+              :to="'/segments/' + rec.segmentId"
+              class="flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-semibold py-1.5 px-3 md:px-4 rounded-lg transition text-sm whitespace-nowrap"
+            >
+              View Stream
+            </router-link>
+          </div>
+        </div>
+
         <!-- Tools Navigation Bar -->
         <div class="sticky top-0 z-10 bg-gray-900 py-2 -mx-4 px-4 mb-2 md:mb-4 border-b border-gray-800 flex flex-wrap gap-2 md:gap-3">
           <!-- Todo List Button -->
@@ -107,6 +135,28 @@ export default {
             </div>
             <span class="text-xs md:text-sm">My Segments</span>
             <span v-if="(upcomingSegments?.length || 0) + (otherSegments?.length || 0) > 0" class="text-xs px-1.5 py-0.5 bg-purple-500/30 text-purple-300 rounded-full font-medium">{{ (upcomingSegments?.length || 0) + (otherSegments?.length || 0) }}</span>
+          </button>
+
+          <!-- Following Button -->
+          <button
+            @click="toggleDashPanel('following'); if (!followedItems.length && !followedItemsLoading) loadFollowedItems()"
+            :class="[
+              'group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03]',
+              expandedDashPanels.following
+                ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-500/25'
+                : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-amber-500/50'
+            ]"
+          >
+            <div :class="[
+              'p-1 md:p-1.5 rounded-lg transition-colors duration-300',
+              expandedDashPanels.following ? 'bg-amber-500/30' : 'bg-gray-700 group-hover:bg-amber-900/30'
+            ]">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">Following</span>
+            <span v-if="followedItems.length > 0" class="text-xs px-1.5 py-0.5 bg-amber-500/30 text-amber-300 rounded-full font-medium">{{ followedItems.length }}</span>
           </button>
 
           <!-- Notifications Button -->
@@ -654,6 +704,70 @@ export default {
                 </div>
                 <p class="text-gray-400 text-xs">{{ notification.message }}</p>
                 <p class="text-gray-500 text-xs mt-0.5">{{ formatDate(notification.createdAt) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </transition>
+
+        <!-- Following Panel (Collapsible) -->
+        <transition
+          enter-active-class="transition-all duration-1000 ease-out"
+          enter-from-class="opacity-0 max-h-0 -translate-y-8"
+          enter-to-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-active-class="transition-all duration-700 ease-in"
+          leave-from-class="opacity-100 max-h-[2000px] translate-y-0"
+          leave-to-class="opacity-0 max-h-0 -translate-y-8"
+        >
+        <div v-show="expandedDashPanels.following" class="overflow-hidden" :style="{ order: getOrderFor('following') }">
+          <div class="bg-gray-800 border border-amber-500/30 rounded-xl p-3 md:p-4 shadow-lg">
+            <button class="w-full flex items-center justify-between text-left">
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <span class="text-amber-400">&#9733;</span>
+                Following
+                <span v-if="followedItems.length > 0" class="px-2 py-0.5 bg-amber-600 text-white text-xs rounded">
+                  {{ followedItems.length }}
+                </span>
+              </h3>
+              <svg :class="['w-4 h-4 transition-transform duration-700 flex-shrink-0', expandedDashPanels.following ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            <div v-if="followedItemsLoading" class="mt-2 text-center text-gray-400 text-sm py-4">
+              Loading...
+            </div>
+
+            <div v-else-if="followedItems.length === 0" class="mt-2 text-center text-gray-500 text-sm py-4">
+              You're not following anything yet. Use the star button on segments or applications to follow them.
+            </div>
+
+            <div v-else class="mt-2 space-y-2">
+              <div
+                v-for="item in followedItems.slice(0, 10)"
+                :key="item._id"
+                @click="navigateTo(getFollowedItemUrl(item))"
+                class="p-2 rounded border bg-gray-750 border-gray-600 hover:border-amber-500/50 cursor-pointer transition-colors text-sm flex items-center justify-between"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <span :class="[
+                    'px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0',
+                    item.resourceType === 'segment' ? 'bg-purple-900 text-purple-200' :
+                    item.resourceType === 'application' ? 'bg-green-900 text-green-200' :
+                    'bg-blue-900 text-blue-200'
+                  ]">
+                    {{ item.resourceType }}
+                  </span>
+                  <span class="text-white truncate">{{ item.resourceTitle }}</span>
+                  <span v-if="item.resourceStatus" class="text-gray-500 text-xs">{{ item.resourceStatus }}</span>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                  <span v-if="item.emailNotifications" class="text-blue-400" title="Email notifications on">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                    </svg>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1279,13 +1393,22 @@ export default {
         activity: false,
         mySegments: false,
         segments: false,
+        following: false,
         overview: true,
         quickActions: true
       },
 
+      // Following panel data
+      followedItems: [],
+      followedItemsLoading: false,
+
       // Panel ordering - most recently toggled appears first
       // Default order (for collapsed/new sessions)
-      panelOrder: ['todos', 'calendar', 'notifications', 'activity', 'mySegments']
+      panelOrder: ['todos', 'calendar', 'following', 'notifications', 'activity', 'mySegments'],
+
+      // Active server recordings (for "Now Recording" indicator)
+      activeServerRecordings: [],
+      activeRecordingsTimer: null
     };
   },
 
@@ -1393,8 +1516,18 @@ export default {
     if (this.hasAnyRole('admin', 'moderator')) {
       await Promise.all([
         this.loadTodos(),
-        this.loadCalendarEvents()
+        this.loadCalendarEvents(),
+        this.checkActiveRecordings()
       ]);
+      // Poll every 30s for active recordings
+      this.activeRecordingsTimer = setInterval(() => this.checkActiveRecordings(), 30000);
+    }
+  },
+
+  beforeUnmount() {
+    if (this.activeRecordingsTimer) {
+      clearInterval(this.activeRecordingsTimer);
+      this.activeRecordingsTimer = null;
     }
   },
 
@@ -1414,16 +1547,24 @@ export default {
     },
 
     toggleDashPanel(panelName) {
-      this.expandedDashPanels[panelName] = !this.expandedDashPanels[panelName];
+      const wasOpen = this.expandedDashPanels[panelName];
 
-      // If opening (expanding) a panel, move it to the top of the order
-      if (this.expandedDashPanels[panelName]) {
-        // Remove panel from current position if it exists
+      // Close all panels first (exclusive tab switching)
+      for (const key of Object.keys(this.expandedDashPanels)) {
+        if (key !== 'overview' && key !== 'quickActions') {
+          this.expandedDashPanels[key] = false;
+        }
+      }
+
+      // Toggle the clicked panel (if it was open, it stays closed; if closed, open it)
+      this.expandedDashPanels[panelName] = !wasOpen;
+
+      // If opening a panel, move it to the top of the order
+      if (!wasOpen) {
         const index = this.panelOrder.indexOf(panelName);
         if (index > -1) {
           this.panelOrder.splice(index, 1);
         }
-        // Add to front
         this.panelOrder.unshift(panelName);
       }
     },
@@ -1439,6 +1580,31 @@ export default {
       if (!this.user) return false;
       const userRoles = Array.isArray(this.user.roles) ? this.user.roles : [this.user.role];
       return roles.some(role => userRoles.includes(role));
+    },
+
+    async checkActiveRecordings() {
+      try {
+        const response = await window.api.getServerRecordings({ status: 'recording' });
+        if (response.success) {
+          this.activeServerRecordings = (response.data || []).filter(
+            r => r.status === 'recording' || r.status === 'starting'
+          );
+        }
+      } catch (e) {
+        // Recording server may be offline — silently ignore
+        this.activeServerRecordings = [];
+      }
+    },
+
+    formatRecDuration(startedAt) {
+      if (!startedAt) return '';
+      const seconds = Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
+      if (seconds < 60) return `${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m`;
+      const hours = Math.floor(minutes / 60);
+      const remainMin = minutes % 60;
+      return `${hours}h ${remainMin}m`;
     },
 
     async loadDashboard() {
@@ -1726,6 +1892,30 @@ export default {
         const eventDate = new Date(e.date);
         return eventDate.toDateString() === date.toDateString();
       });
+    },
+
+    async loadFollowedItems() {
+      this.followedItemsLoading = true;
+      try {
+        const response = await window.api.getMyFollows({ limit: 20 });
+        if (response.success) {
+          this.followedItems = response.data || [];
+        }
+      } catch (err) {
+        console.error('Failed to load followed items:', err);
+      } finally {
+        this.followedItemsLoading = false;
+      }
+    },
+
+    getFollowedItemUrl(item) {
+      const routes = {
+        segment: `/segments/${item.resourceId}`,
+        application: `/applications/${item.resourceId}`,
+        highlight: `/highlights/${item.resourceId}`,
+        flag: `/flags/${item.resourceId}`
+      };
+      return routes[item.resourceType] || '/';
     },
 
     navigateTo(path) {

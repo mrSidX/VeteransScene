@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.js?v=20260211';
-import router from './router.js?v=20260211';
-import api from './services/api.js?v=20260211';
+import router from './router.js?v=20260218e';
+import api from './services/api.js?v=20260218c';
 import InfoHelper from './components/InfoHelper.js?v=20260211';
 
 // Expose API service globally for components

@@ -822,6 +822,10 @@ class ApiService {
     return this.get('/dropbox/cleanup/status');
   }
 
+  async testFtpConnection(config) {
+    return this.post('/storage/test-ftp', config);
+  }
+
   // Highlights API methods
   async getHighlights(params = {}) {
     const queryString = new URLSearchParams(params).toString();
@@ -1173,6 +1177,208 @@ class ApiService {
 
   async resendInvitation(id) {
     return this.post(`/invitations/${id}/resend`, {});
+  }
+
+  // ===== Recording Server (bb9e) API =====
+
+  async getRecordingServerStatus() {
+    return this.get('/recording-server/status');
+  }
+
+  async startServerRecording(data) {
+    return this.post('/recording-server/start', data);
+  }
+
+  async stopServerRecording(recordingId) {
+    return this.post(`/recording-server/stop/${recordingId}`);
+  }
+
+  async getServerRecording(recordingId) {
+    return this.get(`/recording-server/recording/${recordingId}`);
+  }
+
+  async getServerRecordings(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.get(`/recording-server/recordings${queryString ? '?' + queryString : ''}`);
+  }
+
+  async uploadServerRecordingToS3(recordingId) {
+    return this.post(`/recording-server/upload-s3/${recordingId}`);
+  }
+
+  async deleteServerRecording(recordingId) {
+    return this.delete(`/recording-server/recording/${recordingId}`);
+  }
+
+  async getServerRecordingPreview(recordingId) {
+    return this.get(`/recording-server/preview/${recordingId}`);
+  }
+
+  async wakeRecordingServer() {
+    return this.post('/recording-server/wol');
+  }
+
+  // ===== Follows API =====
+
+  async toggleFollow(resourceType, resourceId) {
+    return this.post(`/follows/${resourceType}/${resourceId}/toggle`);
+  }
+
+  async toggleFollowEmail(resourceType, resourceId) {
+    return this.put(`/follows/${resourceType}/${resourceId}/email`);
+  }
+
+  async getFollowStatus(resourceType, resourceId) {
+    return this.get(`/follows/${resourceType}/${resourceId}/status`);
+  }
+
+  async getMyFollows(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.get(`/follows${query ? '?' + query : ''}`);
+  }
+
+  async getFollowers(resourceType, resourceId) {
+    return this.get(`/follows/${resourceType}/${resourceId}/followers`);
+  }
+
+  // ===== Storage Disk Management API =====
+
+  async getRecordingDiskStatus() {
+    return this.get('/storage/recording-status');
+  }
+
+  async getFullDiskStatus() {
+    return this.get('/storage/status');
+  }
+
+  async getStorageDiskConfig() {
+    return this.get('/storage/disks');
+  }
+
+  async updateStorageDiskConfig(data) {
+    return this.put('/storage/disks', data);
+  }
+
+  async addStorageDisk(diskData) {
+    return this.post('/storage/disks', diskData);
+  }
+
+  async removeStorageDisk(diskId) {
+    return this.delete(`/storage/disks/${diskId}`);
+  }
+
+  async testStorageDisk(diskId) {
+    return this.post(`/storage/disks/${diskId}/test`);
+  }
+
+  async reorderStorageDisks(order) {
+    return this.put('/storage/disks/reorder', { order });
+  }
+
+  async getAvailableDisks() {
+    return this.get('/storage/available-disks');
+  }
+
+  // ===== Notification Preferences API =====
+
+  async getNotificationPreferences() {
+    return this.get('/notifications/preferences');
+  }
+
+  async updateNotificationPreferences(prefs) {
+    return this.put('/notifications/preferences', prefs);
+  }
+
+  // ===== S3 Browser API =====
+
+  async browseS3(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.get(`/storage/s3/browse${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getS3Stats() {
+    return this.get('/storage/s3/stats');
+  }
+
+  async deleteS3Object(key) {
+    return this.request('/storage/s3/object', {
+      method: 'DELETE',
+      body: JSON.stringify({ key })
+    });
+  }
+
+  async getS3PresignedUrl(key) {
+    return this.get(`/storage/s3/presign?key=${encodeURIComponent(key)}`);
+  }
+
+  async backfillS3Recordings() {
+    return this.post('/storage/s3/backfill', {});
+  }
+
+  async getRecordingServerDisks() {
+    return this.get('/recording-server/disks');
+  }
+
+  // Get the Recording Agent's attached drives — legacy single-agent (bb9e)
+  // Supports optional { host, port, secret, useSSL } to probe a specific agent
+  async getAgentDisks(opts = {}) {
+    const params = new URLSearchParams();
+    if (opts.host) params.set('host', opts.host);
+    if (opts.port) params.set('port', opts.port);
+    if (opts.secret) params.set('secret', opts.secret);
+    if (opts.useSSL) params.set('useSSL', 'true');
+    const qs = params.toString();
+    return this.get(`/recording-server/agent-disks${qs ? '?' + qs : ''}`);
+  }
+
+  // List all registered agents (agents that have phoned home)
+  async getRegisteredAgents() {
+    return this.get('/recording-server/agents');
+  }
+
+  // Get drives reported by a specific registered agent
+  async getAgentDrives(agentId) {
+    return this.get(`/recording-server/agents/${encodeURIComponent(agentId)}/disks`);
+  }
+
+  // Remove a registered agent from the registry
+  async deleteRegisteredAgent(agentId) {
+    return this.delete(`/recording-server/agents/${encodeURIComponent(agentId)}`);
+  }
+
+  // Manually register an agent from the admin UI
+  async registerAgent(data) {
+    return this.post('/recording-server/agents', data);
+  }
+
+  // Get all block devices (including unmounted) from an agent
+  async getAgentBlockDevices(agentId) {
+    return this.get(`/recording-server/agents/${encodeURIComponent(agentId)}/block-devices`);
+  }
+
+  // Mount a block device on an agent
+  async mountAgentDevice(agentId, device, mountPoint = null) {
+    return this.post(`/recording-server/agents/${encodeURIComponent(agentId)}/mount`, { device, mountPoint });
+  }
+
+  // Get allowed browse roots for an agent
+  async getAgentBrowseRoots(agentId) {
+    return this.get(`/recording-server/agents/${encodeURIComponent(agentId)}/browse-roots`);
+  }
+
+  // Browse a directory on an agent (sandboxed)
+  async browseAgentPath(agentId, dirPath) {
+    return this.get(`/recording-server/agents/${encodeURIComponent(agentId)}/browse?path=${encodeURIComponent(dirPath)}`);
+  }
+
+  // Get local drives on the main server
+  async getLocalDrives() {
+    return this.get('/storage/local-drives');
+  }
+
+  // Transfer a VDO.ninja recording from the agent to a configured storage disk
+  async transferServerRecording(recordingId, diskId) {
+    return this.post(`/recording-server/transfer/${recordingId}`, { diskId });
   }
 }
 

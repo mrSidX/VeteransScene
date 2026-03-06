@@ -3,11 +3,13 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
 import BranchBadges from '../components/BranchBadges.js';
+import FollowButton from '../components/FollowButton.js';
 
 export default {
   name: 'ApplicationDetail',
   components: {
-    BranchBadges
+    BranchBadges,
+    FollowButton
   },
   setup() {
     const route = useRoute();
@@ -67,20 +69,89 @@ export default {
     ];
 
     const showWaiverLinkCopied = ref(false);
+    const sendingWaiverEmail = ref(false);
+    const waiverEmailSent = ref(false);
+    const generatedWaiverLink = ref('');
 
     const getWaiverLink = () => {
+      // If we have a generated public link, use that
+      if (generatedWaiverLink.value) return generatedWaiverLink.value;
+      // Fallback to authenticated link
       const baseUrl = window.location.origin;
       return `${baseUrl}/app.html#/waiver/${application.value.id}`;
     };
 
-    const copyWaiverLink = () => {
-      const link = getWaiverLink();
-      navigator.clipboard.writeText(link).then(() => {
+    const generateWaiverLink = async () => {
+      try {
+        const response = await fetch(`${window.api.baseURL}/waivers/${application.value.id}/generate-link`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('vs_auth_token')}`
+          },
+          body: JSON.stringify({ expiresInDays: 30 })
+        });
+        const data = await response.json();
+        if (data.success) {
+          generatedWaiverLink.value = data.data.waiverUrl;
+          return data.data.waiverUrl;
+        } else {
+          alert('Failed to generate waiver link: ' + data.message);
+          return null;
+        }
+      } catch (err) {
+        alert('Error generating waiver link: ' + err.message);
+        return null;
+      }
+    };
+
+    const copyWaiverLink = async () => {
+      // Generate a fresh public link if we don't have one
+      if (!generatedWaiverLink.value) {
+        const url = await generateWaiverLink();
+        if (!url) return;
+      }
+      navigator.clipboard.writeText(generatedWaiverLink.value).then(() => {
         showWaiverLinkCopied.value = true;
         setTimeout(() => {
           showWaiverLinkCopied.value = false;
         }, 2000);
       });
+    };
+
+    const sendWaiverEmail = async () => {
+      if (!application.value.email) {
+        alert('This application has no email address');
+        return;
+      }
+      if (!confirm(`Send waiver email to ${application.value.email}?`)) return;
+
+      sendingWaiverEmail.value = true;
+      try {
+        const response = await fetch(`${window.api.baseURL}/waivers/${application.value.id}/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('vs_auth_token')}`
+          },
+          body: JSON.stringify({ expiresInDays: 30 })
+        });
+        const data = await response.json();
+        if (data.success) {
+          waiverEmailSent.value = true;
+          generatedWaiverLink.value = data.data.waiverUrl;
+          if (application.value.waiver) {
+            application.value.waiver.status = 'pending';
+          }
+          setTimeout(() => { waiverEmailSent.value = false; }, 5000);
+        } else {
+          alert('Failed to send waiver email: ' + data.message);
+        }
+      } catch (err) {
+        alert('Error sending waiver email: ' + err.message);
+      } finally {
+        sendingWaiverEmail.value = false;
+      }
     };
 
     const updateWaiverStatus = async (status) => {
@@ -322,10 +393,15 @@ export default {
       categories,
       waiverStatuses,
       showWaiverLinkCopied,
+      sendingWaiverEmail,
+      waiverEmailSent,
+      generatedWaiverLink,
       updateStatus,
       updatePriority,
       updateCategory,
       updateWaiverStatus,
+      sendWaiverEmail,
+      generateWaiverLink,
       openScheduleModal,
       saveSchedule,
       openNoteModal,
@@ -511,7 +587,10 @@ export default {
 
             <!-- Status Card -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-              <h3 class="text-lg font-bold text-yellow-400 mb-4">Status</h3>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-yellow-400">Status</h3>
+                <follow-button v-if="application._id || application.id" resource-type="application" :resource-id="application._id || application.id" :compact="true" />
+              </div>
               <select v-model="application.status" @change="updateStatus(application.status)"
                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
                 <option v-for="status in statuses" :key="status.value" :value="status.value">
@@ -573,12 +652,27 @@ export default {
                 </select>
               </div>
 
-              <!-- Waiver Link -->
+              <!-- Send Waiver Email -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-300 mb-2">Share Waiver Link</label>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Send Waiver to Applicant</label>
+                <button
+                  @click="sendWaiverEmail"
+                  :disabled="sendingWaiverEmail || !application.email"
+                  class="w-full px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md transition text-sm font-medium"
+                >
+                  <span v-if="sendingWaiverEmail">Sending...</span>
+                  <span v-else-if="waiverEmailSent">Sent!</span>
+                  <span v-else>Email Waiver Link to {{ application.email || '(no email)' }}</span>
+                </button>
+                <p v-if="!application.email" class="text-xs text-red-400 mt-1">No email on this application</p>
+              </div>
+
+              <!-- Waiver Link (copy) -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Or Copy Public Signing Link</label>
                 <div class="flex gap-2">
                   <input
-                    :value="getWaiverLink()"
+                    :value="generatedWaiverLink || '(click Copy to generate)'"
                     type="text"
                     readonly
                     class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 text-sm"
@@ -586,9 +680,10 @@ export default {
                   <button
                     @click="copyWaiverLink"
                     class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition text-sm font-medium">
-                    {{ showWaiverLinkCopied ? '✓ Copied' : 'Copy' }}
+                    {{ showWaiverLinkCopied ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
+                <p class="text-xs text-gray-500 mt-1">Generates a secure token link (valid 30 days, no login required)</p>
               </div>
 
               <!-- Waiver Info -->

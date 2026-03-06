@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -40,11 +40,54 @@ export default {
     const volumeLevel = ref(0);
     const volumeMeterInterval = ref(null);
 
+    // Preview state
+    const previewVideo = ref(null);
+    const previewMuted = ref(true);
+
     // Upload mode state
     const uploadMode = ref('record'); // 'record' | 'upload'
     const selectedUploadFile = ref(null);
     const uploadFilePreviewUrl = ref(null);
     const uploadFileError = ref(null);
+
+    // Disk status
+    const diskStatus = ref(null);
+    const diskStatusInterval = ref(null);
+
+    const diskStatusColor = computed(() => {
+      if (!diskStatus.value) return 'gray';
+      if (diskStatus.value.status === 'critical') return 'red';
+      if (diskStatus.value.status === 'warning') return 'yellow';
+      return 'green';
+    });
+
+    const diskSpaceBlocked = computed(() => {
+      return diskStatus.value && diskStatus.value.status === 'critical';
+    });
+
+    const formatDiskBytes = (bytes) => {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    const loadDiskStatus = async () => {
+      try {
+        const res = await window.api.getRecordingDiskStatus();
+        if (res.success) {
+          diskStatus.value = res.data;
+        }
+      } catch (err) {
+        console.warn('[RecordingStudio] Failed to load disk status:', err.message);
+      }
+    };
+
+    const startDiskStatusPolling = () => {
+      loadDiskStatus();
+      diskStatusInterval.value = setInterval(loadDiskStatus, 30000);
+    };
 
     // Computed
     const sessionStatus = computed(() => {
@@ -163,16 +206,15 @@ export default {
 
         console.log('[RecordingStudio] Media stream acquired. Camera:', deviceStatus.value.camera, 'Microphone:', deviceStatus.value.microphone);
 
-        // Attach stream to preview video element
-        setTimeout(() => {
-          const videoElement = document.querySelector('video[autoplay]');
-          if (videoElement) {
-            videoElement.srcObject = mediaStream.value;
-            console.log('[RecordingStudio] Preview video attached to stream');
-          } else {
-            console.warn('[RecordingStudio] Preview video element not found');
-          }
-        }, 100);
+        // Attach stream to preview video element via Vue ref
+        await nextTick();
+        if (previewVideo.value) {
+          previewVideo.value.srcObject = mediaStream.value;
+          previewVideo.value.muted = previewMuted.value;
+          console.log('[RecordingStudio] Preview video attached to stream via ref');
+        } else {
+          console.warn('[RecordingStudio] Preview video ref not available');
+        }
 
         // Setup audio analyser for volume meter (show before recording)
         try {
@@ -247,6 +289,13 @@ export default {
         if (selectedMicrophone.value !== previousSelection) {
           selectedMicrophone.value = previousSelection;
         }
+      }
+    };
+
+    const togglePreviewMute = () => {
+      previewMuted.value = !previewMuted.value;
+      if (previewVideo.value) {
+        previewVideo.value.muted = previewMuted.value;
       }
     };
 
@@ -551,6 +600,7 @@ export default {
         if (!sessionInvalid.value) {
           // startMediaStream() will request permission and enumerate devices
           await startMediaStream();
+          startDiskStatusPolling();
         }
       } catch (err) {
         console.error('Mount error:', err);
@@ -560,6 +610,9 @@ export default {
     });
 
     onBeforeUnmount(() => {
+      if (diskStatusInterval.value) {
+        clearInterval(diskStatusInterval.value);
+      }
       if (mediaStream.value) {
         mediaStream.value.getTracks().forEach(t => t.stop());
       }
@@ -607,6 +660,8 @@ export default {
       selectedMicrophone,
       deviceStatus,
       volumeLevel,
+      previewVideo,
+      previewMuted,
       uploadMode,
       selectedUploadFile,
       uploadFilePreviewUrl,
@@ -616,6 +671,7 @@ export default {
       startMediaStream,
       switchCamera,
       switchMicrophone,
+      togglePreviewMute,
       switchTab,
       startRecording,
       stopRecording,
@@ -623,7 +679,11 @@ export default {
       uploadRecording,
       selectUploadFile,
       clearUploadFile,
-      uploadSelectedFile
+      uploadSelectedFile,
+      diskStatus,
+      diskStatusColor,
+      diskSpaceBlocked,
+      formatDiskBytes
     };
   },
   template: `
@@ -635,6 +695,46 @@ export default {
           <div>
             <h4 class="font-bold">Error</h4>
             <p class="text-sm">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Disk Status Bar -->
+      <div v-if="diskStatus && !loading && !sessionInvalid" class="max-w-4xl mx-auto mb-4">
+        <!-- Critical: Block recording -->
+        <div v-if="diskSpaceBlocked" class="bg-red-600/30 border border-red-500 rounded-lg p-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🔴</span>
+            <div class="flex-1">
+              <p class="text-red-300 font-semibold">No Storage Space Available</p>
+              <p class="text-red-400 text-sm">All recording disks are full. Recording and uploads are disabled until space is freed.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Warning -->
+        <div v-else-if="diskStatus.status === 'warning'" class="bg-yellow-600/20 border border-yellow-500/50 rounded-lg px-4 py-2">
+          <div class="flex items-center gap-3">
+            <span>🟡</span>
+            <div class="flex-1 flex items-center gap-3">
+              <span class="text-yellow-300 text-sm font-medium">Storage running low</span>
+              <div class="flex-1 max-w-xs bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full bg-yellow-500 transition-all" :style="{ width: diskStatus.percentUsed + '%' }"></div>
+              </div>
+              <span class="text-yellow-400 text-sm font-mono">{{ formatDiskBytes(diskStatus.available) }} free</span>
+            </div>
+          </div>
+        </div>
+        <!-- OK -->
+        <div v-else class="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2">
+          <div class="flex items-center gap-3">
+            <span>🟢</span>
+            <div class="flex-1 flex items-center gap-3">
+              <span class="text-gray-400 text-sm">Storage</span>
+              <div class="flex-1 max-w-xs bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full bg-green-500 transition-all" :style="{ width: diskStatus.percentUsed + '%' }"></div>
+              </div>
+              <span class="text-green-400 text-sm font-mono">{{ formatDiskBytes(diskStatus.available) }} free</span>
+            </div>
           </div>
         </div>
       </div>
@@ -695,17 +795,35 @@ export default {
         <div v-if="uploadMode === 'record'" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <!-- Left: Video Preview (spans 2 columns) -->
           <div class="lg:col-span-2">
-            <div class="bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-700">
+            <div class="bg-gray-800 rounded-lg overflow-hidden border-2 relative" :class="recordingInProgress ? 'border-red-500' : 'border-gray-700'">
               <video
                 ref="previewVideo"
                 autoplay
                 playsinline
-                muted
+                :muted="previewMuted"
                 class="w-full bg-black"
                 style="min-height: 400px; object-fit: cover;">
               </video>
+
+              <!-- Recording Indicator Overlay -->
+              <div v-if="recordingInProgress" class="absolute top-3 left-3 flex items-center gap-2 bg-black/60 rounded-full px-3 py-1.5">
+                <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                <span class="text-white text-sm font-bold">REC {{ recordingTime }}</span>
+              </div>
+
+              <!-- Mute/Unmute Toggle -->
+              <button
+                @click="togglePreviewMute"
+                class="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition"
+                :title="previewMuted ? 'Unmute preview' : 'Mute preview'">
+                <span v-if="previewMuted" class="text-lg">🔇</span>
+                <span v-else class="text-lg">🔊</span>
+              </button>
             </div>
-            <p class="text-gray-400 text-sm mt-3">👤 Live Preview - You should see yourself here</p>
+            <div class="flex items-center justify-between mt-3">
+              <p class="text-gray-400 text-sm">👤 Live Preview - You should see yourself here</p>
+              <p class="text-gray-500 text-xs">Audio {{ previewMuted ? 'muted' : 'on' }}</p>
+            </div>
           </div>
 
           <!-- Right: Controls Panel -->
@@ -727,8 +845,10 @@ export default {
               <button
                 v-if="!recordingInProgress && !recordedBlob"
                 @click="startRecording"
-                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px] flex items-center justify-center gap-2">
-                🔴 Start Recording
+                :disabled="diskSpaceBlocked"
+                class="w-full font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px] flex items-center justify-center gap-2"
+                :class="diskSpaceBlocked ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600 text-white'">
+                {{ diskSpaceBlocked ? '⛔ No Disk Space' : '🔴 Start Recording' }}
               </button>
               <button
                 v-if="recordingInProgress"
@@ -833,8 +953,10 @@ export default {
             <button
               v-if="!uploading && !uploadedFile"
               @click="uploadRecording"
-              class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]">
-              📤 Upload Recording
+              :disabled="diskSpaceBlocked"
+              class="flex-1 font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]"
+              :class="diskSpaceBlocked ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'">
+              {{ diskSpaceBlocked ? '⛔ No Disk Space' : '📤 Upload Recording' }}
             </button>
           </div>
         </div>
@@ -931,8 +1053,10 @@ export default {
               <button
                 v-if="!uploading && !uploadedFile"
                 @click="uploadSelectedFile"
-                class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]">
-                📤 Upload Video
+                :disabled="diskSpaceBlocked"
+                class="flex-1 font-bold py-3 px-6 rounded-lg transition duration-200 min-h-[44px]"
+                :class="diskSpaceBlocked ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'">
+                {{ diskSpaceBlocked ? '⛔ No Disk Space' : '📤 Upload Video' }}
               </button>
             </div>
           </div>

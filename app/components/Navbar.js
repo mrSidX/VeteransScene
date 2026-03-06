@@ -1,9 +1,13 @@
 import { useAuthStore } from '../stores/auth.js';
 import { useRouter } from 'vue-router';
 import { ref, computed } from 'vue';
+import NotificationBell from './NotificationBell.js';
 
 export default {
   name: 'Navbar',
+  components: {
+    NotificationBell
+  },
   setup() {
     const authStore = useAuthStore();
     const router = useRouter();
@@ -115,6 +119,12 @@ export default {
                 <router-link to="/recordings-browser" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   🎬 Browse Recordings
                 </router-link>
+                <router-link to="/storage" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  💾 Storage
+                </router-link>
+                <router-link v-if="authStore.isAdmin.value" to="/s3-browser" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  ☁️ S3 Browser
+                </router-link>
                 <router-link to="/help-topics" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
                   ❓ Help Topics
                 </router-link>
@@ -142,6 +152,9 @@ export default {
             <router-link v-if="authStore.isAdmin.value" to="/users" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
               Users
             </router-link>
+
+            <!-- Notification Bell -->
+            <notification-bell />
 
             <div class="relative group">
               <button class="flex items-center space-x-2 py-2 px-2 rounded-lg hover:bg-gray-700 transition">
@@ -227,6 +240,16 @@ export default {
           </div>
         </div>
 
+        <!-- Notifications Link (Mobile) -->
+        <div class="px-4 py-3 border-b border-gray-700">
+          <router-link @click="closeMobileMenu" to="/notifications" class="flex items-center gap-2 text-gray-300 hover:text-yellow-400 transition font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            Notifications
+          </router-link>
+        </div>
+
         <!-- Navigation Links -->
         <div class="px-2 py-4 space-y-1">
           <!-- Dashboard -->
@@ -265,6 +288,12 @@ export default {
               </router-link>
               <router-link @click="closeMobileMenu" to="/recordings-browser" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 🎬 Browse Recordings
+              </router-link>
+              <router-link @click="closeMobileMenu" to="/storage" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                💾 Storage
+              </router-link>
+              <router-link v-if="authStore.isAdmin.value" @click="closeMobileMenu" to="/s3-browser" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                ☁️ S3 Browser
               </router-link>
               <router-link @click="closeMobileMenu" to="/help-topics" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 ❓ Help Topics

@@ -443,6 +443,55 @@ export default {
           </form>
         </div>
 
+        <!-- Notification Preferences Card -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 md:p-6">
+          <h2 class="text-lg font-semibold text-white mb-3 md:mb-4">Notification Preferences</h2>
+
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm text-gray-200">In-app notifications</span>
+                <p class="text-xs text-gray-500">Receive in-app notifications for system events</p>
+              </div>
+              <button
+                @click="toggleNotifPref('systemNotifications')"
+                :class="[
+                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                  notifPrefs.systemNotifications ? 'bg-yellow-600' : 'bg-gray-600'
+                ]"
+              >
+                <span :class="[
+                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                  notifPrefs.systemNotifications ? 'translate-x-6' : 'translate-x-1'
+                ]"></span>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm text-gray-200">Email notifications</span>
+                <p class="text-xs text-gray-500">Receive email for system events (assignments, account changes)</p>
+              </div>
+              <button
+                @click="toggleNotifPref('emailSystemNotifications')"
+                :class="[
+                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                  notifPrefs.emailSystemNotifications ? 'bg-blue-600' : 'bg-gray-600'
+                ]"
+              >
+                <span :class="[
+                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                  notifPrefs.emailSystemNotifications ? 'translate-x-6' : 'translate-x-1'
+                ]"></span>
+              </button>
+            </div>
+
+            <p class="text-xs text-gray-500 pt-2 border-t border-gray-700">
+              Per-item email notifications can be toggled using the bell icon when following segments or applications.
+            </p>
+          </div>
+        </div>
+
         <!-- Account Info Card -->
         <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 md:p-6">
           <h2 class="text-lg font-semibold text-white mb-3 md:mb-4">Account Information</h2>
@@ -532,6 +581,10 @@ export default {
         confirmPassword: ''
       },
       passwordError: '',
+      notifPrefs: {
+        systemNotifications: true,
+        emailSystemNotifications: false
+      },
       toast: {
         show: false,
         message: '',
@@ -566,6 +619,7 @@ export default {
 
   async mounted() {
     await this.loadProfile();
+    await this.loadNotifPrefs();
 
     // Setup unsaved changes detection
     this.setupUnsavedChangesDetection();
@@ -580,6 +634,37 @@ export default {
   },
 
   methods: {
+    async loadNotifPrefs() {
+      try {
+        const api = window.api;
+        const res = await api.getNotificationPreferences();
+        if (res.success && res.data) {
+          this.notifPrefs = {
+            systemNotifications: res.data.systemNotifications !== false,
+            emailSystemNotifications: !!res.data.emailSystemNotifications
+          };
+        }
+      } catch (err) {
+        // Use defaults
+      }
+    },
+
+    async toggleNotifPref(key) {
+      const oldVal = this.notifPrefs[key];
+      this.notifPrefs[key] = !oldVal;
+      try {
+        const api = window.api;
+        const res = await api.updateNotificationPreferences({
+          [key]: this.notifPrefs[key]
+        });
+        if (!res.success) {
+          this.notifPrefs[key] = oldVal;
+        }
+      } catch (err) {
+        this.notifPrefs[key] = oldVal;
+      }
+    },
+
     // Unsaved changes detection methods
     handleBeforeUnload(e) {
       if (this.hasChanges && !this.navigationBlocked) {

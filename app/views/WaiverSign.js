@@ -97,7 +97,11 @@ export default {
 
         const response = await ApiService.post(
           `/waivers/${applicationId}/sign`,
-          form
+          {
+            ...form,
+            consentToElectronicSignature: 'true',
+            agreedToTerms: 'true'
+          }
         );
 
         if (response.success) {

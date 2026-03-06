@@ -1,5 +1,10 @@
+import FollowButton from '../components/FollowButton.js';
+
 export default {
   name: 'FlagDetail',
+  components: {
+    FollowButton
+  },
   template: `
     <div class="container mx-auto px-4 py-6">
       <!-- Loading State -->
@@ -37,6 +42,7 @@ export default {
             </div>
           </div>
           <div class="flex items-center gap-2">
+            <follow-button v-if="flag._id" resource-type="flag" :resource-id="flag._id" />
             <button
               v-if="canEdit"
               @click="showEditModal = true"
