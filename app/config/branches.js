@@ -7,27 +7,27 @@ const BRANCH_CONFIG = [
   {
     id: 'Army',
     name: 'Army',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Logo_of_the_United_States_Army.svg/500px-Logo_of_the_United_States_Army.svg.png'
+    logo: './assets/img/branches/Logo_of_the_United_States_Army.svg.png'
   },
   {
     id: 'Navy',
     name: 'Navy',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Emblem_of_the_United_States_Navy.svg/600px-Emblem_of_the_United_States_Navy.svg.png'
+    logo: './assets/img/branches/Emblem_of_the_United_States_Navy.svg.png'
   },
   {
     id: 'Air Force',
     name: 'Air Force',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Military_service_mark_of_the_United_States_Air_Force.svg/640px-Military_service_mark_of_the_United_States_Air_Force.svg.png'
+    logo: './assets/img/branches/U.S._Air_Force_service_mark.svg.png'
   },
   {
     id: 'Marines',
     name: 'Marines',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Emblem_of_the_United_States_Marine_Corps.svg/640px-Emblem_of_the_United_States_Marine_Corps.svg.png'
+    logo: './assets/img/branches/Emblem_of_the_United_States_Marine_Corps.svg.png'
   },
   {
     id: 'Coast Guard',
     name: 'Coast Guard',
-    logo: 'https://images.fineartamerica.com/images/artworkimages/medium/1/u-s-coast-guard-u-s-c-g-emblem-serge-averbukh-transparent.png'
+    logo: './assets/img/branches/u-s-coast-guard-u-s-c-g-emblem-serge-averbukh-transparent.png'
   },
   {
     id: 'Space Force',
@@ -37,12 +37,12 @@ const BRANCH_CONFIG = [
   {
     id: 'National Guard',
     name: 'National Guard',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Seal_of_the_United_States_Army_National_Guard.svg/1200px-Seal_of_the_United_States_Army_National_Guard.svg.png'
+    logo: './assets/img/branches/Seal_of_the_United_States_Army_National_Guard.svg.png'
   },
   {
     id: 'Merchant Marines',
     name: 'Merchant Marines',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Seal_of_the_United_States_Merchant_Marine.svg'
+    logo: './assets/img/branches/Seal_of_the_United_States_Merchant_Marine.svg'
   },
   {
     id: "Women's Army Corps",

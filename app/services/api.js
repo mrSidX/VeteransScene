@@ -1181,16 +1181,25 @@ class ApiService {
 
   // ===== Recording Server (bb9e) API =====
 
-  async getRecordingServerStatus() {
-    return this.get('/recording-server/status');
+  async getRecordingServerStatus(segmentId) {
+    const query = segmentId ? `?segmentId=${segmentId}` : '';
+    return this.get(`/recording-server/status${query}`);
   }
 
   async startServerRecording(data) {
     return this.post('/recording-server/start', data);
   }
 
-  async stopServerRecording(recordingId) {
-    return this.post(`/recording-server/stop/${recordingId}`);
+  async stopServerRecording(recordingId, { force = false } = {}) {
+    return this.post(`/recording-server/stop/${recordingId}`, force ? { force: true } : {});
+  }
+
+  async startRecordingSession(data) {
+    return this.post('/recording-server/start-session', data);
+  }
+
+  async stopRecordingSession(sessionId, { force = false } = {}) {
+    return this.post(`/recording-server/stop-session/${sessionId}`, force ? { force: true } : {});
   }
 
   async getServerRecording(recordingId) {
@@ -1249,6 +1258,10 @@ class ApiService {
 
   async getFullDiskStatus() {
     return this.get('/storage/status');
+  }
+
+  async getDiskStatusById(diskId) {
+    return this.get(`/storage/disks/${diskId}/status`);
   }
 
   async getStorageDiskConfig() {
@@ -1346,6 +1359,11 @@ class ApiService {
     return this.delete(`/recording-server/agents/${encodeURIComponent(agentId)}`);
   }
 
+  // Send Wake-on-LAN packet to power on an offline agent
+  async wakeAgent(agentId) {
+    return this.post(`/recording-server/agents/${encodeURIComponent(agentId)}/wake`);
+  }
+
   // Manually register an agent from the admin UI
   async registerAgent(data) {
     return this.post('/recording-server/agents', data);
@@ -1379,6 +1397,47 @@ class ApiService {
   // Transfer a VDO.ninja recording from the agent to a configured storage disk
   async transferServerRecording(recordingId, diskId) {
     return this.post(`/recording-server/transfer/${recordingId}`, { diskId });
+  }
+
+  // ==========================================
+  // Recording Slots
+  // ==========================================
+  async getRecordingSlots(status) {
+    const qs = status ? `?status=${status}` : '';
+    return this.get(`/recording-slots${qs}`);
+  }
+  async getRecordingSlot(id) {
+    return this.get(`/recording-slots/${id}`);
+  }
+  async getSlotForSegment(segmentId) {
+    return this.get(`/recording-slots/for-segment/${segmentId}`);
+  }
+  async createRecordingSlot(data) {
+    return this.post('/recording-slots', data);
+  }
+  async updateRecordingSlot(id, data) {
+    return this.put(`/recording-slots/${id}`, data);
+  }
+  async deleteRecordingSlot(id) {
+    return this.delete(`/recording-slots/${id}`);
+  }
+  async assignSlotSegment(slotId, segmentId) {
+    return this.post(`/recording-slots/${slotId}/assign`, { segmentId });
+  }
+  async releaseSlot(slotId) {
+    return this.post(`/recording-slots/${slotId}/release`);
+  }
+  async assignSlotSeat(slotId, seatNumber, data) {
+    return this.post(`/recording-slots/${slotId}/seats/${seatNumber}/assign`, data);
+  }
+  async clearSlotSeat(slotId, seatNumber) {
+    return this.post(`/recording-slots/${slotId}/seats/${seatNumber}/clear`);
+  }
+  async addSlotSeats(slotId, count) {
+    return this.post(`/recording-slots/${slotId}/seats/add`, { count });
+  }
+  async regenerateSlotRoom(slotId) {
+    return this.post(`/recording-slots/${slotId}/regenerate`);
   }
 }
 

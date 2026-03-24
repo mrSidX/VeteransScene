@@ -94,19 +94,19 @@ export default {
         <!-- Branch Logos Grid -->
         <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-6 w-full max-w-5xl">
           <div class="bg-gray-800 p-4 rounded-lg shadow-md">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Logo_of_the_United_States_Army.svg/500px-Logo_of_the_United_States_Army.svg.png" alt="Army" class="rounded mb-2 mx-auto h-20">
+            <img src="./assets/img/branches/Logo_of_the_United_States_Army.svg.png" alt="Army" class="rounded mb-2 mx-auto h-20">
             <p class="text-sm text-gray-400 text-center">U.S. Army</p>
           </div>
           <div class="bg-gray-800 p-4 rounded-lg shadow-md">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Emblem_of_the_United_States_Navy.svg/600px-Emblem_of_the_United_States_Navy.svg.png" alt="Navy" class="rounded mb-2 mx-auto h-20">
+            <img src="./assets/img/branches/Emblem_of_the_United_States_Navy.svg.png" alt="Navy" class="rounded mb-2 mx-auto h-20">
             <p class="text-sm text-gray-400 text-center">U.S. Navy</p>
           </div>
           <div class="bg-gray-800 p-4 rounded-lg shadow-md">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Military_service_mark_of_the_United_States_Air_Force.svg/640px-Military_service_mark_of_the_United_States_Air_Force.svg.png" alt="Air Force" class="rounded mb-2 mx-auto h-20">
+            <img src="./assets/img/branches/U.S._Air_Force_service_mark.svg.png" alt="Air Force" class="rounded mb-2 mx-auto h-20">
             <p class="text-sm text-gray-400 text-center">U.S. Air Force</p>
           </div>
           <div class="bg-gray-800 p-4 rounded-lg shadow-md">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Emblem_of_the_United_States_Marine_Corps.svg/640px-Emblem_of_the_United_States_Marine_Corps.svg.png" alt="Marines" class="rounded mb-2 mx-auto h-20">
+            <img src="./assets/img/branches/Emblem_of_the_United_States_Marine_Corps.svg.png" alt="Marines" class="rounded mb-2 mx-auto h-20">
             <p class="text-sm text-gray-400 text-center">U.S. Marines</p>
           </div>
         </div>

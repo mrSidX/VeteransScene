@@ -13,6 +13,7 @@ export default {
     const router = useRouter();
     const showMobileMenu = ref(false);
     const showContentMenu = ref(false);
+    const showRecordingMenu = ref(false);
     const showModerationMenu = ref(false);
 
     const isTemporaryUser = computed(() => authStore.user.value?.isTemporary === true);
@@ -27,6 +28,7 @@ export default {
     const closeMobileMenu = () => {
       showMobileMenu.value = false;
       showContentMenu.value = false;
+      showRecordingMenu.value = false;
       showModerationMenu.value = false;
     };
 
@@ -47,6 +49,7 @@ export default {
       handleLogout,
       showMobileMenu,
       showContentMenu,
+      showRecordingMenu,
       showModerationMenu,
       closeMobileMenu,
       navigateTo,
@@ -100,7 +103,7 @@ export default {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
               </button>
-              <div class="absolute left-0 mt-0 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div class="absolute left-0 mt-0 w-52 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <router-link to="/segments" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   📊 Segments
                 </router-link>
@@ -113,20 +116,28 @@ export default {
                 <router-link to="/dropbox" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   📁 Dropbox
                 </router-link>
-                <router-link to="/recording-access" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
-                  🎥 Grant Recording Access
+                <router-link to="/help-topics" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  ❓ Help Topics
+                </router-link>
+                <!-- Recording section divider -->
+                <div class="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-900/50 border-b border-gray-700">Recording</div>
+                <router-link to="/recording-slots" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  🎚️ Recording Slots
+                </router-link>
+                <router-link to="/obs-machines" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  🖥️ OBS Machines
                 </router-link>
                 <router-link to="/recordings-browser" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   🎬 Browse Recordings
                 </router-link>
+                <router-link to="/recording-access" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  🎥 Grant Access
+                </router-link>
                 <router-link to="/storage" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   💾 Storage
                 </router-link>
-                <router-link v-if="authStore.isAdmin.value" to="/s3-browser" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                <router-link v-if="authStore.isAdmin.value" to="/s3-browser" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
                   ☁️ S3 Browser
-                </router-link>
-                <router-link to="/help-topics" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
-                  ❓ Help Topics
                 </router-link>
               </div>
             </div>
@@ -151,6 +162,10 @@ export default {
 
             <router-link v-if="authStore.isAdmin.value" to="/users" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
               Users
+            </router-link>
+
+            <router-link v-if="authStore.isAdmin.value" to="/security" class="py-2 text-red-400 hover:text-red-300 font-medium transition">
+              Security
             </router-link>
 
             <!-- Notification Bell -->
@@ -283,20 +298,28 @@ export default {
               <router-link @click="closeMobileMenu" to="/dropbox" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 📁 Dropbox
               </router-link>
-              <router-link @click="closeMobileMenu" to="/recording-access" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
-                🎥 Grant Recording Access
+              <router-link @click="closeMobileMenu" to="/help-topics" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                ❓ Help Topics
+              </router-link>
+              <!-- Recording sub-section -->
+              <div class="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Recording</div>
+              <router-link @click="closeMobileMenu" to="/recording-slots" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                🎚️ Recording Slots
+              </router-link>
+              <router-link @click="closeMobileMenu" to="/obs-machines" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                🖥️ OBS Machines
               </router-link>
               <router-link @click="closeMobileMenu" to="/recordings-browser" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 🎬 Browse Recordings
+              </router-link>
+              <router-link @click="closeMobileMenu" to="/recording-access" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                🎥 Grant Access
               </router-link>
               <router-link @click="closeMobileMenu" to="/storage" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 💾 Storage
               </router-link>
               <router-link v-if="authStore.isAdmin.value" @click="closeMobileMenu" to="/s3-browser" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 ☁️ S3 Browser
-              </router-link>
-              <router-link @click="closeMobileMenu" to="/help-topics" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
-                ❓ Help Topics
               </router-link>
             </div>
           </div>
@@ -322,6 +345,11 @@ export default {
           <!-- Users (Admin Only) -->
           <router-link v-if="authStore.isAdmin.value" @click="closeMobileMenu" to="/users" class="block px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg font-medium min-h-[44px] flex items-center">
             Users
+          </router-link>
+
+          <!-- Security (Admin Only) -->
+          <router-link v-if="authStore.isAdmin.value" @click="closeMobileMenu" to="/security" class="block px-4 py-3 text-red-400 hover:bg-gray-700 hover:text-red-300 transition rounded-lg font-medium min-h-[44px] flex items-center">
+            Security
           </router-link>
 
           <!-- Profile -->

@@ -45,6 +45,10 @@ export default {
     const discoveredAgentDisks = ref([]);
     const agentDiscoveryError = ref(null);
 
+    // Wake-on-LAN
+    const wakingAgent = ref(null);   // agentId currently being woken
+    const wakeMessage = ref(null);   // { agentId, text, type: 'success'|'error' }
+
     // Unmounted block devices on agent
     const unmountedDevices = ref([]);
     const mountingDevice = ref(null);
@@ -284,6 +288,43 @@ export default {
       }
     };
 
+    // Wake-on-LAN: power on an offline agent
+    const wakeAgent = async (agentId, ev) => {
+      if (ev) ev.stopPropagation();
+      wakingAgent.value = agentId;
+      wakeMessage.value = null;
+      try {
+        const res = await window.api.wakeAgent(agentId);
+        if (res.alreadyOnline) {
+          wakeMessage.value = { agentId, text: 'Agent is already online', type: 'success' };
+          await loadRegisteredAgents();
+          loadData();
+        } else {
+          wakeMessage.value = { agentId, text: res.message || 'Wake packet sent — machine should boot shortly', type: 'success' };
+          // Poll for the agent to come online (check every 10s for up to 2 min)
+          let attempts = 0;
+          const poll = setInterval(async () => {
+            attempts++;
+            if (attempts > 12) {
+              clearInterval(poll);
+              return;
+            }
+            await loadRegisteredAgents();
+            const agent = registeredAgents.value.find(a => a.id === agentId);
+            if (agent && agent.isOnline) {
+              clearInterval(poll);
+              wakeMessage.value = { agentId, text: `${agent.displayName} is now online!`, type: 'success' };
+              loadData(); // refresh disk statuses
+            }
+          }, 10000);
+        }
+      } catch (err) {
+        wakeMessage.value = { agentId, text: err.message || 'Failed to send wake packet', type: 'error' };
+      } finally {
+        wakingAgent.value = null;
+      }
+    };
+
     // Scan local drives on the main server
     const scanLocalDrives = async () => {
       loadingLocalDrives.value = true;
@@ -333,24 +374,76 @@ export default {
         loading.value = true;
         error.value = null;
 
-        const [statusRes, configRes] = await Promise.all([
-          window.api.getFullDiskStatus(),
-          window.api.getStorageDiskConfig()
-        ]);
-
-        if (statusRes.success) {
-          diskStatuses.value = statusRes.data.disks;
-          totals.value = statusRes.data.totals;
-        }
-
+        // Step 1: Load config (fast — DB only, no network probes)
+        const configRes = await window.api.getStorageDiskConfig();
         if (configRes.success) {
           config.value = configRes.data;
           settingsForm.value.warningThresholdPercent = configRes.data.warningThresholdPercent;
           settingsForm.value.criticalThresholdPercent = configRes.data.criticalThresholdPercent;
+
+          // Build initial disk list from config with "checking" placeholder status
+          diskStatuses.value = (configRes.data.disks || []).map(disk => ({
+            id: disk.id,
+            label: disk.label,
+            type: disk.type || 'local',
+            enabled: disk.enabled,
+            priority: disk.priority,
+            purpose: disk.purpose,
+            path: disk.path,
+            maxUsagePercent: disk.maxUsagePercent,
+            reservedBytes: disk.reservedBytes,
+            host: disk.agentConfig?.host || disk.ftpConfig?.host,
+            port: disk.agentConfig?.port || disk.ftpConfig?.port,
+            bucket: disk.s3Config?.bucket,
+            region: disk.s3Config?.region,
+            prefix: disk.s3Config?.prefix,
+            agentPath: disk.agentConfig?.agentPath,
+            basePath: disk.ftpConfig?.basePath,
+            // Status placeholders — updated async below
+            isOnline: null,  // null = still checking
+            _checking: true
+          }));
+        }
+
+        loading.value = false;
+
+        // Step 2: Fire per-disk status checks in parallel (non-blocking)
+        if (diskStatuses.value.length > 0) {
+          const statusPromises = diskStatuses.value.map(async (disk) => {
+            try {
+              const res = await window.api.getDiskStatusById(disk.id);
+              if (res.success && res.data) {
+                // Merge live status into the disk entry
+                const idx = diskStatuses.value.findIndex(d => d.id === disk.id);
+                if (idx !== -1) {
+                  Object.assign(diskStatuses.value[idx], res.data, { _checking: false });
+                }
+              }
+            } catch (e) {
+              const idx = diskStatuses.value.findIndex(d => d.id === disk.id);
+              if (idx !== -1) {
+                diskStatuses.value[idx].isOnline = false;
+                diskStatuses.value[idx]._checking = false;
+                diskStatuses.value[idx].error = e.message;
+              }
+            }
+          });
+          // Also compute totals once all are done
+          Promise.all(statusPromises).then(() => {
+            const localDisks = diskStatuses.value.filter(d => (d.type || 'local') === 'local' && d.isOnline);
+            totals.value = {
+              total: localDisks.reduce((s, d) => s + (d.total || 0), 0),
+              used: localDisks.reduce((s, d) => s + (d.used || 0), 0),
+              available: localDisks.reduce((s, d) => s + (d.available || 0), 0),
+              percentUsed: 0
+            };
+            if (totals.value.total > 0) {
+              totals.value.percentUsed = Math.round(totals.value.used / totals.value.total * 100);
+            }
+          });
         }
       } catch (err) {
         error.value = err.message || 'Failed to load storage data';
-      } finally {
         loading.value = false;
       }
     };
@@ -454,7 +547,17 @@ export default {
       }
     };
 
-    onMounted(loadData);
+    onMounted(() => {
+      loadData();
+      loadRegisteredAgents();
+    });
+
+    // Resolve the registered agent ID for a disk (by matching host)
+    const agentIdForDisk = (disk) => {
+      if (disk.type !== 'recording-agent' && disk.type !== 'agent-path') return null;
+      const agent = registeredAgents.value.find(a => a.host === disk.host);
+      return agent ? agent.id : null;
+    };
 
     return {
       loading, error, successMsg, config, diskStatuses, totals,
@@ -470,6 +573,7 @@ export default {
       loadRegisteredAgents, selectAgent, discoverAgentDrives, selectDiscoveredDrive,
       registerAgent, scanLocalDrives, selectLocalDrive,
       unmountedDevices, mountingDevice, mountAgentDevice,
+      wakingAgent, wakeMessage, wakeAgent, agentIdForDisk,
       timeSince, formatDiscoveredBytes
     };
   },
@@ -807,7 +911,21 @@ export default {
                       <div class="text-gray-500 text-xs">
                         v{{ agent.version || '?' }} &middot; {{ timeSince(agent.lastSeen) }}
                       </div>
+                      <!-- Wake message -->
+                      <div v-if="wakeMessage && wakeMessage.agentId === agent.id" class="mt-1 text-xs"
+                        :class="wakeMessage.type === 'success' ? 'text-green-400' : 'text-red-400'">
+                        {{ wakeMessage.text }}
+                      </div>
                     </div>
+                    <!-- Power On button (offline agents) -->
+                    <button v-if="!agent.isOnline"
+                      @click="wakeAgent(agent.id, $event)"
+                      :disabled="wakingAgent === agent.id"
+                      class="flex-shrink-0 bg-green-600 hover:bg-green-500 disabled:bg-green-800 disabled:cursor-wait text-white text-xs font-semibold px-3 py-1.5 rounded transition"
+                      :title="'Send Wake-on-LAN to ' + agent.displayName">
+                      <span v-if="wakingAgent === agent.id">Waking...</span>
+                      <span v-else>&#9889; Power On</span>
+                    </button>
                     <!-- Selected checkmark -->
                     <span v-if="selectedAgentId === agent.id" class="text-yellow-400 text-lg flex-shrink-0">&#x2713;</span>
                   </div>
@@ -946,10 +1064,11 @@ export default {
           <div class="space-y-4 mb-8">
             <div v-for="(disk, index) in diskStatuses" :key="disk.id"
               class="bg-gray-800 rounded-lg p-5 border transition"
-              :class="disk.isOnline ? 'border-gray-700' : 'border-red-500/50'">
+              :class="disk._checking ? 'border-gray-700/50' : disk.isOnline ? 'border-gray-700' : 'border-red-500/50'">
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-3">
-                  <span class="w-3 h-3 rounded-full flex-shrink-0"
+                  <span v-if="disk._checking" class="w-3 h-3 rounded-full flex-shrink-0 bg-yellow-400 animate-pulse"></span>
+                  <span v-else class="w-3 h-3 rounded-full flex-shrink-0"
                     :class="disk.isOnline ? 'bg-green-400' : 'bg-red-500'"></span>
                   <div>
                     <div class="flex items-center gap-2">
@@ -959,9 +1078,22 @@ export default {
                       </span>
                       <span v-if="index === 0" class="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded">Primary</span>
                       <span v-if="!disk.enabled" class="bg-gray-600 text-gray-400 text-xs px-2 py-0.5 rounded">Disabled</span>
-                      <span v-if="!disk.isOnline" class="bg-red-600/30 text-red-400 text-xs px-2 py-0.5 rounded">Offline</span>
+                      <span v-if="disk._checking" class="bg-yellow-600/30 text-yellow-400 text-xs px-2 py-0.5 rounded animate-pulse">Checking...</span>
+                      <span v-else-if="!disk.isOnline" class="bg-red-600/30 text-red-400 text-xs px-2 py-0.5 rounded">Offline</span>
+                      <button v-if="!disk.isOnline && !disk._checking && agentIdForDisk(disk)"
+                        @click.stop="wakeAgent(agentIdForDisk(disk), $event)"
+                        :disabled="wakingAgent === agentIdForDisk(disk)"
+                        class="bg-green-600 hover:bg-green-500 disabled:bg-green-800 disabled:cursor-wait text-white text-xs font-semibold px-2.5 py-0.5 rounded transition inline-flex items-center gap-1"
+                        :title="'Send Wake-on-LAN to power on this machine'">
+                        <span v-if="wakingAgent === agentIdForDisk(disk)">Waking...</span>
+                        <span v-else>&#9889; Power On</span>
+                      </button>
                     </div>
                     <p class="text-gray-500 text-xs font-mono mt-0.5">{{ diskSummary(disk) }}</p>
+                    <p v-if="wakeMessage && wakeMessage.agentId === agentIdForDisk(disk)" class="text-xs mt-0.5"
+                      :class="wakeMessage.type === 'success' ? 'text-green-400' : 'text-red-400'">
+                      {{ wakeMessage.text }}
+                    </p>
                   </div>
                 </div>
                 <div class="flex gap-1">
@@ -979,7 +1111,10 @@ export default {
               </div>
 
               <!-- Space bar (local disks) -->
-              <div v-if="(disk.type || 'local') === 'local' && disk.isOnline" class="mb-2">
+              <div v-if="(disk.type || 'local') === 'local' && disk._checking" class="mb-2">
+                <div class="w-full bg-gray-700 rounded-full h-3 animate-pulse"></div>
+              </div>
+              <div v-else-if="(disk.type || 'local') === 'local' && disk.isOnline" class="mb-2">
                 <div class="w-full bg-gray-700 rounded-full h-3">
                   <div class="h-3 rounded-full transition-all duration-500"
                     :class="disk.percentUsed >= 95 ? 'bg-red-500' : disk.percentUsed >= 85 ? 'bg-yellow-500' : 'bg-green-500'"
@@ -994,7 +1129,10 @@ export default {
               </div>
 
               <!-- Remote disk info -->
-              <div v-if="(disk.type || 'local') !== 'local' && disk.isOnline" class="mb-2">
+              <div v-if="(disk.type || 'local') !== 'local' && disk._checking" class="mb-2">
+                <span class="text-yellow-400 text-sm animate-pulse">Checking connection...</span>
+              </div>
+              <div v-else-if="(disk.type || 'local') !== 'local' && disk.isOnline" class="mb-2">
                 <div class="flex items-center gap-2 text-sm text-gray-300">
                   <span class="text-green-400">Connected</span>
                   <span v-if="disk.type === 's3'">&#x2014; {{ disk.region || 'us-east-1' }}</span>

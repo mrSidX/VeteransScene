@@ -37,6 +37,8 @@ import GuestDashboard from './views/GuestDashboard.js?v=20260212';
 import StorageManager from './views/StorageManager.js?v=20260224';
 import S3Browser from './views/S3Browser.js?v=20260224';
 import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260224';
+import RecordingSlots from './views/RecordingSlots.js?v=20260310';
+import ObsMachines from './views/ObsMachines.js?v=20260321';
 
 // Routes with direct component imports
 const routes = [
@@ -257,6 +259,18 @@ const routes = [
     path: '/recordings-browser',
     name: 'RecordingsBrowser',
     component: RecordingsBrowser,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
+    path: '/recording-slots',
+    name: 'RecordingSlots',
+    component: RecordingSlots,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
+    path: '/obs-machines',
+    name: 'ObsMachines',
+    component: ObsMachines,
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {

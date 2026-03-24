@@ -55,6 +55,17 @@ export default {
       return colors[status] || 'bg-gray-700 text-gray-200';
     };
 
+    const getWaiverInfo = (app) => {
+      const status = app.waiver?.status || 'not_signed';
+      const map = {
+        'signed':     { icon: '\u2714', label: 'Signed', cls: 'text-green-400', bg: 'bg-green-900/50 border-green-700' },
+        'pending':    { icon: '\u23F3', label: 'Pending', cls: 'text-yellow-400', bg: 'bg-yellow-900/50 border-yellow-700' },
+        'declined':   { icon: '\u2718', label: 'Declined', cls: 'text-red-400', bg: 'bg-red-900/50 border-red-700' },
+        'not_signed': { icon: '\u2014', label: 'No Waiver', cls: 'text-gray-500', bg: 'bg-gray-800/50 border-gray-700' }
+      };
+      return map[status] || map['not_signed'];
+    };
+
     onMounted(() => {
       fetchApplications();
     });
@@ -68,6 +79,7 @@ export default {
       anonymousFilter,
       fetchApplications,
       getStatusColor,
+      getWaiverInfo,
       maskEmail
     };
   },
@@ -164,6 +176,7 @@ export default {
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Branch</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Type</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Waiver</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Date</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Actions</th>
                 </tr>
@@ -186,6 +199,14 @@ export default {
                   <td class="px-6 py-4">
                     <span :class="getStatusColor(app.status)" class="px-2 py-1 rounded text-xs font-semibold uppercase">
                       {{ app.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span :class="[getWaiverInfo(app).bg]"
+                      class="inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium"
+                      :title="app.waiver?.signedDate ? 'Signed ' + new Date(app.waiver.signedDate).toLocaleDateString() : ''">
+                      <span :class="getWaiverInfo(app).cls">{{ getWaiverInfo(app).icon }}</span>
+                      <span :class="getWaiverInfo(app).cls">{{ getWaiverInfo(app).label }}</span>
                     </span>
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-400">
@@ -220,9 +241,16 @@ export default {
                   </div>
                   <p class="text-xs md:text-sm text-gray-400 truncate">{{ app.preferAnonymous ? maskEmail(app.email) : app.email }}</p>
                 </div>
-                <span :class="getStatusColor(app.status)" class="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs font-semibold uppercase flex-shrink-0 self-start">
-                  {{ app.status }}
-                </span>
+                <div class="flex items-center gap-1.5 flex-shrink-0 self-start">
+                  <span :class="getStatusColor(app.status)" class="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs font-semibold uppercase">
+                    {{ app.status }}
+                  </span>
+                  <span :class="[getWaiverInfo(app).bg]"
+                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-xs font-medium"
+                    :title="getWaiverInfo(app).label">
+                    <span :class="getWaiverInfo(app).cls">{{ getWaiverInfo(app).icon }}</span>
+                  </span>
+                </div>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 md:gap-3 text-xs md:text-sm mb-1.5 md:mb-2">

@@ -6,6 +6,7 @@ import ResetPassword from './views/ResetPassword.js?v=20260211';
 import VerifyEmail from './views/VerifyEmail.js?v=20260211';
 import Dashboard from './views/Dashboard.js?v=20260211';
 import MyApplications from './views/MyApplications.js?v=20260206';
+import Waiver from './views/Waiver.js?v=20260306';
 import WaiverSign from './views/WaiverSign.js?v=20260206';
 import Profile from './views/Profile.js?v=20260211';
 import Notifications from './views/Notifications.js?v=20260211';
@@ -83,6 +84,12 @@ const routes = [
     name: 'MyApplications',
     component: MyApplications,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/sign-waiver/:token',
+    name: 'WaiverPublic',
+    component: Waiver,
+    meta: { requiresAuth: false }
   },
   {
     path: '/waiver/:applicationId',

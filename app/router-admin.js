@@ -26,6 +26,9 @@ import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260211';
 import StorageManager from './views/StorageManager.js?v=20260224';
 import S3Browser from './views/S3Browser.js?v=20260224';
 import HighlightDisplayOBS from './views/HighlightDisplayOBS.js';
+import RecordingSlots from './views/RecordingSlots.js?v=20260310';
+import SecurityMonitor from './views/SecurityMonitor.js?v=20260318';
+import ObsMachines from './views/ObsMachines.js?v=20260321';
 
 // Admin-only routes - no password reset functionality
 const routes = [
@@ -182,6 +185,24 @@ const routes = [
     name: 'S3Browser',
     component: S3Browser,
     meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/recording-slots',
+    name: 'RecordingSlots',
+    component: RecordingSlots,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
+    path: '/security',
+    name: 'SecurityMonitor',
+    component: SecurityMonitor,
+    meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/obs-machines',
+    name: 'ObsMachines',
+    component: ObsMachines,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {
     path: '/highlight-obs/:id',

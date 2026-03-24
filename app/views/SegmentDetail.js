@@ -52,7 +52,8 @@ export default {
       sessionDetails: true,
       participants: true,
       preview: false,
-      recording: false
+      recording: false,
+      recordingSlot: false
     });
 
     // VDO.ninja state
@@ -67,6 +68,14 @@ export default {
     const showVdoPreview = ref(false);
     const vdoPreviewMuted = ref(true);
     const sendingEmail = ref(null); // participantId being sent to
+
+    // Recording Slot state
+    const assignedSlot = ref(null);
+    const slotLoading = ref(false);
+    const availableSlots = ref([]);
+    const showSlotAssignModal = ref(false);
+    const selectedSlotId = ref('');
+    const slotSeatDragFrom = ref(null);
     const sendingEmailAll = ref(false); // bulk send in progress
 
     // Storage status
@@ -74,6 +83,42 @@ export default {
 
     const loadStorageStatus = async () => {
       try {
+        // If the segment has a custom primary disk, show that disk's status
+        const primaryDiskId = segment.value?.storageSettings?.primaryDiskId;
+        if (primaryDiskId) {
+          const res = await api.getDiskStatusById(primaryDiskId);
+          if (res.success && res.data) {
+            const d = res.data;
+            // Normalize to the same shape as getRecordingDiskStatus
+            const diskLabel = d.label || null;
+            if (d.isOnline && d.diskInfo) {
+              const info = d.diskInfo;
+              storageStatus.value = {
+                available: info.available || 0,
+                total: info.total || 0,
+                used: info.used || 0,
+                percentUsed: info.total > 0 ? Math.round(info.used / info.total * 100) : 0,
+                status: 'ok',
+                diskLabel,
+                isRemote: true
+              };
+            } else if (d.isOnline) {
+              storageStatus.value = {
+                available: d.available || 0,
+                total: d.total || 0,
+                used: d.used || 0,
+                percentUsed: d.total > 0 ? Math.round(d.used / d.total * 100) : 0,
+                status: 'ok',
+                diskLabel,
+                isRemote: true
+              };
+            } else {
+              storageStatus.value = { available: 0, total: 0, used: 0, percentUsed: 0, status: 'critical', diskLabel, offline: true };
+            }
+            return;
+          }
+        }
+        // Fallback: generic recording storage status (aggregates local disks)
         const res = await api.getRecordingDiskStatus();
         if (res.success) {
           storageStatus.value = res.data;
@@ -92,6 +137,7 @@ export default {
 
     const storageColor = computed(() => {
       if (!storageStatus.value) return 'gray';
+      if (storageStatus.value.offline) return 'red';
       if (storageStatus.value.status === 'critical') return 'red';
       if (storageStatus.value.status === 'warning') return 'yellow';
       return 'green';
@@ -317,6 +363,8 @@ export default {
         });
         if (response.success) {
           segment.value.storageSettings = { ...storageSettingsForm.value };
+          // Refresh storage status bar to reflect newly selected disk
+          loadStorageStatus();
         }
       } catch (err) {
         console.error('Failed to save storage settings:', err);
@@ -329,11 +377,19 @@ export default {
     // Recording server state
     const recServerOnline = ref(false);
     const recServerChecking = ref(false);
+    const recAgentHostname = ref(null);  // resolved agent ID for WoL
+    const wakingRecAgent = ref(false);
+    const wakeRecMessage = ref(null);
     const activeRecording = ref(null); // { recordingId, status, startedAt }
     const recLoading = ref(false);
     const segmentRecordings = ref([]);
     const recTimerDisplay = ref('00:00:00');
     const recLayout = ref('activespeaker'); // 'grid', 'activespeaker', 'solo'
+    const recordIndividualFeeds = ref(true); // multi-feed per-participant recording
+    const recordSpeakerSwitching = ref(true); // record the VDO speaker switching (OBS) feed
+    const activeSession = ref(null); // { sessionId, recordings: [{recordingId, feedLabel}...] }
+    const stopFailed = ref(false); // true when graceful stop failed, enables force-stop UI
+    let recentlyStoppedAt = 0; // timestamp of last stop — prevents re-detection for 10s
     const previewUrl = ref(null);
     const previewRecordingId = ref(null);
     const previewLoading = ref(false);
@@ -474,6 +530,9 @@ export default {
           // Save original form state for change detection
           originalFormData.value = JSON.parse(JSON.stringify(formData.value));
           hasChanges.value = false;
+
+          // Refresh storage status now that we know the segment's primary disk
+          loadStorageStatus();
         }
       } catch (err) {
         error.value = 'Failed to load segment';
@@ -1020,16 +1079,191 @@ export default {
       }
     };
 
+    // ==========================================
+    // Recording Slot functions
+    // ==========================================
+    const loadSlotForSegment = async () => {
+      try {
+        slotLoading.value = true;
+        const res = await api.getSlotForSegment(route.params.id);
+        if (res.success) {
+          assignedSlot.value = res.data.slot;
+        }
+      } catch (e) {
+        // No slot assigned — that's fine
+        assignedSlot.value = null;
+      } finally {
+        slotLoading.value = false;
+      }
+    };
+
+    const openSlotAssignModal = async () => {
+      showSlotAssignModal.value = true;
+      selectedSlotId.value = '';
+      try {
+        const res = await api.getRecordingSlots('available');
+        if (res.success) {
+          availableSlots.value = res.data.slots;
+        }
+      } catch (e) {
+        console.error('Failed to load available slots:', e);
+      }
+    };
+
+    const confirmSlotAssign = async () => {
+      if (!selectedSlotId.value) return;
+      try {
+        slotLoading.value = true;
+        const res = await api.assignSlotSegment(selectedSlotId.value, route.params.id);
+        if (res.success) {
+          assignedSlot.value = res.data.slot;
+          showSlotAssignModal.value = false;
+          // Reload segment to pick up synced vdoNinja session from the slot
+          await fetchSegment();
+        }
+      } catch (e) {
+        error.value = e.message || 'Failed to assign slot';
+      } finally {
+        slotLoading.value = false;
+      }
+    };
+
+    const releaseCurrentSlot = async () => {
+      if (!assignedSlot.value) return;
+      if (!confirm('Release this slot? Seat assignments will be saved on the segment for next time.')) return;
+      try {
+        slotLoading.value = true;
+        const res = await api.releaseSlot(assignedSlot.value._id);
+        if (res.success) {
+          assignedSlot.value = null;
+          // Refresh segment to pick up saved slotMapping
+          await fetchSegment();
+        }
+      } catch (e) {
+        error.value = e.message || 'Failed to release slot';
+      } finally {
+        slotLoading.value = false;
+      }
+    };
+
+    const slotAssignSeat = async (seatNumber, participantData) => {
+      if (!assignedSlot.value) return;
+      try {
+        const res = await api.assignSlotSeat(assignedSlot.value._id, seatNumber, participantData);
+        if (res.success) {
+          assignedSlot.value = res.data.slot;
+        }
+      } catch (e) {
+        error.value = e.message || 'Failed to assign seat';
+      }
+    };
+
+    const slotClearSeat = async (seatNumber) => {
+      if (!assignedSlot.value) return;
+      try {
+        const res = await api.clearSlotSeat(assignedSlot.value._id, seatNumber);
+        if (res.success) {
+          assignedSlot.value = res.data.slot;
+        }
+      } catch (e) {
+        error.value = e.message || 'Failed to clear seat';
+      }
+    };
+
+    const slotSwapSeats = async (fromSeatNum, toSeatNum) => {
+      if (!assignedSlot.value) return;
+      const seats = assignedSlot.value.seats;
+      const fromSeat = seats.find(s => s.seatNumber === fromSeatNum);
+      const toSeat = seats.find(s => s.seatNumber === toSeatNum);
+      if (!fromSeat || !toSeat) return;
+
+      // Swap by clearing both then assigning both
+      try {
+        const fromData = fromSeat.occupied ? {
+          name: fromSeat.assignedParticipant?.name,
+          email: fromSeat.assignedParticipant?.email,
+          userId: fromSeat.assignedParticipant?.user?._id || fromSeat.assignedParticipant?.user,
+          applicantId: fromSeat.assignedParticipant?.applicant?._id || fromSeat.assignedParticipant?.applicant
+        } : null;
+        const toData = toSeat.occupied ? {
+          name: toSeat.assignedParticipant?.name,
+          email: toSeat.assignedParticipant?.email,
+          userId: toSeat.assignedParticipant?.user?._id || toSeat.assignedParticipant?.user,
+          applicantId: toSeat.assignedParticipant?.applicant?._id || toSeat.assignedParticipant?.applicant
+        } : null;
+
+        // Clear both
+        await api.clearSlotSeat(assignedSlot.value._id, fromSeatNum);
+        await api.clearSlotSeat(assignedSlot.value._id, toSeatNum);
+
+        // Assign swapped
+        if (toData) await api.assignSlotSeat(assignedSlot.value._id, fromSeatNum, toData);
+        if (fromData) await api.assignSlotSeat(assignedSlot.value._id, toSeatNum, fromData);
+
+        // Reload
+        const res = await api.getRecordingSlot(assignedSlot.value._id);
+        if (res.success) assignedSlot.value = res.data.slot;
+      } catch (e) {
+        error.value = e.message || 'Failed to swap seats';
+      }
+      slotSeatDragFrom.value = null;
+    };
+
+    const copySlotUrl = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    };
+
     // Recording server functions
     const checkRecordingServer = async () => {
       recServerChecking.value = true;
       try {
-        const response = await api.getRecordingServerStatus();
+        const response = await api.getRecordingServerStatus(route.params.id);
         recServerOnline.value = response.serverOnline || false;
+        recAgentHostname.value = response.agentHostname || null;
+        if (recServerOnline.value) wakeRecMessage.value = null;
       } catch (e) {
         recServerOnline.value = false;
       }
       recServerChecking.value = false;
+    };
+
+    const wakeRecordingAgent = async () => {
+      if (!recAgentHostname.value) return;
+      wakingRecAgent.value = true;
+      wakeRecMessage.value = null;
+      try {
+        const res = await api.wakeAgent(recAgentHostname.value);
+        if (res.alreadyOnline) {
+          wakeRecMessage.value = { text: 'Agent is already online', type: 'success' };
+          await checkRecordingServer();
+        } else {
+          wakeRecMessage.value = { text: 'Wake packet sent — machine should boot shortly...', type: 'success' };
+          // Poll for it to come online
+          let attempts = 0;
+          const poll = setInterval(async () => {
+            attempts++;
+            if (attempts > 12) { clearInterval(poll); return; }
+            await checkRecordingServer();
+            if (recServerOnline.value) {
+              clearInterval(poll);
+              wakeRecMessage.value = { text: 'Recording server is now online!', type: 'success' };
+            }
+          }, 10000);
+        }
+      } catch (err) {
+        wakeRecMessage.value = { text: err.message || 'Failed to send wake packet', type: 'error' };
+      } finally {
+        wakingRecAgent.value = false;
+      }
     };
 
     const loadSegmentRecordings = async () => {
@@ -1039,9 +1273,29 @@ export default {
         segmentRecordings.value = response.data || response || [];
 
         // Check if there's an active recording for this segment
+        // Skip re-detection for 10s after a stop to prevent UI flicker from stale agent status
         const active = segmentRecordings.value.find(r => r.status === 'recording' || r.status === 'starting');
-        if (active) {
-          activeRecording.value = active;
+        if (active && (Date.now() - recentlyStoppedAt > 10000)) {
+          // Check if this is part of a multi-feed session (any sessionId = use session stop)
+          if (active.sessionId) {
+            const sessionRecs = segmentRecordings.value.filter(r => r.sessionId === active.sessionId && (r.status === 'recording' || r.status === 'starting'));
+            // Don't overwrite activeSession if already set from startRecording()
+            if (!activeSession.value || activeSession.value.sessionId !== active.sessionId) {
+              activeSession.value = { sessionId: active.sessionId, recordings: sessionRecs };
+            }
+            activeRecording.value = {
+              recordingId: active.recordingId,
+              sessionId: active.sessionId,
+              feedCount: sessionRecs.length,
+              status: 'recording',
+              startedAt: active.startedAt
+            };
+          } else {
+            activeRecording.value = active;
+            if (!activeSession.value) {
+              activeSession.value = null;
+            }
+          }
           startRecTimer(active.startedAt);
         }
 
@@ -1096,14 +1350,71 @@ export default {
       // 'grid' = default obsSourceUrl (scene mode, no activespeaker)
 
       recLoading.value = true;
+      stopFailed.value = false;
       try {
-        const response = await api.startServerRecording({
-          url: recordUrl,
-          segmentId: route.params.id,
-          segmentTitle: segment.value.title,
-          roomId: segment.value.vdoNinja.roomId
-        });
-        activeRecording.value = response.data || response;
+        const participants = segment.value.vdoNinja?.participants || [];
+        const hasParticipantFeeds = recordIndividualFeeds.value && participants.length > 0;
+        // Use multi-feed session if recording individual feeds OR speaker switching (separate from main)
+        const useSession = hasParticipantFeeds || recordSpeakerSwitching.value;
+
+        if (useSession) {
+          // Multi-feed session
+          const feeds = [];
+
+          // Add per-participant feeds if enabled
+          if (hasParticipantFeeds) {
+            for (const p of participants.filter(pp => pp.viewUrl)) {
+              let feedUrl = p.viewUrl;
+              if (!feedUrl.includes('&scene')) feedUrl += '&scene';
+              feeds.push({
+                url: feedUrl,
+                label: p.name || p._id,
+                participantId: p._id
+              });
+            }
+          }
+
+          // The mainUrl is always the speaker switching (OBS source) URL
+          // If recordSpeakerSwitching is on, it gets recorded as 'main' feed
+          // If it's off but we have participant feeds, we still use session mode
+          // but skip the main feed
+          const mainUrl = recordSpeakerSwitching.value ? recordUrl : null;
+
+          if (!mainUrl && feeds.length === 0) {
+            alert('No feeds selected to record. Enable speaker switching or individual participant feeds.');
+            recLoading.value = false;
+            return;
+          }
+
+          const response = await api.startRecordingSession({
+            segmentId: route.params.id,
+            segmentTitle: segment.value.title,
+            roomId: segment.value.vdoNinja.roomId,
+            mainUrl: mainUrl || feeds[0]?.url, // fallback: use first participant as main if no speaker switching
+            feeds: mainUrl ? feeds : feeds.slice(1) // if no main, first feed is already in mainUrl
+          });
+          const data = response.data || response;
+          activeSession.value = data;
+          // Set activeRecording to the main feed for timer/display compat
+          const mainRec = data.recordings?.find(r => r.feedLabel === 'main');
+          activeRecording.value = {
+            recordingId: mainRec?.recordingId || data.recordings?.[0]?.recordingId,
+            sessionId: data.sessionId,
+            feedCount: data.recordings?.length || 1,
+            status: 'recording',
+            startedAt: new Date().toISOString()
+          };
+        } else {
+          // Single recording (backward compat — no individual feeds, no speaker switching)
+          const response = await api.startServerRecording({
+            url: recordUrl,
+            segmentId: route.params.id,
+            segmentTitle: segment.value.title,
+            roomId: segment.value.vdoNinja.roomId
+          });
+          activeRecording.value = response.data || response;
+          activeSession.value = null;
+        }
         startRecTimer(new Date().toISOString());
         await loadSegmentRecordings();
       } catch (e) {
@@ -1112,22 +1423,51 @@ export default {
       recLoading.value = false;
     };
 
-    const stopRecording = async () => {
+    const stopRecording = async (forceMode = false) => {
       if (!activeRecording.value) return;
-      if (!confirm('Stop the current recording?')) return;
+      if (!forceMode && !confirm('Stop the current recording?')) return;
 
       recLoading.value = true;
       try {
-        await api.stopServerRecording(activeRecording.value.recordingId);
+        if (activeSession.value?.sessionId) {
+          // Stop entire session (all feeds)
+          const result = await api.stopRecordingSession(activeSession.value.sessionId, { force: forceMode });
+          const data = result?.data || result;
+          if (data?.errors?.length > 0) {
+            console.warn('Some feeds had stop errors:', data.errors);
+          }
+          activeSession.value = null;
+        } else {
+          // Single recording stop
+          await api.stopServerRecording(activeRecording.value.recordingId, { force: forceMode });
+        }
         stopRecTimer();
         activeRecording.value = null;
+        stopFailed.value = false;
+        recentlyStoppedAt = Date.now();
         await loadSegmentRecordings();
         // If the recording is now "processing", the poll will auto-start via loadSegmentRecordings
       } catch (e) {
-        alert('Failed to stop recording: ' + (e.response?.data?.message || e.message));
+        console.error('Stop recording error:', e);
+        if (!forceMode) {
+          // Graceful stop failed — show force-stop option
+          stopFailed.value = true;
+          alert('Recording stop partially failed. Use "Force Stop" to ensure all processes are terminated.');
+        } else {
+          // Force stop also failed — clear UI state anyway to prevent being stuck
+          stopRecTimer();
+          activeRecording.value = null;
+          activeSession.value = null;
+          stopFailed.value = false;
+          recentlyStoppedAt = Date.now();
+          alert('Force stop sent. Some recordings may need manual cleanup on the agent.');
+          await loadSegmentRecordings();
+        }
       }
       recLoading.value = false;
     };
+
+    const forceStopRecording = () => stopRecording(true);
 
     const uploadRecordingToS3 = async (recordingId) => {
       if (!confirm('Upload this recording to S3 cloud storage?')) return;
@@ -1328,6 +1668,7 @@ export default {
       checkRecordingServer();
       loadSegmentRecordings();
       loadStorageStatus();
+      loadSlotForSegment();
       document.addEventListener('click', handleDocClick);
     });
 
@@ -1405,6 +1746,21 @@ export default {
       sendingEmailAll,
       sendVdoEmail,
       sendVdoEmailToAll,
+      // Recording Slot
+      assignedSlot,
+      slotLoading,
+      availableSlots,
+      showSlotAssignModal,
+      selectedSlotId,
+      slotSeatDragFrom,
+      loadSlotForSegment,
+      openSlotAssignModal,
+      confirmSlotAssign,
+      releaseCurrentSlot,
+      slotAssignSeat,
+      slotClearSeat,
+      slotSwapSeats,
+      copySlotUrl,
       // Storage status
       storageStatus,
       storageColor,
@@ -1412,14 +1768,23 @@ export default {
       // Recording server
       recServerOnline,
       recServerChecking,
+      recAgentHostname,
+      wakingRecAgent,
+      wakeRecMessage,
+      wakeRecordingAgent,
       activeRecording,
       recLoading,
       segmentRecordings,
       recTimerDisplay,
       recLayout,
+      recordIndividualFeeds,
+      recordSpeakerSwitching,
+      activeSession,
+      stopFailed,
       checkRecordingServer,
       startRecording,
       stopRecording,
+      forceStopRecording,
       uploadRecordingToS3,
       transferRecording,
       transferRecordingDiskId,
@@ -2481,6 +2846,168 @@ export default {
                   </div>
                 </div>
 
+                <!-- Recording Slot (Collapsible) -->
+                <div class="rounded-lg border border-gray-700 overflow-hidden">
+                  <button
+                    @click="toggleVdoSection('recordingSlot')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-gray-900 hover:bg-gray-800/80 transition-colors"
+                  >
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                      </svg>
+                      <span class="font-semibold text-gray-300 text-sm">Recording Slot</span>
+                      <template v-if="assignedSlot">
+                        <span class="px-2 py-0.5 bg-orange-900/50 text-orange-300 text-xs rounded-full border border-orange-700/50">{{ assignedSlot.name }}</span>
+                        <span class="text-xs text-gray-500">{{ assignedSlot.occupiedCount || 0 }}/{{ assignedSlot.maxSeats }} seats</span>
+                      </template>
+                      <span v-else-if="segment.slotMapping?.lastSlotName" class="text-xs text-gray-500">Last: {{ segment.slotMapping.lastSlotName }}</span>
+                      <span v-else class="text-xs text-gray-500">No slot assigned</span>
+                    </div>
+                    <svg :class="['w-4 h-4 text-gray-400 transition-transform duration-300', expandedVdoSections.recordingSlot ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  <div v-show="expandedVdoSections.recordingSlot" class="p-4 border-t border-gray-700">
+                    <!-- Loading -->
+                    <div v-if="slotLoading" class="flex justify-center py-4">
+                      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-400"></div>
+                    </div>
+
+                    <!-- No Slot Assigned -->
+                    <div v-else-if="!assignedSlot" class="space-y-3">
+                      <div class="text-center py-4">
+                        <p class="text-gray-400 mb-1">No recording slot assigned to this segment.</p>
+                        <p v-if="segment.slotMapping?.lastSlotName" class="text-xs text-gray-500 mb-3">
+                          Previously used: {{ segment.slotMapping.lastSlotName }}
+                          ({{ segment.slotMapping.seatAssignments?.length || 0 }} seat assignments saved)
+                        </p>
+                        <button @click="openSlotAssignModal" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-semibold transition text-sm">
+                          Assign Recording Slot
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Slot Assigned -->
+                    <div v-else class="space-y-4">
+                      <!-- Slot Info Bar -->
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <h4 class="font-semibold text-orange-300">{{ assignedSlot.name }}</h4>
+                          <p v-if="assignedSlot.description" class="text-xs text-gray-500">{{ assignedSlot.description }}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <router-link :to="'/recording-slots'" class="text-xs text-gray-400 hover:text-orange-400 transition">Manage Slots</router-link>
+                          <button @click="releaseCurrentSlot" class="text-xs bg-gray-700 hover:bg-red-800 text-gray-300 px-3 py-1.5 rounded-lg transition">Release</button>
+                        </div>
+                      </div>
+
+                      <!-- OBS URLs -->
+                      <div class="bg-gray-900 rounded-lg p-3 space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                          <span class="text-gray-500 text-xs w-28 flex-shrink-0">OBS Grid:</span>
+                          <code class="text-gray-400 font-mono text-xs truncate flex-1 cursor-pointer" @click="toggleUrlReveal('slot-grid')">
+                            {{ revealedUrls['slot-grid'] ? assignedSlot.obsGridUrl : 'Click to reveal...' }}
+                          </code>
+                          <button v-if="revealedUrls['slot-grid']" @click="copySlotUrl(assignedSlot.obsGridUrl)" class="text-gray-500 hover:text-orange-400 flex-shrink-0 text-xs">Copy</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-gray-500 text-xs w-28 flex-shrink-0">OBS Auto-Switch:</span>
+                          <code class="text-gray-400 font-mono text-xs truncate flex-1 cursor-pointer" @click="toggleUrlReveal('slot-auto')">
+                            {{ revealedUrls['slot-auto'] ? assignedSlot.obsAutoSwitchUrl : 'Click to reveal...' }}
+                          </code>
+                          <button v-if="revealedUrls['slot-auto']" @click="copySlotUrl(assignedSlot.obsAutoSwitchUrl)" class="text-gray-500 hover:text-orange-400 flex-shrink-0 text-xs">Copy</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-gray-500 text-xs w-28 flex-shrink-0">Director:</span>
+                          <code class="text-gray-400 font-mono text-xs truncate flex-1 cursor-pointer" @click="toggleUrlReveal('slot-dir')">
+                            {{ revealedUrls['slot-dir'] ? assignedSlot.directorUrl : 'Click to reveal...' }}
+                          </code>
+                          <button v-if="revealedUrls['slot-dir']" @click="copySlotUrl(assignedSlot.directorUrl)" class="text-gray-500 hover:text-orange-400 flex-shrink-0 text-xs">Copy</button>
+                        </div>
+                      </div>
+
+                      <!-- Seats -->
+                      <div>
+                        <div class="flex items-center justify-between mb-2">
+                          <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Seats ({{ assignedSlot.occupiedCount || 0 }}/{{ assignedSlot.maxSeats }})</h5>
+                          <p class="text-xs text-gray-600">Drag seats to reorder</p>
+                        </div>
+                        <div class="space-y-1.5">
+                          <div v-for="seat in assignedSlot.seats" :key="seat.seatNumber"
+                            :class="['flex items-center gap-2 p-2.5 rounded-lg border text-sm transition-all', seat.occupied ? 'bg-gray-800 border-gray-600' : 'bg-gray-900/50 border-gray-700/50',
+                              slotSeatDragFrom === seat.seatNumber ? 'ring-2 ring-orange-500' : '']"
+                            draggable="true"
+                            @dragstart="slotSeatDragFrom = seat.seatNumber"
+                            @dragover.prevent
+                            @drop="slotSwapSeats(slotSeatDragFrom, seat.seatNumber)"
+                          >
+                            <!-- Drag handle -->
+                            <span class="text-gray-600 cursor-grab flex-shrink-0">
+                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+                            </span>
+                            <!-- Seat number -->
+                            <span :class="['w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0', seat.occupied ? 'bg-orange-600 text-gray-900' : 'bg-gray-700 text-gray-400']">
+                              {{ seat.seatNumber }}
+                            </span>
+                            <!-- Participant info -->
+                            <div class="flex-1 min-w-0">
+                              <template v-if="seat.occupied && seat.assignedParticipant?.name">
+                                <span class="text-gray-200 text-sm">{{ seat.assignedParticipant.name }}</span>
+                                <span v-if="seat.assignedParticipant.email" class="text-gray-600 text-xs ml-1 hidden sm:inline">{{ seat.assignedParticipant.email }}</span>
+                              </template>
+                              <span v-else class="text-gray-600 italic text-xs">Empty seat</span>
+                            </div>
+                            <!-- Copy URLs -->
+                            <button @click="copySlotUrl(seat.joinUrl)" class="text-gray-600 hover:text-green-400 p-1 flex-shrink-0" title="Copy Join URL">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            </button>
+                            <button @click="copySlotUrl(seat.viewUrl)" class="text-gray-600 hover:text-blue-400 p-1 flex-shrink-0" title="Copy View URL (OBS)">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            </button>
+                            <!-- Clear -->
+                            <button v-if="seat.occupied" @click="slotClearSeat(seat.seatNumber)" class="text-gray-600 hover:text-red-400 p-1 flex-shrink-0" title="Clear seat">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Slot Assign Modal -->
+                <div v-if="showSlotAssignModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div class="absolute inset-0 bg-black/60" @click="showSlotAssignModal = false"></div>
+                  <div class="relative bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md p-6 space-y-4">
+                    <h2 class="text-lg font-bold text-gray-100">Assign Recording Slot</h2>
+                    <div v-if="availableSlots.length === 0" class="text-center py-4 text-gray-500">
+                      No available slots. <router-link to="/recording-slots" class="text-orange-400 hover:text-orange-300">Create one</router-link>.
+                    </div>
+                    <div v-else class="space-y-2 max-h-64 overflow-y-auto">
+                      <div v-for="slot in availableSlots" :key="slot._id"
+                        @click="selectedSlotId = slot._id"
+                        :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition border',
+                          selectedSlotId === slot._id ? 'bg-orange-900/30 border-orange-700' : 'hover:bg-gray-700 border-transparent']">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full bg-orange-900/50 text-orange-300 text-xs font-bold flex-shrink-0">{{ slot.maxSeats }}</span>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm text-gray-100">{{ slot.name }}</p>
+                          <p class="text-xs text-gray-500">{{ slot.maxSeats }} seats &middot; Room: {{ slot.roomId }}</p>
+                        </div>
+                        <svg v-if="selectedSlotId === slot._id" class="w-5 h-5 text-orange-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                      <button @click="showSlotAssignModal = false" class="px-4 py-2 text-gray-400 hover:text-gray-200 transition">Cancel</button>
+                      <button @click="confirmSlotAssign" :disabled="slotLoading || !selectedSlotId" class="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white px-5 py-2 rounded-lg font-semibold transition">
+                        {{ slotLoading ? 'Assigning...' : 'Assign Slot' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Recording Controls (Collapsible) -->
                 <div v-if="segment.vdoNinja?.sessionCreated" class="rounded-lg border border-gray-700 overflow-hidden">
                   <button
@@ -2543,7 +3070,7 @@ export default {
                       storageColor === 'yellow' ? 'text-yellow-400' : '',
                       storageColor === 'green' ? 'text-gray-400' : '',
                       storageColor === 'gray' ? 'text-gray-500' : ''
-                    ]">{{ storageColor === 'red' ? 'Storage Critical' : storageColor === 'yellow' ? 'Storage Low' : 'Storage' }}</span>
+                    ]">{{ storageColor === 'red' ? 'Storage Critical' : storageColor === 'yellow' ? 'Storage Low' : 'Storage' }}{{ storageStatus.diskLabel ? ' (' + storageStatus.diskLabel + ')' : '' }}{{ storageStatus.offline ? ' - Offline' : '' }}</span>
                     <div class="flex-1 max-w-[120px] bg-gray-700 rounded-full h-1.5">
                       <div :class="[
                         'h-1.5 rounded-full transition-all',
@@ -2568,16 +3095,33 @@ export default {
                       <div class="flex items-center gap-2">
                         <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
                         <span class="text-red-200 font-semibold">RECORDING</span>
+                        <span v-if="activeRecording.feedCount > 1"
+                          class="px-1.5 py-0.5 bg-red-800 text-red-200 rounded text-xs font-medium">
+                          {{ activeRecording.feedCount }} feeds
+                        </span>
                         <span class="text-red-300 font-mono text-lg">{{ recTimerDisplay }}</span>
                       </div>
-                      <button
-                        @click="stopRecording"
-                        :disabled="recLoading"
-                        class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded font-semibold text-sm transition disabled:opacity-50"
-                      >
-                        {{ recLoading ? 'Stopping...' : 'Stop Recording' }}
-                      </button>
+                      <div class="flex items-center gap-2">
+                        <button
+                          @click="stopRecording"
+                          :disabled="recLoading"
+                          class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded font-semibold text-sm transition disabled:opacity-50"
+                        >
+                          {{ recLoading ? 'Stopping...' : 'Stop Recording' }}
+                        </button>
+                        <button v-if="stopFailed"
+                          @click="forceStopRecording"
+                          :disabled="recLoading"
+                          class="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded font-semibold text-sm transition disabled:opacity-50"
+                          title="Force kill all recording processes immediately"
+                        >
+                          Force Stop
+                        </button>
+                      </div>
                     </div>
+                    <p v-if="stopFailed" class="text-yellow-400 text-xs mt-2">
+                      Graceful stop failed for some feeds. Click "Force Stop" to terminate all recording processes.
+                    </p>
                   </div>
 
                   <!-- Start Recording Button -->
@@ -2593,6 +3137,18 @@ export default {
                         <option value="solo">Solo Speaker (one at a time)</option>
                       </select>
                     </div>
+                    <label class="flex items-center gap-2 mb-2 text-xs text-gray-300 cursor-pointer select-none">
+                      <input type="checkbox" v-model="recordSpeakerSwitching"
+                        class="rounded border-gray-600 bg-gray-800 text-red-500 focus:ring-red-500 focus:ring-offset-0" />
+                      Record speaker switching feed (VDO.ninja OBS)
+                    </label>
+                    <label v-if="segment?.vdoNinja?.participants?.length > 0"
+                      class="flex items-center gap-2 mb-2 text-xs text-gray-300 cursor-pointer select-none">
+                      <input type="checkbox" v-model="recordIndividualFeeds"
+                        class="rounded border-gray-600 bg-gray-800 text-red-500 focus:ring-red-500 focus:ring-offset-0" />
+                      Record individual participant feeds
+                      <span class="text-gray-500">({{ segment.vdoNinja.participants.filter(p => p.viewUrl).length }} feeds)</span>
+                    </label>
                     <button
                       @click="startRecording"
                       :disabled="recLoading || !recServerOnline"
@@ -2601,9 +3157,22 @@ export default {
                       <span class="w-3 h-3 bg-red-400 rounded-full"></span>
                       {{ recLoading ? 'Starting...' : 'Start Recording' }}
                     </button>
-                    <p v-if="!recServerOnline" class="text-xs text-yellow-400 mt-1 text-center">
-                      Recording server is offline. Check that bb9e is running.
-                    </p>
+                    <div v-if="!recServerOnline" class="mt-2 text-center">
+                      <p class="text-xs text-yellow-400 mb-2">
+                        Recording server is offline.
+                      </p>
+                      <button v-if="recAgentHostname"
+                        @click="wakeRecordingAgent"
+                        :disabled="wakingRecAgent"
+                        class="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-500 disabled:bg-green-800 disabled:cursor-wait text-white text-xs font-semibold px-4 py-1.5 rounded transition">
+                        <span v-if="wakingRecAgent">Sending wake packet...</span>
+                        <span v-else>&#9889; Power On Recording PC</span>
+                      </button>
+                      <p v-if="wakeRecMessage" class="text-xs mt-1.5"
+                        :class="wakeRecMessage.type === 'success' ? 'text-green-400' : 'text-red-400'">
+                        {{ wakeRecMessage.text }}
+                      </p>
+                    </div>
                   </div>
 
                   <!-- Past Recordings for this Segment -->
@@ -2617,7 +3186,10 @@ export default {
                     >
                       <div class="flex items-center justify-between gap-2">
                         <div class="flex-1 min-w-0">
-                          <div class="text-sm text-gray-300 truncate">{{ rec.fileName }}</div>
+                          <div class="text-sm text-gray-300 truncate flex items-center gap-1.5">
+                            <span v-if="rec.feedLabel" class="px-1 py-0.5 bg-gray-700 text-gray-300 rounded text-xs font-mono shrink-0">{{ rec.feedLabel }}</span>
+                            {{ rec.fileName }}
+                          </div>
                           <div class="text-xs text-gray-500 flex flex-wrap gap-2">
                             <span v-if="rec.duration">{{ formatDuration(rec.duration) }}</span>
                             <span v-if="rec.fileSize">{{ formatFileSize(rec.fileSize) }}</span>
