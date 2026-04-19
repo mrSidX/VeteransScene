@@ -429,6 +429,16 @@ export default {
           </div>
           <div class="mt-4 space-y-3">
             <div>
+              <label class="text-sm text-gray-400">Image URL</label>
+              <input
+                v-model="profileImage.url"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                class="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm font-mono text-xs"
+                @blur="updateImageMetadata('profile', null, { url: profileImage.url })"
+              />
+            </div>
+            <div>
               <label class="text-sm text-gray-400">Alt Text</label>
               <input
                 v-model="profileImage.altText"
@@ -552,6 +562,13 @@ export default {
 
             <!-- Metadata -->
             <div class="p-3 space-y-2">
+              <input
+                v-model="image.url"
+                type="url"
+                placeholder="Image URL"
+                class="w-full px-2 py-1 bg-gray-700 text-white rounded border border-gray-600 text-xs font-mono"
+                @blur="updateImageMetadata('gallery', index, { url: image.url })"
+              />
               <input
                 v-model="image.altText"
                 type="text"

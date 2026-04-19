@@ -1,5 +1,5 @@
 import { useRoute } from 'vue-router';
-import Navbar from './components/Navbar.js';
+import Navbar from './components/Navbar.js?v=20260330';
 
 export default {
   name: 'App',
@@ -22,6 +22,10 @@ export default {
       showNavbar,
       showFooter
     };
+  },
+  mounted() {
+    const el = document.getElementById('app-loading');
+    if (el) el.remove();
   },
   template: `
     <div id="app" class="min-h-screen bg-gray-900">

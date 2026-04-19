@@ -185,6 +185,7 @@ export const useAuthStore = () => {
 
   const isAdmin = computed(() => hasRole('admin'));
   const isModerator = computed(() => hasAnyRole('moderator', 'admin'));
+  const isSuperAdmin = computed(() => state.user?.isSuperAdmin === true);
 
   return {
     // State
@@ -195,6 +196,7 @@ export const useAuthStore = () => {
     error: computed(() => state.error),
     isAdmin,
     isModerator,
+    isSuperAdmin,
 
     // Role checking methods
     hasRole,

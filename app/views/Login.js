@@ -97,18 +97,18 @@ export default {
           </p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="mt-8 space-y-6 bg-gray-800 p-8 rounded-lg shadow-xl">
+        <form @submit.prevent="handleSubmit" class="mt-8 space-y-6 bg-gray-800 p-4 sm:p-8 rounded-lg shadow-xl">
           <div v-if="error" class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded">
             {{ error }}
           </div>
 
           <!-- Login Method Toggle -->
-          <div class="flex gap-2 bg-gray-700 p-1 rounded-lg">
+          <div class="flex gap-1 bg-gray-700 p-1 rounded-lg">
             <button
               type="button"
               @click="loginMethod = 'password'"
               :class="[
-                'flex-1 py-2 px-4 rounded-md font-medium transition text-sm',
+                'flex-1 py-2 px-2 sm:px-4 rounded-md font-medium transition text-xs sm:text-sm',
                 loginMethod === 'password'
                   ? 'bg-yellow-400 text-gray-900'
                   : 'text-gray-300 hover:text-gray-100'
@@ -120,7 +120,7 @@ export default {
               type="button"
               @click="loginMethod = 'code'"
               :class="[
-                'flex-1 py-2 px-4 rounded-md font-medium transition text-sm',
+                'flex-1 py-2 px-2 sm:px-4 rounded-md font-medium transition text-xs sm:text-sm',
                 loginMethod === 'code'
                   ? 'bg-yellow-400 text-gray-900'
                   : 'text-gray-300 hover:text-gray-100'
@@ -132,13 +132,13 @@ export default {
               type="button"
               @click="loginMethod = 'anonymous'"
               :class="[
-                'flex-1 py-2 px-4 rounded-md font-medium transition text-sm',
+                'flex-1 py-2 px-2 sm:px-4 rounded-md font-medium transition text-xs sm:text-sm',
                 loginMethod === 'anonymous'
                   ? 'bg-purple-500 text-white'
                   : 'text-gray-300 hover:text-gray-100'
               ]"
             >
-              🔒 Anonymous
+              Anonymous
             </button>
           </div>
 

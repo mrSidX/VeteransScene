@@ -22,6 +22,9 @@ export default {
     const isEditing = ref(false);
     const aiFetching = ref(false);
     const aiFetchError = ref('');
+    const consolidateData = ref('');
+    const consolidating = ref(false);
+    const consolidateError = ref('');
 
     // Form data for editing
     const editForm = ref({
@@ -224,9 +227,37 @@ export default {
       const pathname = window.location.pathname;
       // Get the directory path (everything up to the filename)
       const dir = pathname.substring(0, pathname.lastIndexOf('/') + 1);
-      const url = `${origin}${dir}admin.html#/highlight-obs/${highlightId}`;
+      const url = `${origin}${dir}obs.html?id=${highlightId}`;
       console.log('[OBS] Opening URL:', url);
       window.open(url, '_blank');
+    };
+
+    const triggerConsolidate = async () => {
+      if (!consolidateData.value.trim()) {
+        consolidateError.value = 'Please paste additional data to consolidate.';
+        return;
+      }
+      if (!confirm('Consolidate this data with existing AI content? This will re-process via Grok AI.')) return;
+
+      consolidating.value = true;
+      consolidateError.value = '';
+
+      try {
+        const response = await api.post(`/highlights/${highlightId}/consolidate`, {
+          additionalData: consolidateData.value
+        });
+
+        if (response.success) {
+          await pollAiFetchStatus();
+          consolidateData.value = '';
+        } else {
+          consolidateError.value = response.message || 'Failed to start consolidation';
+        }
+      } catch (err) {
+        consolidateError.value = err.message || 'Error starting consolidation';
+      } finally {
+        consolidating.value = false;
+      }
     };
 
     const cancelEdit = () => {
@@ -248,8 +279,12 @@ export default {
       isEditing,
       aiFetching,
       aiFetchError,
+      consolidateData,
+      consolidating,
+      consolidateError,
       editForm,
       highlightId,
+      triggerConsolidate,
       fetchHighlight,
       triggerAiFetch,
       saveHighlight,
@@ -272,7 +307,7 @@ export default {
         <div class="mb-8 flex justify-between items-start">
           <div>
             <router-link to="/highlights" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-4">
-              ← Back to Highlights
+              ← Back to Tributes
             </router-link>
             <div class="flex items-center gap-3">
               <h1 class="text-4xl font-bold text-yellow-400">{{ highlight.title }}</h1>
@@ -338,6 +373,13 @@ export default {
               :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'ai-content' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
             >
               AI Content
+            </button>
+            <button
+              v-if="highlight.aiContent?.fetched"
+              @click="activeTab = 'consolidate'"
+              :class="['px-3 md:px-6 py-3 font-semibold transition text-xs md:text-sm whitespace-nowrap flex-shrink-0', activeTab === 'consolidate' ? 'bg-gray-700 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-300']"
+            >
+              Consolidate
             </button>
             <button
               @click="activeTab = 'media'"
@@ -448,7 +490,7 @@ export default {
 
           <div class="bg-blue-900 border border-blue-700 rounded-lg p-4 text-blue-200 mb-6">
             <p class="font-semibold mb-2">💡 How it works:</p>
-            <p>Click the button below to have Grok AI research this {{ highlight.type }} and generate content including biography, facts, achievements, quotes, and timeline.</p>
+            <p>Click the button below to have Grok AI research this tribute and generate content including biography, facts, achievements, quotes, and timeline.</p>
           </div>
 
           <div v-if="aiFetchError" class="bg-red-900 border border-red-700 rounded-lg p-4 text-red-200 mb-6">
@@ -457,7 +499,7 @@ export default {
 
           <div v-if="highlight.status === 'pending-ai-fetch'" class="bg-yellow-900 border border-yellow-700 rounded-lg p-4 text-yellow-200 mb-6">
             <p class="font-semibold">⏳ AI fetch in progress...</p>
-            <p>Please wait while Grok AI researches this highlight.</p>
+            <p>Please wait while Grok AI researches this tribute.</p>
           </div>
 
           <div v-if="highlight.status === 'ai-fetched'" class="bg-green-900 border border-green-700 rounded-lg p-4 text-green-200 mb-6">
@@ -551,6 +593,45 @@ export default {
           </div>
         </div>
 
+        <!-- Consolidate Tab -->
+        <div v-if="activeTab === 'consolidate' && highlight.aiContent?.fetched" class="bg-gray-800 border border-gray-700 rounded-lg p-4 md:p-8 space-y-6">
+          <h2 class="text-2xl font-bold text-yellow-400 mb-6">Consolidate Additional Data</h2>
+
+          <div class="bg-blue-900 border border-blue-700 rounded-lg p-4 text-blue-200 mb-6">
+            <p class="font-semibold mb-2">How it works:</p>
+            <p>Paste additional information below (articles, formatted data, notes, etc.). The system will merge it with the existing AI-generated content to create a unified, comprehensive entry via Grok AI.</p>
+          </div>
+
+          <div v-if="consolidateError" class="bg-red-900 border border-red-700 rounded-lg p-4 text-red-200 mb-4">
+            {{ consolidateError }}
+          </div>
+
+          <div v-if="consolidating || highlight.status === 'pending-ai-fetch'" class="bg-yellow-900 border border-yellow-700 rounded-lg p-4 text-yellow-200 mb-4">
+            <p class="font-semibold">Consolidation in progress...</p>
+            <p>Grok AI is merging the data. This may take a minute.</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Additional Data</label>
+            <textarea
+              v-model="consolidateData"
+              rows="12"
+              placeholder="Paste additional information here — articles, formatted data, notes, awards citations, biographical details, etc. Any format is accepted."
+              class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500 font-mono text-sm"
+              :disabled="consolidating || highlight.status === 'pending-ai-fetch'"
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-1">{{ consolidateData.length }} / 50,000 characters</p>
+          </div>
+
+          <button
+            @click="triggerConsolidate"
+            :disabled="consolidating || highlight.status === 'pending-ai-fetch' || !consolidateData.trim()"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          >
+            {{ consolidating || highlight.status === 'pending-ai-fetch' ? 'Consolidating...' : 'Consolidate & Re-merge Content' }}
+          </button>
+        </div>
+
         <!-- Display Settings Tab -->
         <div v-if="activeTab === 'display'" class="bg-gray-800 border border-gray-700 rounded-lg p-8 space-y-6">
           <h2 class="text-2xl font-bold text-yellow-400 mb-6">Display Settings</h2>
@@ -587,7 +668,7 @@ export default {
                 disabled
                 class="w-4 h-4"
               />
-              <span class="text-gray-300">Featured Highlight</span>
+              <span class="text-gray-300">Featured Tribute</span>
             </label>
 
             <label class="flex items-center gap-3 cursor-pointer">
@@ -678,10 +759,10 @@ export default {
     <div v-else-if="!loading && error" class="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
       <div class="max-w-2xl mx-auto">
         <div class="bg-red-900 border border-red-700 rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-red-200 mb-4">Error Loading Highlight</h2>
+          <h2 class="text-2xl font-bold text-red-200 mb-4">Error Loading Tribute</h2>
           <p class="text-red-200 mb-6">{{ error }}</p>
           <router-link to="/highlights" class="inline-block bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-6 rounded transition">
-            ← Back to Highlights
+            ← Back to Tributes
           </router-link>
         </div>
       </div>
@@ -691,7 +772,7 @@ export default {
     <div v-else class="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
       <div class="text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4"></div>
-        <p class="text-gray-400">Loading highlight...</p>
+        <p class="text-gray-400">Loading tribute...</p>
       </div>
     </div>
   `

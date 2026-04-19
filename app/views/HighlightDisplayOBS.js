@@ -14,58 +14,130 @@ export default {
     const loading = ref(true);
     const error = ref('');
 
+    // Max characters that fit on a single OBS slide (tuned for 1920x1080)
+    const BIO_CHAR_LIMIT = 380;
+    const FACT_TEXT_LIMIT = 120;
+    const ACHIEVEMENT_DESC_LIMIT = 150;
+
+    // Split long text into chunks that fit on individual slides
+    const splitText = (text, limit) => {
+      if (!text || text.length <= limit) return [text];
+      const chunks = [];
+      // Split on sentence boundaries where possible
+      const sentences = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
+      let current = '';
+      for (const sentence of sentences) {
+        if ((current + sentence).length > limit && current.length > 0) {
+          chunks.push(current.trim());
+          current = sentence;
+        } else {
+          current += sentence;
+        }
+      }
+      if (current.trim()) chunks.push(current.trim());
+      // Safety: if any chunk is still too long (no sentence breaks), hard split
+      const result = [];
+      for (const chunk of chunks) {
+        if (chunk.length <= limit) {
+          result.push(chunk);
+        } else {
+          for (let i = 0; i < chunk.length; i += limit) {
+            const sub = chunk.substring(i, i + limit);
+            // Try to break at last space
+            if (i + limit < chunk.length) {
+              const lastSpace = sub.lastIndexOf(' ');
+              if (lastSpace > limit * 0.6) {
+                result.push(sub.substring(0, lastSpace).trim());
+                i = i - (limit - lastSpace); // backtrack
+                continue;
+              }
+            }
+            result.push(sub.trim());
+          }
+        }
+      }
+      return result.filter(c => c.length > 0);
+    };
+
+    // Truncate a single string with ellipsis
+    const truncate = (text, limit) => {
+      if (!text || text.length <= limit) return text;
+      const trimmed = text.substring(0, limit);
+      const lastSpace = trimmed.lastIndexOf(' ');
+      return (lastSpace > limit * 0.6 ? trimmed.substring(0, lastSpace) : trimmed) + '…';
+    };
+
     const slides = computed(() => {
       if (!highlight.value) return [];
       const slideList = [];
 
-      // Slide 1: Biography
-      slideList.push({
-        id: 'bio',
-        title: 'Biography',
-        type: 'bio',
-        content: highlight.value.aiContent?.biographyBrief ||
-                 highlight.value.aiContent?.biography ||
-                 highlight.value.description ||
-                 'Dedicated military service member'
+      // Biography — split into multiple slides if long
+      const bioText = highlight.value.aiContent?.biographyBrief ||
+                      highlight.value.aiContent?.biography ||
+                      highlight.value.description ||
+                      'Dedicated military service member';
+      const bioChunks = splitText(bioText, BIO_CHAR_LIMIT);
+      bioChunks.forEach((chunk, idx) => {
+        slideList.push({
+          id: bioChunks.length > 1 ? `bio-${idx}` : 'bio',
+          title: bioChunks.length > 1 ? `Biography (${idx + 1}/${bioChunks.length})` : 'Biography',
+          type: 'bio',
+          content: chunk
+        });
       });
 
-      // Slide 2: Key Facts (or use regular facts if keyFacts is empty)
+      // Key Facts — truncate individual fact text to prevent overflow
       const factsToShow = (highlight.value.aiContent?.keyFacts && highlight.value.aiContent.keyFacts.length > 0)
-        ? highlight.value.aiContent.keyFacts.slice(0, 4)  // Limit to 4 items to fit on screen
+        ? highlight.value.aiContent.keyFacts.slice(0, 4)
         : (highlight.value.aiContent?.facts && highlight.value.aiContent.facts.length > 0)
           ? highlight.value.aiContent.facts.slice(0, 4).map(f => ({ text: f.text, icon: '⭐' }))
           : [];
 
       if (factsToShow.length > 0) {
+        // Truncate each fact to prevent overflow
+        const clampedFacts = factsToShow.map(f => ({
+          ...f,
+          text: truncate(f.text, FACT_TEXT_LIMIT)
+        }));
         slideList.push({
           id: 'facts',
           title: 'Key Facts',
           type: 'facts',
-          content: factsToShow
+          content: clampedFacts
         });
       }
 
-      // Slide 3: Achievements (or use timeline if achievements is empty)
-      const achievementsToShow = (highlight.value.aiContent?.achievements && highlight.value.aiContent.achievements.length > 0)
-        ? highlight.value.aiContent.achievements.slice(0, 3)  // Limit to 3 items to fit on screen
+      // Achievements — truncate descriptions, split if many
+      const allAchievements = (highlight.value.aiContent?.achievements && highlight.value.aiContent.achievements.length > 0)
+        ? highlight.value.aiContent.achievements
         : (highlight.value.aiContent?.timeline && highlight.value.aiContent.timeline.length > 0)
-          ? highlight.value.aiContent.timeline.slice(0, 3).map(t => ({
+          ? highlight.value.aiContent.timeline.map(t => ({
               title: t.event || t.date,
               description: t.description,
               date: t.date
             }))
           : [];
 
-      if (achievementsToShow.length > 0) {
-        slideList.push({
-          id: 'achievements',
-          title: 'Achievements & Honors',
-          type: 'achievements',
-          content: achievementsToShow
-        });
+      if (allAchievements.length > 0) {
+        // Truncate descriptions and split into groups of 3
+        const clamped = allAchievements.map(a => ({
+          ...a,
+          description: truncate(a.description, ACHIEVEMENT_DESC_LIMIT)
+        }));
+        for (let i = 0; i < clamped.length; i += 3) {
+          const group = clamped.slice(i, i + 3);
+          const pageNum = Math.floor(i / 3) + 1;
+          const totalPages = Math.ceil(clamped.length / 3);
+          slideList.push({
+            id: totalPages > 1 ? `achievements-${pageNum}` : 'achievements',
+            title: totalPages > 1 ? `Achievements & Honors (${pageNum}/${totalPages})` : 'Achievements & Honors',
+            type: 'achievements',
+            content: group
+          });
+        }
       }
 
-      // Slide 4+: Gallery Images
+      // Gallery Images
       if (highlight.value.media?.gallery && highlight.value.media.gallery.length > 0) {
         highlight.value.media.gallery.forEach((img, idx) => {
           slideList.push({
@@ -77,9 +149,9 @@ export default {
         });
       }
 
-      // Final Slide: Sources (if available)
+      // Sources
       const sourcesToShow = (highlight.value.aiContent?.sources && highlight.value.aiContent.sources.length > 0)
-        ? highlight.value.aiContent.sources.slice(0, 3)  // Show top 3 sources only
+        ? highlight.value.aiContent.sources.slice(0, 3)
         : [];
 
       if (sourcesToShow.length > 0) {
@@ -91,7 +163,6 @@ export default {
         });
       }
 
-      // If we only have biography, that's fine - show it alone
       return slideList;
     });
 
@@ -314,9 +385,7 @@ export default {
 
       <!-- Veterans Scene Branding -->
       <div class="obs-branding">
-        <div class="obs-logo">
-          <img src="/assets/img/vs-logo.jpg" alt="Veterans Scene Logo" class="logo-image" />
-        </div>
+        <img src="/assets/img/vs-logo.jpg" alt="Veterans Scene Logo" class="logo-image" />
         <div class="obs-website">VeteransScene.org</div>
       </div>
     </div>

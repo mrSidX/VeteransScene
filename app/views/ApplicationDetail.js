@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
@@ -72,6 +72,47 @@ export default {
     const sendingWaiverEmail = ref(false);
     const waiverEmailSent = ref(false);
     const generatedWaiverLink = ref('');
+
+    // --- Readiness check helpers ---
+    const readinessLinkCopied = ref(false);
+    const copyReadinessCheckLink = async () => {
+      const url = `${window.location.origin}/readiness-check.html`;
+      try {
+        await navigator.clipboard.writeText(url);
+        readinessLinkCopied.value = true;
+        setTimeout(() => { readinessLinkCopied.value = false; }, 2000);
+      } catch (_) {
+        prompt('Copy this link:', url);
+      }
+    };
+    const formatMbps = (v) => (v == null ? '—' : v.toFixed(1) + ' Mbps');
+    const tierColor = (tier) => ({
+      green: 'text-green-400',
+      yellow: 'text-yellow-400',
+      red: 'text-red-400'
+    })[tier] || 'text-gray-400';
+    const readinessVerdict = () => application.value?.readinessCheck?.verdict;
+    const readinessBadgeLabel = computed(() => {
+      const v = readinessVerdict();
+      if (v === 'pass') return '✓ Looks good';
+      if (v === 'review') return '⚠ Needs review';
+      if (v === 'fail') return '✗ Not ready';
+      return '';
+    });
+    const readinessBadgeClass = computed(() => {
+      const v = readinessVerdict();
+      if (v === 'pass') return 'bg-green-900/30 border-green-400';
+      if (v === 'review') return 'bg-yellow-900/30 border-yellow-400';
+      if (v === 'fail') return 'bg-red-900/30 border-red-400';
+      return 'bg-gray-900 border-gray-700';
+    });
+    const readinessTextClass = computed(() => {
+      const v = readinessVerdict();
+      if (v === 'pass') return 'text-green-300';
+      if (v === 'review') return 'text-yellow-300';
+      if (v === 'fail') return 'text-red-300';
+      return 'text-gray-300';
+    });
 
     const getWaiverLink = () => {
       // If we have a generated public link, use that
@@ -412,6 +453,13 @@ export default {
       inviteToCreateUser,
       getWaiverLink,
       copyWaiverLink,
+      readinessLinkCopied,
+      copyReadinessCheckLink,
+      formatMbps,
+      tierColor,
+      readinessBadgeLabel,
+      readinessBadgeClass,
+      readinessTextClass,
       getStatusColor,
       getPriorityColor,
       getCategoryIcon,
@@ -525,6 +573,94 @@ export default {
               <div v-if="application.additionalInfo" class="mt-4 pt-4 border-t border-gray-700">
                 <label class="text-sm text-gray-400 font-semibold">Additional Information</label>
                 <p class="text-gray-300 whitespace-pre-wrap mt-2">{{ application.additionalInfo }}</p>
+              </div>
+            </div>
+
+            <!-- Studio Readiness Check -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h2 class="text-2xl font-bold text-yellow-400">Studio Readiness Check</h2>
+                  <p class="text-xs text-gray-500 mt-1">Network + system assessment the guest ran before scheduling</p>
+                </div>
+                <button v-if="!application.readinessCheck"
+                  @click="copyReadinessCheckLink"
+                  class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-md text-sm transition">
+                  {{ readinessLinkCopied ? 'Copied ✓' : 'Copy check link' }}
+                </button>
+              </div>
+
+              <div v-if="!application.readinessCheck" class="text-center py-6 text-gray-400">
+                <p>No readiness check on file yet.</p>
+                <p class="text-xs mt-2">Share the link above with the applicant to have them run a quick check on their device.</p>
+              </div>
+
+              <div v-else>
+                <!-- Verdict badge -->
+                <div :class="readinessBadgeClass" class="rounded-lg p-4 mb-4 border-2 text-center">
+                  <div class="text-2xl font-bold" :class="readinessTextClass">
+                    {{ readinessBadgeLabel }}
+                  </div>
+                  <p v-if="application.readinessCheck.verdictReasons?.length" class="mt-2 text-sm">
+                    {{ application.readinessCheck.verdictReasons.join(' · ') }}
+                  </p>
+                </div>
+
+                <!-- Metrics grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <div class="bg-gray-900 rounded p-3 border border-gray-700">
+                    <div class="text-xs text-gray-400 uppercase">Download</div>
+                    <div class="font-mono text-lg" :class="tierColor(application.readinessCheck.network?.downloadTier)">
+                      {{ formatMbps(application.readinessCheck.network?.downloadMbps) }}
+                    </div>
+                  </div>
+                  <div class="bg-gray-900 rounded p-3 border border-gray-700">
+                    <div class="text-xs text-gray-400 uppercase">Upload</div>
+                    <div class="font-mono text-lg" :class="tierColor(application.readinessCheck.network?.uploadTier)">
+                      {{ formatMbps(application.readinessCheck.network?.uploadMbps) }}
+                    </div>
+                  </div>
+                  <div class="bg-gray-900 rounded p-3 border border-gray-700">
+                    <div class="text-xs text-gray-400 uppercase">CPU cores</div>
+                    <div class="font-mono text-lg" :class="tierColor(application.readinessCheck.system?.cpuTier)">
+                      {{ application.readinessCheck.system?.cpuCores ?? '—' }}
+                    </div>
+                  </div>
+                  <div class="bg-gray-900 rounded p-3 border border-gray-700">
+                    <div class="text-xs text-gray-400 uppercase">RAM</div>
+                    <div class="font-mono text-lg" :class="tierColor(application.readinessCheck.system?.ramTier)">
+                      {{ application.readinessCheck.system?.ramGb ? application.readinessCheck.system.ramGb + ' GB' : 'unknown' }}
+                    </div>
+                  </div>
+                  <div class="bg-gray-900 rounded p-3 border border-gray-700">
+                    <div class="text-xs text-gray-400 uppercase">Camera</div>
+                    <div class="text-lg" :class="application.readinessCheck.devices?.hasCamera ? 'text-green-400' : 'text-red-400'">
+                      {{ application.readinessCheck.devices?.hasCamera ? '✓ present' : '✗ missing' }}
+                    </div>
+                  </div>
+                  <div class="bg-gray-900 rounded p-3 border border-gray-700">
+                    <div class="text-xs text-gray-400 uppercase">Microphone</div>
+                    <div class="text-lg" :class="application.readinessCheck.devices?.hasMicrophone ? 'text-green-400' : 'text-red-400'">
+                      {{ application.readinessCheck.devices?.hasMicrophone ? '✓ present' : '✗ missing' }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-400 space-y-1">
+                  <div v-if="application.readinessCheck.system?.deviceModel">
+                    <span class="text-gray-500">Device:</span> {{ application.readinessCheck.system.deviceModel }}
+                    <span class="text-gray-600">({{ application.readinessCheck.system.deviceModelSource }})</span>
+                  </div>
+                  <div v-if="application.readinessCheck.system?.osName">
+                    <span class="text-gray-500">OS:</span> {{ application.readinessCheck.system.osName }} {{ application.readinessCheck.system.osVersion || '' }}
+                  </div>
+                  <div v-if="application.readinessCheck.system?.browserName">
+                    <span class="text-gray-500">Browser:</span> {{ application.readinessCheck.system.browserName }} {{ application.readinessCheck.system.browserVersion || '' }}
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Submitted:</span> {{ formatDate(application.readinessCheck.createdAt) }}
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/auth.js';
 import { useRouter } from 'vue-router';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import NotificationBell from './NotificationBell.js';
 
 export default {
@@ -15,8 +15,30 @@ export default {
     const showContentMenu = ref(false);
     const showRecordingMenu = ref(false);
     const showModerationMenu = ref(false);
+    const showGuestsMenu = ref(false);
+    const pendingDeletions = ref(0);
+    let deletionPollInterval = null;
 
     const isTemporaryUser = computed(() => authStore.user.value?.isTemporary === true);
+
+    const fetchDeletionCount = async () => {
+      if (!authStore.isSuperAdmin.value) return;
+      try {
+        const res = await window.api.get('/super-admin/queue/stats');
+        if (res.success) pendingDeletions.value = res.data.total || 0;
+      } catch (e) { /* ignore */ }
+    };
+
+    onMounted(() => {
+      if (authStore.isSuperAdmin.value) {
+        fetchDeletionCount();
+        deletionPollInterval = setInterval(fetchDeletionCount, 60000);
+      }
+    });
+
+    onUnmounted(() => {
+      if (deletionPollInterval) clearInterval(deletionPollInterval);
+    });
 
     const handleLogout = async () => {
       authStore.logout();
@@ -30,6 +52,7 @@ export default {
       showContentMenu.value = false;
       showRecordingMenu.value = false;
       showModerationMenu.value = false;
+      showGuestsMenu.value = false;
     };
 
     const navigateTo = async (route) => {
@@ -51,10 +74,12 @@ export default {
       showContentMenu,
       showRecordingMenu,
       showModerationMenu,
+      showGuestsMenu,
       closeMobileMenu,
       navigateTo,
       getAvatarUrl,
-      isTemporaryUser
+      isTemporaryUser,
+      pendingDeletions
     };
   },
   template: `
@@ -62,7 +87,7 @@ export default {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         <div class="flex items-center space-x-3">
           <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene Logo" class="w-10 h-10 rounded-lg">
-          <router-link :to="authStore.isAuthenticated.value ? '/dashboard' : '/'" class="text-xl sm:text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
+          <router-link to="/" class="text-xl sm:text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
             Veteran's Scene
           </router-link>
         </div>
@@ -81,6 +106,9 @@ export default {
           </template>
 
           <template v-else-if="!authStore.isAuthenticated.value">
+            <router-link to="/tributes" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
+              Tributes
+            </router-link>
             <router-link to="/login" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 rounded-md font-semibold transition">
               Login
             </router-link>
@@ -91,9 +119,23 @@ export default {
               Dashboard
             </router-link>
 
-            <router-link v-if="authStore.isModerator.value" to="/applications" class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition">
-              Guest Applicants
-            </router-link>
+            <!-- Guests Dropdown -->
+            <div v-if="authStore.isModerator.value" class="relative group">
+              <button class="py-2 text-gray-300 hover:text-yellow-400 font-medium transition flex items-center space-x-1">
+                <span>Guests</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div class="absolute left-0 mt-0 w-52 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <router-link to="/applications" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  👤 Applicants
+                </router-link>
+                <router-link to="/readiness-checks" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm">
+                  🎙️ Readiness Checks
+                </router-link>
+              </div>
+            </div>
 
             <!-- Content Dropdown -->
             <div v-if="authStore.isModerator.value" class="relative group">
@@ -108,7 +150,7 @@ export default {
                   📊 Segments
                 </router-link>
                 <router-link to="/highlights" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
-                  ⭐ Highlights
+                  ⭐ Tributes
                 </router-link>
                 <router-link to="/prompt-templates" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   🎯 Prompt Templates
@@ -119,6 +161,9 @@ export default {
                 <router-link to="/help-topics" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   ❓ Help Topics
                 </router-link>
+                <a href="/assets/docs/Veteran_Interview_Guide.pdf" target="_blank" rel="noopener" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  📘 Interview Guide
+                </a>
                 <!-- Recording section divider -->
                 <div class="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-900/50 border-b border-gray-700">Recording</div>
                 <router-link to="/recording-slots" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
@@ -131,7 +176,7 @@ export default {
                   🎬 Browse Recordings
                 </router-link>
                 <router-link to="/recording-access" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
-                  🎥 Grant Access
+                  🎥 Grant Recording Access
                 </router-link>
                 <router-link to="/storage" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   💾 Storage
@@ -166,6 +211,13 @@ export default {
 
             <router-link v-if="authStore.isAdmin.value" to="/security" class="py-2 text-red-400 hover:text-red-300 font-medium transition">
               Security
+            </router-link>
+
+            <!-- Super Admin Review Queue -->
+            <router-link v-if="authStore.isSuperAdmin.value" to="/super-admin" class="py-2 text-purple-400 hover:text-purple-300 font-medium transition flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              Review
+              <span v-if="pendingDeletions > 0" class="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{{ pendingDeletions }}</span>
             </router-link>
 
             <!-- Notification Bell -->
@@ -207,6 +259,12 @@ export default {
                 <router-link to="/my-applications" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
                   My Applications
                 </router-link>
+                <router-link v-if="authStore.isAdmin.value" to="/site-settings" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition text-sm border-b border-gray-700">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Site Settings
+                  </span>
+                </router-link>
                 <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-red-400 transition text-sm border-t border-gray-700">
                   Logout
                 </button>
@@ -214,6 +272,11 @@ export default {
             </div>
           </template>
         </div>
+
+        <!-- Mobile: Login button when not authenticated -->
+        <router-link v-if="!authStore.isAuthenticated.value" to="/login" class="md:hidden bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 rounded-md font-semibold text-sm transition">
+          Login
+        </router-link>
 
         <!-- Mobile Menu Button -->
         <button @click="showMobileMenu = true" v-if="authStore.isAuthenticated.value" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-700 transition">
@@ -272,10 +335,23 @@ export default {
             Dashboard
           </router-link>
 
-          <!-- Guest Applicants -->
-          <router-link v-if="authStore.isModerator.value" @click="closeMobileMenu" to="/applications" class="block px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg font-medium min-h-[44px] flex items-center">
-            Guest Applicants
-          </router-link>
+          <!-- Guests Menu (Expandable) -->
+          <div v-if="authStore.isModerator.value">
+            <button @click="showGuestsMenu = !showGuestsMenu" class="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg font-medium min-h-[44px] flex items-center justify-between">
+              <span>Guests</span>
+              <svg :class="['w-4 h-4 transition-transform', showGuestsMenu ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div v-if="showGuestsMenu" class="pl-4 space-y-1">
+              <router-link @click="closeMobileMenu" to="/applications" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg text-sm">
+                👤 Applicants
+              </router-link>
+              <router-link @click="closeMobileMenu" to="/readiness-checks" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg text-sm">
+                🎙️ Readiness Checks
+              </router-link>
+            </div>
+          </div>
 
           <!-- Content Menu (Expandable) -->
           <div v-if="authStore.isModerator.value">
@@ -290,7 +366,7 @@ export default {
                 📊 Segments
               </router-link>
               <router-link @click="closeMobileMenu" to="/highlights" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
-                ⭐ Highlights
+                ⭐ Tributes
               </router-link>
               <router-link @click="closeMobileMenu" to="/prompt-templates" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 🎯 Prompt Templates
@@ -301,6 +377,9 @@ export default {
               <router-link @click="closeMobileMenu" to="/help-topics" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 ❓ Help Topics
               </router-link>
+              <a @click="closeMobileMenu" href="/assets/docs/Veteran_Interview_Guide.pdf" target="_blank" rel="noopener" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
+                📘 Interview Guide
+              </a>
               <!-- Recording sub-section -->
               <div class="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Recording</div>
               <router-link @click="closeMobileMenu" to="/recording-slots" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
@@ -313,7 +392,7 @@ export default {
                 🎬 Browse Recordings
               </router-link>
               <router-link @click="closeMobileMenu" to="/recording-access" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
-                🎥 Grant Access
+                🎥 Grant Recording Access
               </router-link>
               <router-link @click="closeMobileMenu" to="/storage" class="block px-4 py-3 text-sm text-gray-400 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg min-h-[44px] flex items-center">
                 💾 Storage
@@ -350,6 +429,19 @@ export default {
           <!-- Security (Admin Only) -->
           <router-link v-if="authStore.isAdmin.value" @click="closeMobileMenu" to="/security" class="block px-4 py-3 text-red-400 hover:bg-gray-700 hover:text-red-300 transition rounded-lg font-medium min-h-[44px] flex items-center">
             Security
+          </router-link>
+
+          <!-- Super Admin Review Queue -->
+          <router-link v-if="authStore.isSuperAdmin.value" @click="closeMobileMenu" to="/super-admin" class="block px-4 py-3 text-purple-400 hover:bg-gray-700 hover:text-purple-300 transition rounded-lg font-medium min-h-[44px] flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Review Queue
+            <span v-if="pendingDeletions > 0" class="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{{ pendingDeletions }}</span>
+          </router-link>
+
+          <!-- Site Settings (Admin Only) -->
+          <router-link v-if="authStore.isAdmin.value" @click="closeMobileMenu" to="/site-settings" class="block px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition rounded-lg font-medium min-h-[44px] flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Site Settings
           </router-link>
 
           <!-- Profile -->

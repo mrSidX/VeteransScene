@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OBS Display</title>
+    <link rel="stylesheet" href="./app/styles/highlight-obs.css"/>
+    <style>html, body { margin: 0; padding: 0; overflow: hidden; background: #1a1a1a; }</style>
+</head>
+<body>
+    <div id="app">
+      <!-- Loading State -->
+      <div v-if="loading" class="obs-display loading">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="obs-display error">
+        <div class="error-box">
+          <h2>Error Loading Highlight</h2>
+          <p>{{ error }}</p>
+        </div>
+      </div>
+
+      <!-- Main Display -->
+      <div v-else-if="highlight" class="obs-display">
+        <!-- Fixed Profile Image (Left 30%) -->
+        <div class="profile-section">
+          <div v-if="highlight.media?.profileImage?.url" class="profile-image-container">
+            <img
+              :src="getImageUrl(highlight.media.profileImage)"
+              :alt="highlight.media.profileImage?.altText || highlight.title"
+              :style="getImageStyle(highlight.media.profileImage)"
+              class="profile-image"
+            />
+          </div>
+          <div v-else class="profile-placeholder">
+            <div class="placeholder-text">No Image</div>
+          </div>
+        </div>
+
+        <!-- Rotating Content (Right 70%) -->
+        <div class="content-section">
+          <!-- Header -->
+          <div class="header">
+            <h1 class="title">{{ highlight.title }}</h1>
+            <p v-if="highlight.personInfo" class="subtitle">
+              {{ highlight.personInfo.rank }}<span v-if="highlight.personInfo.rank && highlight.personInfo.branch"> &bull; </span>{{ highlight.personInfo.branch }}
+            </p>
+          </div>
+
+          <!-- Dynamic Slides -->
+          <transition name="fade" mode="out-in">
+            <div v-if="slides.length > 0" :key="'slide-' + currentSlide" class="slide">
+              <!-- Bio Slide -->
+              <template v-if="slides[currentSlide].type === 'bio'">
+                <div class="slide-bio">
+                  <h2 class="slide-title">{{ slides[currentSlide].title }}</h2>
+                  <p class="slide-content">{{ slides[currentSlide].content }}</p>
+                </div>
+              </template>
+
+              <!-- Facts Slide -->
+              <template v-else-if="slides[currentSlide].type === 'facts'">
+                <div class="slide-facts">
+                  <h2 class="slide-title">{{ slides[currentSlide].title }}</h2>
+                  <ul class="facts-list">
+                    <li v-for="(fact, index) in slides[currentSlide].content" :key="index" class="fact-item">
+                      <span class="fact-icon">{{ fact.icon || '&#127894;' }}</span>
+                      <span class="fact-text">{{ fact.text }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+
+              <!-- Achievements Slide -->
+              <template v-else-if="slides[currentSlide].type === 'achievements'">
+                <div class="slide-achievements">
+                  <h2 class="slide-title">{{ slides[currentSlide].title }}</h2>
+                  <div class="achievements-list">
+                    <div v-for="(achievement, index) in slides[currentSlide].content" :key="index" class="achievement">
+                      <div class="achievement-title">{{ achievement.title }}</div>
+                      <div v-if="achievement.date" class="achievement-date">{{ achievement.date }}</div>
+                      <div v-if="achievement.description" class="achievement-desc">{{ achievement.description }}</div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Gallery Image Slide -->
+              <template v-else-if="slides[currentSlide].type === 'gallery'">
+                <div class="slide-gallery">
+                  <div class="gallery-image-container">
+                    <img
+                      :src="getImageUrl(slides[currentSlide].content)"
+                      :alt="slides[currentSlide].content.altText || 'Gallery image'"
+                      :style="getImageStyle(slides[currentSlide].content)"
+                      class="gallery-image"
+                    />
+                  </div>
+                  <div v-if="slides[currentSlide].content.caption" class="gallery-caption">
+                    {{ slides[currentSlide].content.caption }}
+                  </div>
+                </div>
+              </template>
+
+              <!-- Sources Slide -->
+              <template v-else-if="slides[currentSlide].type === 'sources'">
+                <div class="slide-sources">
+                  <h2 class="slide-title">{{ slides[currentSlide].title }}</h2>
+                  <ul class="sources-list">
+                    <li v-for="(source, idx) in slides[currentSlide].content" :key="idx" class="source-item">
+                      <span class="source-label">&#128218;</span>
+                      <span class="source-text">{{ source.title }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+            </div>
+          </transition>
+
+          <!-- Progress Dots -->
+          <div v-if="slides.length > 1" class="progress-dots">
+            <span
+              v-for="(slide, idx) in slides"
+              :key="idx"
+              :class="['dot', { active: currentSlide === idx }]"
+              :title="(idx + 1) + '. ' + slide.title"
+              @click="goToSlide(idx)"
+            ></span>
+          </div>
+        </div>
+
+        <!-- Veterans Scene Branding -->
+        <div class="obs-branding">
+          <img src="/assets/img/vs-logo.jpg" alt="Veterans Scene Logo" class="logo-image" />
+          <div class="obs-website">VeteransScene.org</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue 3 via global script (no importmap needed) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script>
+    const API_BASE = 'https://api.veteransscene.org/api';
+    const BIO_CHAR_LIMIT = 380;
+    const FACT_TEXT_LIMIT = 120;
+    const ACHIEVEMENT_DESC_LIMIT = 150;
+
+    // Get highlight ID from URL: obs.html?id=XXXX
+    const params = new URLSearchParams(window.location.search);
+    const highlightId = params.get('id');
+
+    const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+    const app = createApp({
+      setup() {
+        const highlight = ref(null);
+        const currentSlide = ref(0);
+        const loading = ref(true);
+        const error = ref('');
+        let slideTimer = null;
+
+        const splitText = (text, limit) => {
+          if (!text || text.length <= limit) return [text];
+          const chunks = [];
+          const sentences = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
+          let current = '';
+          for (const sentence of sentences) {
+            if ((current + sentence).length > limit && current.length > 0) {
+              chunks.push(current.trim());
+              current = sentence;
+            } else {
+              current += sentence;
+            }
+          }
+          if (current.trim()) chunks.push(current.trim());
+          const result = [];
+          for (const chunk of chunks) {
+            if (chunk.length <= limit) {
+              result.push(chunk);
+            } else {
+              for (let i = 0; i < chunk.length; i += limit) {
+                const sub = chunk.substring(i, i + limit);
+                if (i + limit < chunk.length) {
+                  const lastSpace = sub.lastIndexOf(' ');
+                  if (lastSpace > limit * 0.6) {
+                    result.push(sub.substring(0, lastSpace).trim());
+                    i = i - (limit - lastSpace);
+                    continue;
+                  }
+                }
+                result.push(sub.trim());
+              }
+            }
+          }
+          return result.filter(c => c.length > 0);
+        };
+
+        const truncate = (text, limit) => {
+          if (!text || text.length <= limit) return text;
+          const trimmed = text.substring(0, limit);
+          const lastSpace = trimmed.lastIndexOf(' ');
+          return (lastSpace > limit * 0.6 ? trimmed.substring(0, lastSpace) : trimmed) + '\u2026';
+        };
+
+        const slides = computed(() => {
+          if (!highlight.value) return [];
+          const slideList = [];
+          const h = highlight.value;
+
+          // Biography
+          const bioText = h.aiContent?.biographyBrief || h.aiContent?.biography || h.description || 'Dedicated military service member';
+          const bioChunks = splitText(bioText, BIO_CHAR_LIMIT);
+          bioChunks.forEach((chunk, idx) => {
+            slideList.push({
+              id: bioChunks.length > 1 ? 'bio-' + idx : 'bio',
+              title: bioChunks.length > 1 ? 'Biography (' + (idx + 1) + '/' + bioChunks.length + ')' : 'Biography',
+              type: 'bio',
+              content: chunk
+            });
+          });
+
+          // Key Facts
+          const factsToShow = (h.aiContent?.keyFacts?.length > 0)
+            ? h.aiContent.keyFacts.slice(0, 4)
+            : (h.aiContent?.facts?.length > 0)
+              ? h.aiContent.facts.slice(0, 4).map(f => ({ text: f.text, icon: '\u2B50' }))
+              : [];
+          if (factsToShow.length > 0) {
+            slideList.push({
+              id: 'facts',
+              title: 'Key Facts',
+              type: 'facts',
+              content: factsToShow.map(f => ({ ...f, text: truncate(f.text, FACT_TEXT_LIMIT) }))
+            });
+          }
+
+          // Achievements
+          const allAchievements = (h.aiContent?.achievements?.length > 0)
+            ? h.aiContent.achievements
+            : (h.aiContent?.timeline?.length > 0)
+              ? h.aiContent.timeline.map(t => ({ title: t.event || t.date, description: t.description, date: t.date }))
+              : [];
+          if (allAchievements.length > 0) {
+            const clamped = allAchievements.map(a => ({ ...a, description: truncate(a.description, ACHIEVEMENT_DESC_LIMIT) }));
+            for (let i = 0; i < clamped.length; i += 3) {
+              const group = clamped.slice(i, i + 3);
+              const pageNum = Math.floor(i / 3) + 1;
+              const totalPages = Math.ceil(clamped.length / 3);
+              slideList.push({
+                id: totalPages > 1 ? 'achievements-' + pageNum : 'achievements',
+                title: totalPages > 1 ? 'Achievements & Honors (' + pageNum + '/' + totalPages + ')' : 'Achievements & Honors',
+                type: 'achievements',
+                content: group
+              });
+            }
+          }
+
+          // Gallery
+          if (h.media?.gallery?.length > 0) {
+            h.media.gallery.forEach((img, idx) => {
+              slideList.push({
+                id: 'gallery-' + idx,
+                title: img.caption || 'Image ' + (idx + 1),
+                type: 'gallery',
+                content: img
+              });
+            });
+          }
+
+          // Sources
+          const sourcesToShow = (h.aiContent?.sources?.length > 0) ? h.aiContent.sources.slice(0, 3) : [];
+          if (sourcesToShow.length > 0) {
+            slideList.push({ id: 'sources', title: 'Sources', type: 'sources', content: sourcesToShow });
+          }
+
+          return slideList;
+        });
+
+        const slideDuration = computed(() => {
+          return (highlight.value?.displaySettings?.slideshowDuration || 10) * 1000;
+        });
+
+        const getImageUrl = (imageObj) => {
+          if (!imageObj) return '';
+          if (typeof imageObj === 'string') return imageObj;
+          return imageObj.url || '';
+        };
+
+        const getImageStyle = (image) => {
+          const positioning = image?.positioning || { offsetX: 0, offsetY: 0, zoom: 100 };
+          return {
+            objectFit: 'cover',
+            objectPosition: (50 + positioning.offsetX) + '% ' + (50 + positioning.offsetY) + '%',
+            transform: 'scale(' + (positioning.zoom / 100) + ')',
+            transformOrigin: 'center'
+          };
+        };
+
+        const startSlideshow = () => {
+          slideTimer = setInterval(() => {
+            currentSlide.value = (currentSlide.value + 1) % slides.value.length;
+          }, slideDuration.value);
+        };
+
+        const stopSlideshow = () => {
+          if (slideTimer) clearInterval(slideTimer);
+        };
+
+        const goToSlide = (index) => {
+          currentSlide.value = index;
+          stopSlideshow();
+          startSlideshow();
+        };
+
+        const fetchHighlight = async () => {
+          if (!highlightId) {
+            error.value = 'No highlight ID provided. Use: obs.html?id=YOUR_ID';
+            loading.value = false;
+            return;
+          }
+          try {
+            loading.value = true;
+            const response = await fetch(API_BASE + '/highlights/obs/' + highlightId);
+            const data = await response.json();
+            if (data.success) {
+              highlight.value = data.data.highlight;
+              startSlideshow();
+            } else {
+              error.value = data.message || 'Failed to load highlight';
+            }
+          } catch (err) {
+            error.value = err.message || 'Error loading highlight';
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        onMounted(fetchHighlight);
+        onUnmounted(stopSlideshow);
+
+        return { highlight, currentSlide, slides, loading, error, getImageUrl, getImageStyle, goToSlide };
+      }
+    });
+
+    app.mount('#app');
+    </script>
+</body>
+</html>

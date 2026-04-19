@@ -224,6 +224,13 @@ export default {
       }
     };
 
+    // Determine if a recording is audio based on mimeType or filename
+    const isAudioRecording = (recording) => {
+      if (recording.mimeType) return recording.mimeType.startsWith('audio/');
+      const name = (recording.filename || '').toLowerCase();
+      return name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.ogg') || name.endsWith('.flac') || name.endsWith('.aac');
+    };
+
     // Check authorization
     const isAuthorized = computed(() => {
       return ['admin', 'moderator'].includes(authStore.user.value?.role);
@@ -261,7 +268,8 @@ export default {
       cancelDelete,
       closePreview,
       changeSortBy,
-      goToPage
+      goToPage,
+      isAudioRecording
     };
   },
 
@@ -347,10 +355,15 @@ export default {
       <div v-if="isAuthorized && recordings.length > 0" class="space-y-4 mb-6">
         <div v-for="recording in recordings" :key="recording.id" class="bg-gray-800 rounded p-4 hover:bg-gray-750 transition">
           <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-            <!-- Filename -->
-            <div>
-              <p class="font-semibold truncate">{{ recording.filename }}</p>
-              <p class="text-sm text-gray-400">{{ formatDate(recording.uploadedAt) }}</p>
+            <!-- Filename with type icon -->
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5 text-xl flex-shrink-0" :title="isAudioRecording(recording) ? 'Audio Recording' : 'Video Recording'">
+                {{ isAudioRecording(recording) ? '🎙️' : '🎥' }}
+              </span>
+              <div class="min-w-0">
+                <p class="font-semibold truncate">{{ recording.filename }}</p>
+                <p class="text-sm text-gray-400">{{ formatDate(recording.uploadedAt) }}</p>
+              </div>
             </div>
 
             <!-- Uploader -->
@@ -422,11 +435,14 @@ export default {
         <div class="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
           <!-- Modal header -->
           <div class="flex justify-between items-center p-6 border-b border-gray-700 sticky top-0 bg-gray-800">
-            <div>
-              <h2 class="text-2xl font-bold">{{ selectedRecording.filename }}</h2>
-              <p class="text-sm text-gray-400 mt-1">
-                {{ formatFileSize(selectedRecording.size) }} • {{ formatDuration(selectedRecording.duration) }}
-              </p>
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">{{ isAudioRecording(selectedRecording) ? '🎙️' : '🎥' }}</span>
+              <div>
+                <h2 class="text-2xl font-bold">{{ selectedRecording.filename }}</h2>
+                <p class="text-sm text-gray-400 mt-1">
+                  {{ isAudioRecording(selectedRecording) ? 'Audio' : 'Video' }} • {{ formatFileSize(selectedRecording.size) }} • {{ formatDuration(selectedRecording.duration) }}
+                </p>
+              </div>
             </div>
             <button
               @click="closePreview"
@@ -445,6 +461,19 @@ export default {
               </div>
             </div>
 
+            <div v-else-if="previewUrl && isAudioRecording(selectedRecording)" class="bg-gray-900 rounded p-8">
+              <div class="text-center mb-6">
+                <span class="text-6xl">🎙️</span>
+                <p class="text-gray-300 font-semibold mt-3">{{ selectedRecording.filename }}</p>
+              </div>
+              <audio
+                :src="previewUrl"
+                controls
+                class="w-full"
+              ></audio>
+              <p class="text-xs text-gray-400 mt-3 text-center">Audio recording</p>
+            </div>
+
             <div v-else-if="previewUrl" class="bg-black rounded">
               <video
                 :src="previewUrl"
@@ -452,7 +481,7 @@ export default {
                 class="w-full rounded"
                 style="max-height: 500px;"
               ></video>
-              <p class="text-xs text-gray-400 mt-2 text-center">Video preview (S3 presigned URL)</p>
+              <p class="text-xs text-gray-400 mt-2 text-center">Video preview</p>
             </div>
 
             <div v-else class="text-center py-12">

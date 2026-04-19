@@ -157,14 +157,14 @@ export default {
               <router-link to="/dashboard" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-2">
                 ← Back to Dashboard
               </router-link>
-              <h1 class="text-3xl sm:text-4xl font-bold text-yellow-400">Highlights</h1>
-              <p class="text-sm sm:text-base text-gray-400 mt-2">Manage featured content about military figures, topics, and events</p>
+              <h1 class="text-3xl sm:text-4xl font-bold text-yellow-400">Tributes</h1>
+              <p class="text-sm sm:text-base text-gray-400 mt-2">Manage tribute content about military figures, topics, and events</p>
             </div>
             <button
               @click="createNewHighlight"
               class="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition min-h-[44px] flex items-center justify-center"
             >
-              + New Highlight
+              + New Tribute
             </button>
           </div>
         </div>
@@ -178,7 +178,7 @@ export default {
                 v-model="searchTerm"
                 @input="onFilterChange"
                 type="text"
-                placeholder="Search highlights..."
+                placeholder="Search tributes..."
                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500"
               />
             </div>
@@ -252,7 +252,7 @@ export default {
         <!-- Stats Bar -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
           <div class="bg-gray-800 border border-gray-700 rounded p-2 md:p-3">
-            <p class="text-gray-400 text-sm">Total Highlights</p>
+            <p class="text-gray-400 text-sm">Total Tributes</p>
             <p class="text-2xl font-bold text-yellow-400">{{ total }}</p>
           </div>
           <div class="bg-gray-800 border border-gray-700 rounded p-2 md:p-3">
@@ -272,7 +272,7 @@ export default {
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-12">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
-          <p class="mt-4 text-gray-400">Loading highlights...</p>
+          <p class="mt-4 text-gray-400">Loading tributes...</p>
         </div>
 
         <!-- Error State -->
@@ -289,11 +289,16 @@ export default {
             class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden cursor-pointer hover:border-yellow-500 transition hover:shadow-lg hover:shadow-yellow-500/20 flex flex-col h-full"
           >
             <!-- Profile Image -->
-            <div v-if="highlight.media?.profileImage?.url" class="w-full h-48 bg-gray-900 overflow-hidden">
+            <div v-if="highlight.media?.profileImage?.url" class="w-full h-48 bg-gray-900 overflow-hidden relative">
+              <img
+                :src="highlight.media.profileImage.url"
+                aria-hidden="true"
+                class="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-60"
+              />
               <img
                 :src="highlight.media.profileImage.url"
                 :alt="highlight.media.profileImage.altText || highlight.title"
-                class="w-full h-full object-cover"
+                class="relative w-full h-full object-contain"
               />
             </div>
             <div v-else class="w-full h-48 bg-gray-700 flex items-center justify-center text-gray-500 text-3xl">
@@ -351,12 +356,12 @@ export default {
 
         <!-- Empty State -->
         <div v-else class="text-center py-12 bg-gray-800 border border-gray-700 rounded-lg">
-          <p class="text-gray-400 text-lg mb-4">No highlights found</p>
+          <p class="text-gray-400 text-lg mb-4">No tributes found</p>
           <button
             @click="createNewHighlight"
             class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition"
           >
-            Create Your First Highlight
+            Create Your First Tribute
           </button>
         </div>
 

@@ -4,7 +4,7 @@ import Login from './views/Login.js?v=20260211';
 import ForgotPassword from './views/ForgotPassword.js?v=20260211';
 import ResetPassword from './views/ResetPassword.js?v=20260211';
 import VerifyEmail from './views/VerifyEmail.js?v=20260211';
-import Dashboard from './views/Dashboard.js?v=20260211';
+import Dashboard from './views/Dashboard.js?v=20260410b';
 import MyApplications from './views/MyApplications.js?v=20260206';
 import Waiver from './views/Waiver.js?v=20260306';
 import WaiverSign from './views/WaiverSign.js?v=20260206';
@@ -34,6 +34,9 @@ import RecordingAccessManager from './views/RecordingAccessManager.js?v=20260211
 import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260211';
 import InviteRedeem from './views/InviteRedeem.js?v=20260212';
 import GuestDashboard from './views/GuestDashboard.js?v=20260212';
+import SiteSettings from './views/SiteSettings.js?v=20260410e';
+import Transparency from './views/Transparency.js?v=20260410d';
+import ExpenseManager from './views/ExpenseManager.js?v=20260410c';
 
 // User portal routes - full route set with role-based access control
 const routes = [
@@ -239,6 +242,29 @@ const routes = [
     path: '/recordings-browser',
     name: 'RecordingsBrowser',
     component: RecordingsBrowser,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
+    path: '/site-settings',
+    name: 'SiteSettings',
+    component: SiteSettings,
+    meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/transparency/costs',
+    name: 'TransparencyCosts',
+    component: Transparency,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/transparency',
+    name: 'TransparencyRoot',
+    redirect: '/transparency/costs'
+  },
+  {
+    path: '/expense-manager',
+    name: 'ExpenseManager',
+    component: ExpenseManager,
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   }
 ];

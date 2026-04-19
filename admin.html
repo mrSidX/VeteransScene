@@ -9,7 +9,16 @@
     <link rel="stylesheet" href="./app/styles/highlight-obs.css?v=20260203"/>
 </head>
 <body class="bg-gray-900 text-gray-100">
-    <div id="app"></div>
+    <div id="app">
+      <!-- Shown while Vue loads, or if JS fails -->
+      <div id="app-loading" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;">
+        <img src="/assets/img/vs-logo.jpg" alt="Logo" style="width:64px;height:64px;border-radius:8px;">
+        <p style="color:#facc15;font-size:18px;font-weight:bold;">Loading...</p>
+        <noscript>
+          <p style="color:#f87171;margin-top:16px;">JavaScript is required. Please enable JavaScript in your browser settings.</p>
+        </noscript>
+      </div>
+    </div>
 
     <!-- Import Vue 3 from CDN -->
     <script type="importmap">
@@ -23,6 +32,6 @@
     </script>
 
     <!-- Admin Portal Entry Point -->
-    <script type="module" src="./app/main-admin.js?v=20260211b"></script>
+    <script type="module" src="./app/main-admin.js?v=20260410"></script>
 </body>
 </html>

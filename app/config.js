@@ -1,7 +1,20 @@
 // API Configuration
+// Auto-detect: localhost/127.0.0.1/file:// → local API, else production.
+// Override with `?api=http://host:port/api` for ad-hoc testing.
+function resolveApiBase() {
+  try {
+    const qs = new URLSearchParams(window.location.search);
+    const override = qs.get('api');
+    if (override) return override.replace(/\/$/, '');
+    const host = window.location.hostname;
+    const isLocal = !host || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.endsWith('.local');
+    if (isLocal) return 'http://localhost:5000/api';
+  } catch (_) { /* fall through */ }
+  return 'https://api.veteransscene.org/api';
+}
+
 export const API_CONFIG = {
-  // All API calls route to api.veteransscene.org
-  BASE_URL: 'https://api.veteransscene.org/api',
+  BASE_URL: resolveApiBase(),
 
   ENDPOINTS: {
     // Auth

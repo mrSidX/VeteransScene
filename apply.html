@@ -325,6 +325,22 @@
                 <p class="text-red-200 text-sm">{{ error }}</p>
               </div>
 
+              <!-- Pre-application readiness check CTA -->
+              <div v-if="!success" class="bg-blue-900/30 border-2 border-blue-400 rounded-lg p-5 mb-6">
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">🎤</span>
+                  <div class="flex-1">
+                    <h2 class="text-lg md:text-xl font-bold text-blue-200">Planning to be a podcast guest?</h2>
+                    <p class="text-blue-100 text-sm md:text-base mt-1">Before your interview gets scheduled, run a quick <strong>2-minute Studio Readiness Check</strong> on the computer and internet you'll use. It confirms your mic, camera, and connection are ready so we don't hit surprises during recording.</p>
+                    <a href="/readiness-check.html" target="_blank" rel="noopener"
+                       class="inline-block mt-3 bg-blue-400 hover:bg-blue-300 text-gray-900 font-semibold px-5 py-2 rounded-lg transition">
+                      Run the Readiness Check →
+                    </a>
+                    <p class="text-xs text-blue-200/70 mt-2">Opens in a new tab — your application progress here will be kept.</p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Main Form -->
               <div v-if="!success" class="space-y-6">
 

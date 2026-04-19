@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Studio Readiness Check | Veteran's Scene</title>
+    <meta name="description" content="A quick, guided check to see if your computer, camera, microphone and internet connection are ready for a Veteran's Scene podcast recording."/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/assets/img/vs-favicon.png"/>
+    <style>
+        /* Honeypot: invisible to humans, but bots fill anything with a name/label. */
+        .hp-field { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; width: 0; pointer-events: none; }
+        .pulse-dot { animation: pulse 1.4s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: .4 } 50% { opacity: 1 } }
+        /* Larger base font sized for readability — many guests are older veterans. */
+        html { font-size: 18px; }
+        @media (min-width: 768px) { html { font-size: 19px; } }
+        input[type="text"], input[type="email"] { font-size: 1.05rem; }
+        button { font-size: 1.05rem; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen scroll-smooth">
+
+<!-- Navbar -->
+<nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center space-x-3">
+        <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene" class="w-10 h-10 rounded-lg">
+        <h1 class="text-xl sm:text-2xl font-bold text-yellow-400 tracking-wide">Veteran's Scene — Studio Readiness Check</h1>
+    </div>
+</nav>
+
+<main class="flex-grow px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
+
+    <!-- Critical banner: must use the actual interview device -->
+    <div class="bg-yellow-500/10 border-2 border-yellow-400 rounded-lg p-5 mb-8">
+        <div class="flex items-start space-x-3">
+            <svg class="w-7 h-7 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l6.28 11.17c.75 1.334-.213 2.98-1.742 2.98H3.72c-1.53 0-2.493-1.646-1.743-2.98l6.28-11.17zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            <div>
+                <h2 class="text-lg font-bold text-yellow-300 mb-1">Important — please read</h2>
+                <p class="text-gray-200">
+                    Run this check on the <strong class="text-yellow-300">same computer, camera, microphone and internet connection</strong> you plan to use for your podcast interview. If your interview setup is different from this one, the results won't reflect what we'll actually see and hear.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress indicator -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between text-base text-gray-300 mb-2">
+            <span id="stepLabel" class="font-semibold">Step 1 of 5</span>
+            <span id="stepTitle">Getting started</span>
+        </div>
+        <div class="w-full bg-gray-700 rounded-full h-3">
+            <div id="progressBar" class="bg-yellow-400 h-3 rounded-full transition-all" style="width: 20%"></div>
+        </div>
+    </div>
+
+    <!-- ===================== STEP 1: Intro + identity ===================== -->
+    <section id="step1" class="step bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 class="text-2xl font-bold text-yellow-400 mb-2">Who should we send this to?</h3>
+        <p class="text-gray-300 mb-5">Your name or handle helps us match this check to your application. You can also submit anonymously.</p>
+
+        <label class="block mb-4">
+            <span class="text-gray-200 text-lg font-medium">Name or handle <span class="text-gray-500">(optional)</span></span>
+            <input id="fHandle" type="text" maxlength="80" autocomplete="name"
+                class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:border-yellow-400 focus:outline-none"/>
+        </label>
+
+        <label class="block mb-4">
+            <span class="text-gray-200 text-lg font-medium">Email <span class="text-gray-400 text-base font-normal">(optional — lets us link this to your application)</span></span>
+            <input id="fEmail" type="email" maxlength="200" autocomplete="email"
+                class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:border-yellow-400 focus:outline-none"/>
+        </label>
+
+        <label class="flex items-center mb-6 cursor-pointer">
+            <input id="fAnon" type="checkbox" class="w-4 h-4 accent-yellow-400"/>
+            <span class="ml-2 text-gray-300">Submit anonymously</span>
+        </label>
+
+        <!-- Honeypot — real users never see this -->
+        <div class="hp-field" aria-hidden="true">
+            <label>Website<input id="hp" type="text" tabindex="-1" autocomplete="off"/></label>
+        </div>
+
+        <button data-next class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-3 rounded-lg transition">Start the check →</button>
+    </section>
+
+    <!-- ===================== STEP 2: Camera + mic ===================== -->
+    <section id="step2" class="step hidden bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 class="text-2xl font-bold text-yellow-400 mb-2">Camera &amp; microphone</h3>
+        <p class="text-gray-300 mb-4">We need to confirm your browser can see and hear you. Click below, then <strong>allow access</strong> when your browser asks.</p>
+
+        <button id="btnStartMedia" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-3 rounded-lg transition mb-4">Check camera &amp; mic</button>
+
+        <div id="mediaArea" class="hidden space-y-4">
+            <div class="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
+                <video id="preview" autoplay playsinline muted class="w-full max-h-64 bg-black"></video>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between text-base text-gray-200 mb-2">
+                    <span class="font-medium">Microphone level <span class="text-gray-400 font-normal">(say something or clap)</span></span>
+                    <span id="micHint" class="text-gray-400">listening...</span>
+                </div>
+                <div class="w-full bg-gray-900 rounded h-6 border border-gray-700 overflow-hidden">
+                    <div id="micBar" class="bg-green-500 h-full transition-all" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div id="mediaStatus" class="text-base text-gray-200 space-y-2"></div>
+        </div>
+
+        <div id="mediaError" class="hidden mt-4 bg-red-900/40 border border-red-500 rounded p-4 text-red-100 text-base"></div>
+
+        <div class="mt-6 flex space-x-3">
+            <button data-back class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-5 py-2 rounded-lg">← Back</button>
+            <button id="btnNextMedia" data-next disabled class="bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-900 font-semibold px-6 py-2 rounded-lg transition">Next →</button>
+        </div>
+    </section>
+
+    <!-- ===================== STEP 3: Network speed test ===================== -->
+    <section id="step3" class="step hidden bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 class="text-2xl font-bold text-yellow-400 mb-2">Internet speed test</h3>
+        <p class="text-gray-300 mb-4">We'll measure your connection against our own server. This takes about 15 seconds.</p>
+
+        <button id="btnStartSpeed" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-3 rounded-lg transition mb-4">Run speed test</button>
+
+        <div id="speedArea" class="hidden space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-gray-900 rounded p-5 border border-gray-700">
+                    <div class="text-base text-gray-300 uppercase tracking-wide font-semibold">Download</div>
+                    <div id="dlValue" class="text-3xl font-bold text-gray-100 mt-2">—</div>
+                    <div id="dlStatus" class="text-base text-gray-400 mt-1">waiting...</div>
+                </div>
+                <div class="bg-gray-900 rounded p-5 border border-gray-700">
+                    <div class="text-base text-gray-300 uppercase tracking-wide font-semibold">Upload</div>
+                    <div id="ulValue" class="text-3xl font-bold text-gray-100 mt-2">—</div>
+                    <div id="ulStatus" class="text-base text-gray-400 mt-1">waiting...</div>
+                </div>
+            </div>
+            <div id="speedError" class="hidden bg-red-900/40 border border-red-500 rounded p-4 text-red-100 text-base"></div>
+        </div>
+
+        <div class="mt-6 flex space-x-3">
+            <button data-back class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-5 py-2 rounded-lg">← Back</button>
+            <button id="btnNextSpeed" data-next disabled class="bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-gray-900 font-semibold px-6 py-2 rounded-lg transition">Next →</button>
+        </div>
+    </section>
+
+    <!-- ===================== STEP 4: System specs ===================== -->
+    <section id="step4" class="step hidden bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 class="text-2xl font-bold text-yellow-400 mb-2">Your computer</h3>
+        <p class="text-gray-300 mb-4">We auto-detect what your browser will tell us. None of this identifies you personally.</p>
+
+        <div id="sysList" class="space-y-3 text-base bg-gray-900 border border-gray-700 rounded p-5 mb-4"></div>
+
+        <label class="block mb-4">
+            <span class="text-gray-200 text-lg font-medium">Computer make &amp; model <span class="text-gray-400 text-base font-normal">(optional — e.g. "Dell XPS 15 2022" or "MacBook Air M2")</span></span>
+            <input id="fModel" type="text" maxlength="120"
+                class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:border-yellow-400 focus:outline-none"
+                placeholder="Leave blank if you don't know"/>
+        </label>
+
+        <div class="mt-6 flex space-x-3">
+            <button data-back class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-5 py-2 rounded-lg">← Back</button>
+            <button data-next class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-2 rounded-lg transition">See results →</button>
+        </div>
+    </section>
+
+    <!-- ===================== STEP 5: Results + submit ===================== -->
+    <section id="step5" class="step hidden bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 class="text-2xl font-bold text-yellow-400 mb-4">Results</h3>
+
+        <div id="verdictBadge" class="rounded-lg p-5 mb-5 border-2 text-center"></div>
+
+        <div class="space-y-3 text-base bg-gray-900 border border-gray-700 rounded p-5 mb-5" id="resultsList"></div>
+
+        <p class="text-base text-gray-400 mb-5">Submitting sends this report to the Veteran's Scene team. A moderator will review it and follow up.</p>
+
+        <div id="submitError" class="hidden mb-4 bg-red-900/40 border border-red-500 rounded p-4 text-red-100 text-base"></div>
+        <div id="submitOk" class="hidden mb-4 bg-green-900/40 border border-green-500 rounded p-4 text-green-100 text-base"></div>
+
+        <div class="flex space-x-3">
+            <button data-back class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-5 py-2 rounded-lg">← Back</button>
+            <button id="btnSubmit" class="bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 text-gray-900 font-semibold px-6 py-2 rounded-lg transition">Submit report</button>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-gray-900 border-t border-gray-700 text-center py-6 text-gray-400 text-sm">
+    <p>Questions? <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+    <p class="mt-2">&copy; <span id="year"></span> Veteran's Scene</p>
+</footer>
+
+<script>
+(() => {
+    'use strict';
+
+    // ------ Config ----------------------------------------------------------
+    // Allow override via ?api=... for testing, otherwise auto-detect.
+    // file:// (empty hostname) and localhost both default to the local dev API.
+    const apiOverride = new URLSearchParams(location.search).get('api');
+    const isLocal = !location.hostname
+        || location.hostname === 'localhost'
+        || location.hostname === '127.0.0.1';
+    const API_BASE = apiOverride
+        || (isLocal ? 'http://localhost:5000/api' : 'https://api.veteransscene.org/api');
+
+    const STEP_TITLES = ['Getting started', 'Camera & mic', 'Internet speed', 'Computer specs', 'Results'];
+    const TOTAL_STEPS = 5;
+    const pageLoadedAt = Date.now();
+
+    // ------ State -----------------------------------------------------------
+    const state = {
+        step: 1,
+        handle: '',
+        email: '',
+        anonymous: false,
+        devices: { hasCamera: false, hasMicrophone: false, cameraCount: 0, microphoneCount: 0,
+                   cameraLabel: '', microphoneLabel: '', audioLevelDetected: false },
+        network: { downloadMbps: null, uploadMbps: null, effectiveType: null, rttMs: null },
+        system: {},
+        mediaStream: null,
+        audioCtx: null
+    };
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ------ Step navigation -------------------------------------------------
+    function showStep(n) {
+        state.step = n;
+        for (let i = 1; i <= TOTAL_STEPS; i++) {
+            document.getElementById('step' + i).classList.toggle('hidden', i !== n);
+        }
+        document.getElementById('stepLabel').textContent = `Step ${n} of ${TOTAL_STEPS}`;
+        document.getElementById('stepTitle').textContent = STEP_TITLES[n - 1];
+        document.getElementById('progressBar').style.width = `${(n / TOTAL_STEPS) * 100}%`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('[data-next]').forEach(b => b.addEventListener('click', () => {
+        if (state.step === 1) collectIdentity();
+        if (state.step === 4) { renderResults(); }
+        if (state.step < TOTAL_STEPS) showStep(state.step + 1);
+    }));
+    document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => {
+        if (state.step > 1) showStep(state.step - 1);
+    }));
+
+    function collectIdentity() {
+        state.handle = document.getElementById('fHandle').value.trim();
+        state.email = document.getElementById('fEmail').value.trim();
+        state.anonymous = document.getElementById('fAnon').checked;
+    }
+
+    // ------ Step 2: camera + mic -------------------------------------------
+    document.getElementById('btnStartMedia').addEventListener('click', async () => {
+        const errBox = document.getElementById('mediaError');
+        errBox.classList.add('hidden');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            state.mediaStream = stream;
+            document.getElementById('mediaArea').classList.remove('hidden');
+            document.getElementById('preview').srcObject = stream;
+
+            // Enumerate (labels are only populated after permission is granted)
+            const devs = await navigator.mediaDevices.enumerateDevices();
+            const cams = devs.filter(d => d.kind === 'videoinput');
+            const mics = devs.filter(d => d.kind === 'audioinput');
+            state.devices.cameraCount = cams.length;
+            state.devices.microphoneCount = mics.length;
+            state.devices.hasCamera = cams.length > 0;
+            state.devices.hasMicrophone = mics.length > 0;
+            state.devices.cameraLabel = cams[0]?.label || '';
+            state.devices.microphoneLabel = mics[0]?.label || '';
+
+            renderMediaStatus();
+            listenForAudio(stream);
+        } catch (err) {
+            errBox.classList.remove('hidden');
+            errBox.textContent = 'Could not access camera or microphone: ' + (err.message || err.name) +
+                '. Please allow access in your browser and try again.';
+        }
+    });
+
+    function renderMediaStatus() {
+        const d = state.devices;
+        const el = document.getElementById('mediaStatus');
+        const row = (ok, label) => `<div class="flex items-center"><span class="${ok ? 'text-green-400' : 'text-red-400'} mr-2">${ok ? '✓' : '✗'}</span>${label}</div>`;
+        el.innerHTML = row(d.hasCamera, `Camera detected${d.cameraLabel ? ' — ' + d.cameraLabel : ''}`) +
+                       row(d.hasMicrophone, `Microphone detected${d.microphoneLabel ? ' — ' + d.microphoneLabel : ''}`) +
+                       row(d.audioLevelDetected, 'Audio level detected (you spoke or clapped)');
+        document.getElementById('btnNextMedia').disabled = !(d.hasCamera && d.hasMicrophone);
+    }
+
+    function listenForAudio(stream) {
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AC();
+            state.audioCtx = ctx;
+            const src = ctx.createMediaStreamSource(stream);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 512;
+            src.connect(analyser);
+            const data = new Uint8Array(analyser.frequencyBinCount);
+            const startedAt = Date.now();
+
+            const tick = () => {
+                analyser.getByteTimeDomainData(data);
+                // Compute RMS around 128 (silence center)
+                let sum = 0;
+                for (let i = 0; i < data.length; i++) { const v = data[i] - 128; sum += v * v; }
+                const rms = Math.sqrt(sum / data.length);
+                const level = Math.min(100, Math.round((rms / 40) * 100));
+                document.getElementById('micBar').style.width = level + '%';
+                if (level > 15) {
+                    state.devices.audioLevelDetected = true;
+                    document.getElementById('micHint').textContent = 'got it ✓';
+                    renderMediaStatus();
+                }
+                if (state.mediaStream && state.mediaStream.active) requestAnimationFrame(tick);
+            };
+            tick();
+
+            // After 8 seconds, if still no audio, leave a gentle note but don't hard-fail
+            setTimeout(() => {
+                if (!state.devices.audioLevelDetected) {
+                    document.getElementById('micHint').textContent = 'no sound yet — try speaking';
+                }
+            }, 8000);
+        } catch (err) {
+            console.warn('Audio analysis failed:', err);
+        }
+    }
+
+    // ------ Step 3: speed test ---------------------------------------------
+    document.getElementById('btnStartSpeed').addEventListener('click', runSpeedTest);
+
+    async function runSpeedTest() {
+        const area = document.getElementById('speedArea');
+        area.classList.remove('hidden');
+        document.getElementById('speedError').classList.add('hidden');
+        document.getElementById('btnStartSpeed').disabled = true;
+
+        const dlValue = document.getElementById('dlValue');
+        const dlStatus = document.getElementById('dlStatus');
+        const ulValue = document.getElementById('ulValue');
+        const ulStatus = document.getElementById('ulStatus');
+
+        try {
+            // --- Download ---
+            dlStatus.textContent = 'measuring...';
+            dlStatus.classList.add('pulse-dot');
+            const dlStart = performance.now();
+            const blobUrl = `${API_BASE}/guest-assessments/speedtest/blob?_=${Date.now()}`;
+            const resp = await fetch(blobUrl, { cache: 'no-store' });
+            if (!resp.ok) throw new Error(`Download blob request failed (${resp.status} from ${blobUrl})`);
+            const buf = await resp.arrayBuffer();
+            const dlSec = (performance.now() - dlStart) / 1000;
+            const dlMbps = (buf.byteLength * 8) / (dlSec * 1e6);
+            state.network.downloadMbps = dlMbps;
+            dlValue.textContent = dlMbps.toFixed(1) + ' Mbps';
+            dlStatus.textContent = `${(buf.byteLength / 1024 / 1024).toFixed(1)} MB in ${dlSec.toFixed(2)}s`;
+            dlStatus.classList.remove('pulse-dot');
+
+            // --- Upload ---
+            ulStatus.textContent = 'measuring...';
+            ulStatus.classList.add('pulse-dot');
+            const UL_BYTES = 3 * 1024 * 1024;
+            const payload = new Uint8Array(UL_BYTES);
+            // Fill with pseudo-random so it won't be compressed in transit
+            for (let i = 0; i < UL_BYTES; i += 1024) {
+                payload[i] = (Math.random() * 256) | 0;
+            }
+            const ulStart = performance.now();
+            const upUrl = `${API_BASE}/guest-assessments/speedtest/upload`;
+            const upResp = await fetch(upUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: payload
+            });
+            if (!upResp.ok) throw new Error(`Upload request failed (${upResp.status} from ${upUrl})`);
+            const ulSec = (performance.now() - ulStart) / 1000;
+            const ulMbps = (UL_BYTES * 8) / (ulSec * 1e6);
+            state.network.uploadMbps = ulMbps;
+            ulValue.textContent = ulMbps.toFixed(1) + ' Mbps';
+            ulStatus.textContent = `${(UL_BYTES / 1024 / 1024).toFixed(1)} MB in ${ulSec.toFixed(2)}s`;
+            ulStatus.classList.remove('pulse-dot');
+
+            // Browser-reported network hints (not all browsers)
+            if (navigator.connection) {
+                state.network.effectiveType = navigator.connection.effectiveType || null;
+                state.network.rttMs = navigator.connection.rtt || null;
+            }
+
+            document.getElementById('btnNextSpeed').disabled = false;
+
+            // Pre-populate system info since we've moved past network
+            collectSystem();
+        } catch (err) {
+            const eb = document.getElementById('speedError');
+            eb.classList.remove('hidden');
+            eb.textContent = 'Speed test failed: ' + (err.message || err) + '. Check your connection and try again.';
+            document.getElementById('btnStartSpeed').disabled = false;
+        }
+    }
+
+    // ------ Step 4: system specs -------------------------------------------
+    async function collectSystem() {
+        const sys = {};
+        sys.cpuCores = navigator.hardwareConcurrency || null;
+        sys.ramGb = navigator.deviceMemory || null; // Chrome/Edge only
+        sys.platform = navigator.userAgentData?.platform || navigator.platform || null;
+        sys.screenWidth = screen.width;
+        sys.screenHeight = screen.height;
+
+        // Storage quota
+        try {
+            if (navigator.storage?.estimate) {
+                const est = await navigator.storage.estimate();
+                if (est.quota) sys.storageQuotaGb = Math.round((est.quota / 1024 / 1024 / 1024) * 10) / 10;
+                if (est.usage) sys.storageUsageGb = Math.round((est.usage / 1024 / 1024 / 1024) * 10) / 10;
+            }
+        } catch (_) {}
+
+        // Browser + OS guess from UA
+        const ua = navigator.userAgent;
+        const browserMatch = ua.match(/(Firefox|Edg|Chrome|Safari)\/([\d.]+)/);
+        if (browserMatch) {
+            sys.browserName = browserMatch[1] === 'Edg' ? 'Edge' : browserMatch[1];
+            sys.browserVersion = browserMatch[2];
+        }
+        const osMatch = ua.match(/(Windows NT [\d.]+|Mac OS X [\d_]+|Android [\d.]+|iPhone OS [\d_]+|Linux)/);
+        if (osMatch) sys.osName = osMatch[1].replace(/_/g, '.');
+
+        // High-entropy device model (Android Chrome exposes this; desktop rarely does)
+        try {
+            if (navigator.userAgentData?.getHighEntropyValues) {
+                const hints = await navigator.userAgentData.getHighEntropyValues(['model', 'platform', 'platformVersion']);
+                if (hints.model) {
+                    sys.deviceModel = hints.model;
+                    sys.deviceModelSource = 'auto';
+                }
+                if (hints.platform) sys.platform = hints.platform;
+                if (hints.platformVersion) sys.osVersion = hints.platformVersion;
+            }
+        } catch (_) {}
+
+        state.system = sys;
+        renderSysList();
+    }
+
+    function renderSysList() {
+        const s = state.system;
+        const fmt = (label, value) => {
+            const v = value == null || value === '' ? '<span class="text-gray-500 italic">not reported by browser</span>' : value;
+            return `<div class="flex justify-between border-b border-gray-800 pb-1"><span class="text-gray-400">${label}</span><span class="text-gray-100 text-right">${v}</span></div>`;
+        };
+        document.getElementById('sysList').innerHTML = [
+            fmt('CPU cores', s.cpuCores),
+            fmt('RAM', s.ramGb ? s.ramGb + ' GB (approx)' : null),
+            fmt('Storage available', s.storageQuotaGb ? s.storageQuotaGb + ' GB' : null),
+            fmt('Platform / OS', [s.platform, s.osName, s.osVersion].filter(Boolean).join(' ')),
+            fmt('Browser', s.browserName ? `${s.browserName} ${s.browserVersion || ''}` : null),
+            fmt('Screen', s.screenWidth ? `${s.screenWidth}×${s.screenHeight}` : null),
+            fmt('Device model (auto)', s.deviceModel && s.deviceModelSource === 'auto' ? s.deviceModel : null)
+        ].join('');
+    }
+
+    // ------ Step 5: results + submit ---------------------------------------
+    function tierFor(value, green, yellow) {
+        if (value == null || Number.isNaN(value)) return 'unknown';
+        if (value >= green) return 'green';
+        if (value >= yellow) return 'yellow';
+        return 'red';
+    }
+
+    function computeLocalVerdict() {
+        const n = state.network, s = state.system, d = state.devices;
+        const tiers = {
+            download: tierFor(n.downloadMbps, 10, 5),
+            upload: tierFor(n.uploadMbps, 10, 5),
+            cpu: tierFor(s.cpuCores, 4, 2),
+            ram: s.ramGb == null ? 'unknown' : tierFor(s.ramGb, 8, 4)
+        };
+        const hardFail = !d.hasCamera || !d.hasMicrophone;
+        const anyRed = Object.values(tiers).some(t => t === 'red');
+        const anyYellowOrUnknown = Object.values(tiers).some(t => t === 'yellow' || t === 'unknown');
+
+        let verdict;
+        if (hardFail) verdict = 'fail';
+        else if (anyRed) verdict = 'fail';
+        else if (anyYellowOrUnknown) verdict = 'review';
+        else verdict = 'pass';
+
+        return { verdict, tiers };
+    }
+
+    function renderResults() {
+        // Pick up any late-entered model number
+        const model = document.getElementById('fModel').value.trim();
+        if (model) {
+            state.system.deviceModel = model;
+            state.system.deviceModelSource = 'user';
+        }
+        const { verdict, tiers } = computeLocalVerdict();
+
+        const badge = document.getElementById('verdictBadge');
+        if (verdict === 'pass') {
+            badge.className = 'rounded-lg p-6 mb-5 border-2 text-center bg-green-900/30 border-green-400';
+            badge.innerHTML = '<div class="text-4xl font-bold text-green-300">✓ Looks good</div><p class="mt-3 text-lg text-green-100">Your setup should work well for a podcast recording.</p>';
+        } else if (verdict === 'review') {
+            badge.className = 'rounded-lg p-6 mb-5 border-2 text-center bg-yellow-900/30 border-yellow-400';
+            badge.innerHTML = '<div class="text-4xl font-bold text-yellow-300">⚠ Needs review</div><p class="mt-3 text-lg text-yellow-100">Your setup is borderline. A moderator will look at your results and follow up.</p>';
+        } else {
+            badge.className = 'rounded-lg p-6 mb-5 border-2 text-center bg-red-900/30 border-red-400';
+            badge.innerHTML = '<div class="text-4xl font-bold text-red-300">✗ Not ready yet</div><p class="mt-3 text-lg text-red-100">Your current setup likely won\'t produce a usable recording. Submit anyway — we\'ll help you figure out what to change.</p>';
+        }
+
+        const tierDot = t => ({ green: '🟢', yellow: '🟡', red: '🔴', unknown: '⚪' }[t] || '⚪');
+        const mbps = v => v == null ? '—' : v.toFixed(1) + ' Mbps';
+        const rows = [
+            ['Download speed', mbps(state.network.downloadMbps), tiers.download],
+            ['Upload speed', mbps(state.network.uploadMbps), tiers.upload],
+            ['CPU cores', state.system.cpuCores ?? '—', tiers.cpu],
+            ['RAM', state.system.ramGb ? state.system.ramGb + ' GB' : 'unknown', tiers.ram],
+            ['Camera', state.devices.hasCamera ? 'present' : 'MISSING', state.devices.hasCamera ? 'green' : 'red'],
+            ['Microphone', state.devices.hasMicrophone ? 'present' : 'MISSING', state.devices.hasMicrophone ? 'green' : 'red']
+        ];
+        document.getElementById('resultsList').innerHTML = rows.map(r =>
+            `<div class="flex justify-between items-center border-b border-gray-800 pb-1">
+                <span class="text-gray-300">${tierDot(r[2])} ${r[0]}</span>
+                <span class="font-mono text-gray-100">${r[1]}</span>
+             </div>`
+        ).join('');
+    }
+
+    // ------ Submit ----------------------------------------------------------
+    document.getElementById('btnSubmit').addEventListener('click', async () => {
+        const btn = document.getElementById('btnSubmit');
+        const errBox = document.getElementById('submitError');
+        const okBox = document.getElementById('submitOk');
+        errBox.classList.add('hidden');
+        okBox.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        const payload = {
+            handle: state.anonymous ? '' : state.handle,
+            email: state.anonymous ? '' : state.email,
+            submittedAnonymously: state.anonymous,
+            network: state.network,
+            system: state.system,
+            devices: state.devices,
+            hp: document.getElementById('hp').value,
+            timeOnPageMs: Date.now() - pageLoadedAt
+        };
+
+        try {
+            const resp = await fetch(`${API_BASE}/guest-assessments/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.success) {
+                throw new Error(data.message || 'Submission failed');
+            }
+            okBox.classList.remove('hidden');
+            okBox.innerHTML = `
+                <p><strong>Submitted — thank you.</strong> Your report ID is <code class="font-mono">${data.data.id}</code>. A moderator will follow up.</p>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <a href="/" class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-5 py-2 rounded-lg transition">Return to Home</a>
+                    <a href="/podcast-setup.html" class="inline-block bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold px-5 py-2 rounded-lg transition">Podcast join guide</a>
+                    <a href="mailto:veteransscene@gmail.com" class="inline-block bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold px-5 py-2 rounded-lg transition">Contact us</a>
+                </div>
+            `;
+            btn.textContent = 'Submitted ✓';
+            btn.classList.remove('bg-yellow-400', 'hover:bg-yellow-300');
+            btn.classList.add('bg-green-600');
+            // Hide the back button too — they're done, no need to revisit
+            document.querySelector('#step5 [data-back]').classList.add('hidden');
+
+            // Release camera/mic after submit so the user's lights go off
+            if (state.mediaStream) {
+                state.mediaStream.getTracks().forEach(t => t.stop());
+                state.mediaStream = null;
+            }
+            if (state.audioCtx) { try { state.audioCtx.close(); } catch (_) {} state.audioCtx = null; }
+        } catch (err) {
+            errBox.classList.remove('hidden');
+            errBox.textContent = 'Could not submit: ' + (err.message || err);
+            btn.disabled = false;
+            btn.textContent = 'Submit report';
+        }
+    });
+
+    // ------ Cleanup on navigate away ---------------------------------------
+    window.addEventListener('beforeunload', () => {
+        if (state.mediaStream) state.mediaStream.getTracks().forEach(t => t.stop());
+    });
+
+    showStep(1);
+})();
+</script>
+</body>
+</html>

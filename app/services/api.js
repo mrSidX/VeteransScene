@@ -319,6 +319,10 @@ class ApiService {
     return this.delete(`/segments/${segmentId}/vdo/participants/${participantId}`);
   }
 
+  async autoAssignVdoSeats(segmentId) {
+    return this.post(`/segments/${segmentId}/vdo/participants/auto-assign-seats`);
+  }
+
   async sendVdoEmail(segmentId, participantId) {
     return this.post(`/segments/${segmentId}/vdo/email/${participantId}`);
   }
@@ -1438,6 +1442,20 @@ class ApiService {
   }
   async regenerateSlotRoom(slotId) {
     return this.post(`/recording-slots/${slotId}/regenerate`);
+  }
+
+  // ===== Guest Readiness Check Assessments =====
+  async listGuestAssessments(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.get(`/guest-assessments${qs ? '?' + qs : ''}`);
+  }
+
+  async getGuestAssessment(id) {
+    return this.get(`/guest-assessments/${id}`);
+  }
+
+  async linkGuestAssessment(id, applicationId) {
+    return this.patch(`/guest-assessments/${id}/link`, { applicationId });
   }
 }
 

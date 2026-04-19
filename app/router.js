@@ -12,9 +12,9 @@ import Users from './views/Users.js';
 import Segments from './views/Segments.js?v=20260124i';
 import SegmentDetail from './views/SegmentDetail.js?v=20260218e';
 import SegmentNew from './views/SegmentNew.js?v=20260124i';
-import Highlights from './views/Highlights.js?v=20260124i';
-import HighlightDetail from './views/HighlightDetail.js?v=20260124i';
-import HighlightNew from './views/HighlightNew.js?v=20260124i';
+import Highlights from './views/Highlights.js?v=20260330';
+import HighlightDetail from './views/HighlightDetail.js?v=20260330';
+import HighlightNew from './views/HighlightNew.js?v=20260330';
 import PromptTemplateManager from './views/PromptTemplateManager.js?v=20260124i';
 import Flags from './views/Flags.js?v=20260124i';
 import FlagDetail from './views/FlagDetail.js?v=20260124i';
@@ -26,7 +26,7 @@ import DropboxSettings from './views/DropboxSettings.js?v=20260130';
 import HelpTopics from './views/HelpTopics.js?v=20260202';
 import HighlightDisplay from './views/HighlightDisplay.js?v=20260202';
 import HighlightDisplayRandom from './views/HighlightDisplayRandom.js?v=20260202';
-import HighlightDisplayOBS from './views/HighlightDisplayOBS.js?v=20260203';
+import HighlightDisplayOBS from './views/HighlightDisplayOBS.js?v=20260330';
 import Waiver from './views/Waiver.js?v=20260305';
 import MyApplications from './views/MyApplications.js?v=20260206';
 import WaiverSign from './views/WaiverSign.js?v=20260305';
@@ -39,6 +39,13 @@ import S3Browser from './views/S3Browser.js?v=20260224';
 import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260224';
 import RecordingSlots from './views/RecordingSlots.js?v=20260310';
 import ObsMachines from './views/ObsMachines.js?v=20260321';
+import SiteSettings from './views/SiteSettings.js?v=20260409';
+import ReadinessChecks from './views/ReadinessChecks.js?v=20260418b';
+import SuperAdminQueue from './views/SuperAdminQueue.js?v=20260329';
+import TributeIndex from './views/TributeIndex.js?v=20260330';
+import TributeDetail from './views/TributeDetail.js?v=20260330';
+import Transparency from './views/Transparency.js?v=20260409';
+import ExpenseManager from './views/ExpenseManager.js?v=20260409';
 
 // Routes with direct component imports
 const routes = [
@@ -148,9 +155,21 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {
+    path: '/readiness-checks',
+    name: 'ReadinessChecks',
+    component: ReadinessChecks,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
     path: '/users',
     name: 'Users',
     component: Users,
+    meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/site-settings',
+    name: 'SiteSettings',
+    component: SiteSettings,
     meta: { requiresAuth: true, requiresRole: ['admin'] }
   },
   {
@@ -274,6 +293,41 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {
+    path: '/super-admin',
+    name: 'SuperAdminQueue',
+    component: SuperAdminQueue,
+    meta: { requiresAuth: true, requiresSuperAdmin: true }
+  },
+  {
+    path: '/tributes',
+    name: 'TributeIndex',
+    component: TributeIndex,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/tribute/:id',
+    name: 'TributeDetail',
+    component: TributeDetail,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/transparency/costs',
+    name: 'TransparencyCosts',
+    component: Transparency,
+    meta: { requiresAuth: false } // Public
+  },
+  {
+    path: '/transparency',
+    name: 'TransparencyRoot',
+    redirect: '/transparency/costs'
+  },
+  {
+    path: '/expense-manager',
+    name: 'ExpenseManager',
+    component: ExpenseManager,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
     path: '/highlight-display/:id',
     name: 'HighlightDisplay',
     component: HighlightDisplay,
@@ -315,11 +369,17 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated.value) {
     console.log('[Router Guard] Redirecting unauthenticated user to login');
     next({ name: 'Login', query: { redirect: to.fullPath } });
+  } else if (to.meta.requiresSuperAdmin) {
+    if (!authStore.isSuperAdmin.value) {
+      console.log('[Router Guard] Super Admin required, redirecting to dashboard');
+      next({ name: 'Dashboard' });
+    } else {
+      next();
+    }
   } else if (to.meta.requiresRole) {
-    // Check both .role (singular) and .roles (plural) for flexibility
-    const userRole = authStore.user.value?.role || (Array.isArray(authStore.user.value?.roles) ? authStore.user.value.roles[0] : null);
-    console.log(`[Router Guard] Checking role: user has ${userRole}, requires ${to.meta.requiresRole}`);
-    if (!userRole || !to.meta.requiresRole.includes(userRole)) {
+    const userRoles = Array.isArray(authStore.user.value?.roles) ? authStore.user.value.roles : (authStore.user.value?.role ? [authStore.user.value.role] : []);
+    console.log(`[Router Guard] Checking roles: user has ${userRoles}, requires ${to.meta.requiresRole}`);
+    if (!to.meta.requiresRole.some(r => userRoles.includes(r))) {
       console.log('[Router Guard] User does not have required role, redirecting to dashboard');
       next({ name: 'Dashboard' });
     } else {

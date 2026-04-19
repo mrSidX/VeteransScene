@@ -22,7 +22,8 @@ export default {
       emails: [],
       personalMessage: '',
       sessionType: 'one-time',
-      sessionDurationHours: 24
+      sessionDurationHours: 24,
+      mediaMode: 'video'
     });
     const invitations = ref([]);
     const inviteLoading = ref(false);
@@ -40,7 +41,8 @@ export default {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       maxRecordings: 1,
       description: '',
-      purpose: 'Podcast Recording'
+      purpose: 'Podcast Recording',
+      mediaMode: 'video'
     });
 
     const sessionTypeOptions = [
@@ -84,7 +86,8 @@ export default {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         maxRecordings: 1,
         description: `Recording session for ${user.firstName} ${user.lastName}`,
-        purpose: 'Podcast Recording'
+        purpose: 'Podcast Recording',
+        mediaMode: 'video'
       };
       showGrantModal.value = true;
     };
@@ -98,7 +101,8 @@ export default {
           userId: selectedUser.value._id,
           sessionType: grantForm.value.sessionType,
           description: grantForm.value.description || 'Recording session',
-          purpose: grantForm.value.purpose || 'Podcast Recording'
+          purpose: grantForm.value.purpose || 'Podcast Recording',
+          mediaMode: grantForm.value.mediaMode || 'video'
         };
 
         console.log('Sending payload:', payload);
@@ -229,7 +233,8 @@ export default {
           emails: inviteForm.value.emails,
           personalMessage: inviteForm.value.personalMessage,
           sessionType: inviteForm.value.sessionType,
-          sessionDurationHours: inviteForm.value.sessionType === 'time-limited' ? inviteForm.value.sessionDurationHours : undefined
+          sessionDurationHours: inviteForm.value.sessionType === 'time-limited' ? inviteForm.value.sessionDurationHours : undefined,
+          mediaMode: inviteForm.value.mediaMode || 'video'
         });
 
         if (response.success) {
@@ -239,7 +244,8 @@ export default {
             emails: [],
             personalMessage: '',
             sessionType: 'one-time',
-            sessionDurationHours: 24
+            sessionDurationHours: 24,
+            mediaMode: 'video'
           };
           await loadInvitations();
         }
@@ -491,10 +497,14 @@ export default {
                 </span>
               </div>
 
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-400 mb-3">
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-gray-400 mb-3">
                 <div>
                   <p class="text-gray-500">Type</p>
                   <p class="font-semibold text-gray-200">{{ session.sessionType }}</p>
+                </div>
+                <div>
+                  <p class="text-gray-500">Media</p>
+                  <p class="font-semibold text-gray-200">{{ session.mediaMode === 'audio' ? 'Audio' : session.mediaMode === 'both' ? 'Video or Audio' : 'Video' }}</p>
                 </div>
                 <div>
                   <p class="text-gray-500">Created</p>
@@ -582,6 +592,50 @@ export default {
                   <option value="time-limited">Time-Limited (24-48 hours)</option>
                   <option value="unlimited">Unlimited Access</option>
                 </select>
+              </div>
+
+              <!-- Media Mode Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Recording Type</label>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    @click="inviteForm.mediaMode = 'video'"
+                    :class="[
+                      'flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition border',
+                      inviteForm.mediaMode === 'video'
+                        ? 'bg-yellow-400 text-gray-900 border-yellow-400'
+                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                    ]"
+                  >
+                    Video
+                  </button>
+                  <button
+                    type="button"
+                    @click="inviteForm.mediaMode = 'audio'"
+                    :class="[
+                      'flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition border',
+                      inviteForm.mediaMode === 'audio'
+                        ? 'bg-yellow-400 text-gray-900 border-yellow-400'
+                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                    ]"
+                  >
+                    Audio Only
+                  </button>
+                  <button
+                    type="button"
+                    @click="inviteForm.mediaMode = 'both'"
+                    :class="[
+                      'flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition border',
+                      inviteForm.mediaMode === 'both'
+                        ? 'bg-yellow-400 text-gray-900 border-yellow-400'
+                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                    ]"
+                  >
+                    Both (User's Choice)
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ inviteForm.mediaMode === 'both' ? 'User will choose between video or audio when recording' : '' }}</p>
               </div>
 
               <!-- Duration for time-limited sessions -->
@@ -693,6 +747,50 @@ export default {
               <p class="text-xs text-gray-400 mt-1">
                 {{ sessionTypeOptions.find(o => o.value === grantForm.sessionType)?.description }}
               </p>
+            </div>
+
+            <!-- Media Mode Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Recording Type</label>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  @click="grantForm.mediaMode = 'video'"
+                  :class="[
+                    'flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition border',
+                    grantForm.mediaMode === 'video'
+                      ? 'bg-yellow-400 text-gray-900 border-yellow-400'
+                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                  ]"
+                >
+                  Video
+                </button>
+                <button
+                  type="button"
+                  @click="grantForm.mediaMode = 'audio'"
+                  :class="[
+                    'flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition border',
+                    grantForm.mediaMode === 'audio'
+                      ? 'bg-yellow-400 text-gray-900 border-yellow-400'
+                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                  ]"
+                >
+                  Audio Only
+                </button>
+                <button
+                  type="button"
+                  @click="grantForm.mediaMode = 'both'"
+                  :class="[
+                    'flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition border',
+                    grantForm.mediaMode === 'both'
+                      ? 'bg-yellow-400 text-gray-900 border-yellow-400'
+                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                  ]"
+                >
+                  Both (User's Choice)
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">{{ grantForm.mediaMode === 'both' ? 'User will choose between video or audio when recording' : '' }}</p>
             </div>
 
             <!-- Expiry Date (for time-limited) -->

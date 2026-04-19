@@ -51,6 +51,12 @@ export default {
       loadDashboard();
     });
 
+    const getAvatarUrl = () => {
+      if (!user.value?.profile?.avatarUrl || !user.value?.id) return '';
+      const url = window.api.getAvatarUrl(user.value.id);
+      return `${url}?v=${encodeURIComponent(user.value.profile.avatarUrl)}`;
+    };
+
     return {
       loading,
       error,
@@ -58,6 +64,7 @@ export default {
       showPasswordBanner,
       user,
       fullName,
+      getAvatarUrl,
       goToProfile,
       goToMyApplications,
       goToChangePassword
@@ -111,12 +118,13 @@ export default {
                   Your participant dashboard
                 </p>
               </div>
-              <div v-if="user?.profile?.avatarUrl" class="hidden md:block">
-                <img
-                  :src="user.profile.avatarUrl"
-                  :alt="fullName"
-                  class="w-20 h-20 rounded-full object-cover border-4 border-yellow-400"
-                />
+              <div class="hidden md:block">
+                <div v-if="user?.profile?.avatarUrl" class="w-20 h-20 rounded-full bg-gray-700 overflow-hidden border-4 border-yellow-400">
+                  <img :src="getAvatarUrl()" :alt="fullName" class="w-full h-full object-cover">
+                </div>
+                <div v-else class="w-20 h-20 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-2xl font-bold border-4 border-yellow-400">
+                  {{ (user?.firstName || 'U')[0] }}{{ (user?.lastName || '')[0] }}
+                </div>
               </div>
             </div>
           </div>

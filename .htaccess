@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# Short public URL for the guest readiness check
+# /check and /check/ → /readiness-check.html (URL stays as /check)
+RewriteRule ^check/?$ /readiness-check.html [L]

@@ -126,10 +126,10 @@ export default {
         <!-- Header -->
         <div class="mb-4 md:mb-6">
           <button @click="goBack" class="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-2 md:mb-4">
-            ← Back to Highlights
+            ← Back to Tributes
           </button>
-          <h1 class="text-4xl font-bold text-yellow-400">Create New Highlight</h1>
-          <p class="text-gray-400 mt-2">Add a new highlight to feature military figures, units, events, or topics</p>
+          <h1 class="text-4xl font-bold text-yellow-400">Create New Tribute</h1>
+          <p class="text-gray-400 mt-2">Add a new tribute to feature military figures, units, events, or topics</p>
         </div>
 
         <!-- Messages -->
@@ -200,7 +200,7 @@ export default {
               <textarea
                 v-model="formData.description"
                 rows="4"
-                placeholder="Provide context or details about this highlight (optional). This will help Grok AI generate more accurate content."
+                placeholder="Provide context or details about this tribute (optional). This will help Grok AI generate more accurate content."
                 class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500"
               ></textarea>
             </div>
@@ -334,7 +334,7 @@ export default {
           <!-- Manual Links -->
           <div class="space-y-3 md:space-y-4 border-t border-gray-700 pt-4 md:pt-6">
             <h2 class="text-xl font-bold text-yellow-400">Manual Source Links (Optional)</h2>
-            <p class="text-gray-400 text-sm">Add reference links that Grok AI will use when researching this highlight</p>
+            <p class="text-gray-400 text-sm">Add reference links that Grok AI will use when researching this tribute</p>
 
             <div class="space-y-2 md:space-y-3">
               <div
@@ -402,7 +402,7 @@ export default {
               type="submit"
               class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
             >
-              {{ loading ? 'Creating...' : 'Create Highlight' }}
+              {{ loading ? 'Creating...' : 'Create Tribute' }}
             </button>
           </div>
         </form>

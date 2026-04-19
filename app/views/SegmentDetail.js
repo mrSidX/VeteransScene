@@ -979,9 +979,26 @@ export default {
         if (response.success) {
           segment.value = response.data.segment;
           closeVdoParticipantModal();
+          if (assignedSlot.value) await loadSlotForSegment();
         }
       } catch (err) {
         alert('Failed to add participant: ' + err.message);
+      } finally {
+        vdoLoading.value = false;
+      }
+    };
+
+    const autoAssignVdoSeats = async () => {
+      try {
+        vdoLoading.value = true;
+        const response = await api.autoAssignVdoSeats(route.params.id);
+        if (response.success) {
+          segment.value = response.data.segment;
+          await loadSlotForSegment();
+          alert(response.message);
+        }
+      } catch (err) {
+        alert('Failed to auto-assign seats: ' + err.message);
       } finally {
         vdoLoading.value = false;
       }
@@ -1006,11 +1023,27 @@ export default {
         const response = await api.removeVdoParticipant(route.params.id, participantId);
         if (response.success) {
           segment.value = response.data.segment;
+          if (assignedSlot.value) await loadSlotForSegment();
         }
       } catch (err) {
         alert('Failed to remove participant: ' + err.message);
       }
     };
+
+    // Returns the seat number that a given vdo participant occupies on the
+    // assigned slot (by matching pushId), or null if unseated.
+    const seatNumberForParticipant = (participant) => {
+      if (!assignedSlot.value || !participant?.pushId) return null;
+      const seat = assignedSlot.value.seats?.find(s => s.pushId === participant.pushId);
+      return seat ? seat.seatNumber : null;
+    };
+
+    // Count of segment participants not yet mapped to a seat on the slot.
+    const unseatedParticipantCount = computed(() => {
+      if (!assignedSlot.value || !segment.value?.vdoNinja?.participants) return 0;
+      const seatPushIds = new Set(assignedSlot.value.seats?.map(s => s.pushId) || []);
+      return segment.value.vdoNinja.participants.filter(p => !seatPushIds.has(p.pushId)).length;
+    });
 
     const toggleUrlReveal = (key) => {
       revealedUrls.value[key] = !revealedUrls.value[key];
@@ -1737,6 +1770,9 @@ export default {
       openVdoParticipantModal,
       closeVdoParticipantModal,
       addVdoParticipant,
+      autoAssignVdoSeats,
+      seatNumberForParticipant,
+      unseatedParticipantCount,
       updateVdoParticipantRole,
       removeVdoParticipant,
       toggleUrlReveal,
@@ -2675,7 +2711,27 @@ export default {
                     </svg>
                   </button>
                   <div v-show="expandedVdoSections.participants" class="p-4 border-t border-gray-700">
-                  <div class="flex items-center justify-end mb-3">
+                  <!-- Slot-aware hint -->
+                  <div v-if="assignedSlot" class="mb-3 p-2.5 bg-orange-900/20 border border-orange-700/40 rounded-lg text-xs text-orange-200/90 flex items-start gap-2">
+                    <svg class="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                      Slot <span class="font-semibold text-orange-300">{{ assignedSlot.name }}</span> is assigned
+                      ({{ assignedSlot.occupiedCount || 0 }}/{{ assignedSlot.maxSeats }} seats filled).
+                      New participants are automatically placed in the next open seat so their URLs match the slot's OBS browser sources.
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-end gap-2 mb-3">
+                    <button
+                      v-if="assignedSlot && unseatedParticipantCount > 0"
+                      @click="autoAssignVdoSeats"
+                      :disabled="vdoLoading"
+                      class="px-3 py-1 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded text-sm font-semibold transition"
+                      :title="'Assign ' + unseatedParticipantCount + ' unseated participant(s) to open slot seats'"
+                    >
+                      Auto-assign to seats ({{ unseatedParticipantCount }})
+                    </button>
                     <button
                       @click="openVdoParticipantModal"
                       class="px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded text-sm font-semibold transition"
@@ -2691,6 +2747,21 @@ export default {
                     >
                       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                         <div class="flex items-center gap-2 flex-wrap">
+                          <!-- Slot seat badge -->
+                          <span
+                            v-if="assignedSlot && seatNumberForParticipant(participant)"
+                            class="w-7 h-7 flex items-center justify-center rounded-full bg-orange-600 text-gray-900 text-xs font-bold flex-shrink-0"
+                            :title="'Recording slot seat ' + seatNumberForParticipant(participant)"
+                          >
+                            {{ seatNumberForParticipant(participant) }}
+                          </span>
+                          <span
+                            v-else-if="assignedSlot"
+                            class="px-2 py-0.5 rounded-full bg-gray-700 text-gray-400 text-xs font-semibold"
+                            title="Not yet assigned to a slot seat"
+                          >
+                            unseated
+                          </span>
                           <span class="font-semibold text-gray-200">
                             {{ participant.user?.firstName ? \`\${participant.user.firstName} \${participant.user.lastName}\` :
                                participant.applicant?.firstName ? \`\${participant.applicant.firstName} \${participant.applicant.lastName}\` :

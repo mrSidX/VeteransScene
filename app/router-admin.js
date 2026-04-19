@@ -1,7 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { useAuthStore } from './stores/auth.js';
 import Login from './views/Login.js';
-import Dashboard from './views/Dashboard.js';
+import Dashboard from './views/Dashboard.js?v=20260410b';
 import Applications from './views/Applications.js';
 import ApplicationDetail from './views/ApplicationDetail.js';
 import Users from './views/Users.js';
@@ -10,9 +10,9 @@ import SegmentDetail from './views/SegmentDetail.js';
 import SegmentNew from './views/SegmentNew.js';
 import Mail from './views/Mail.js';
 import Profile from './views/Profile.js';
-import Highlights from './views/Highlights.js?v=20260211';
-import HighlightDetail from './views/HighlightDetail.js?v=20260211';
-import HighlightNew from './views/HighlightNew.js?v=20260211';
+import Highlights from './views/Highlights.js?v=20260330';
+import HighlightDetail from './views/HighlightDetail.js?v=20260330';
+import HighlightNew from './views/HighlightNew.js?v=20260330';
 import Flags from './views/Flags.js?v=20260211';
 import FlagDetail from './views/FlagDetail.js?v=20260211';
 import PromptTemplateManager from './views/PromptTemplateManager.js?v=20260211';
@@ -25,10 +25,15 @@ import RecordingStudio from './views/RecordingStudio.js?v=20260211i';
 import RecordingsBrowser from './views/RecordingsBrowser.js?v=20260211';
 import StorageManager from './views/StorageManager.js?v=20260224';
 import S3Browser from './views/S3Browser.js?v=20260224';
-import HighlightDisplayOBS from './views/HighlightDisplayOBS.js';
+import HighlightDisplayOBS from './views/HighlightDisplayOBS.js?v=20260330';
 import RecordingSlots from './views/RecordingSlots.js?v=20260310';
 import SecurityMonitor from './views/SecurityMonitor.js?v=20260318';
 import ObsMachines from './views/ObsMachines.js?v=20260321';
+import SiteSettings from './views/SiteSettings.js?v=20260410e';
+import SuperAdminQueue from './views/SuperAdminQueue.js?v=20260329';
+import Transparency from './views/Transparency.js?v=20260410d';
+import ExpenseManager from './views/ExpenseManager.js?v=20260410c';
+import ReadinessChecks from './views/ReadinessChecks.js?v=20260418b';
 
 // Admin-only routes - no password reset functionality
 const routes = [
@@ -58,6 +63,12 @@ const routes = [
     path: '/applications/:id',
     name: 'ApplicationDetail',
     component: ApplicationDetail,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
+  },
+  {
+    path: '/readiness-checks',
+    name: 'ReadinessChecks',
+    component: ReadinessChecks,
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {
@@ -205,10 +216,39 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   },
   {
+    path: '/site-settings',
+    name: 'SiteSettings',
+    component: SiteSettings,
+    meta: { requiresAuth: true, requiresRole: ['admin'] }
+  },
+  {
+    path: '/super-admin',
+    name: 'SuperAdminQueue',
+    component: SuperAdminQueue,
+    meta: { requiresAuth: true, requiresSuperAdmin: true }
+  },
+  {
     path: '/highlight-obs/:id',
     name: 'HighlightDisplayOBS',
     component: HighlightDisplayOBS,
     meta: { requiresAuth: false }
+  },
+  {
+    path: '/transparency/costs',
+    name: 'TransparencyCosts',
+    component: Transparency,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/transparency',
+    name: 'TransparencyRoot',
+    redirect: '/transparency/costs'
+  },
+  {
+    path: '/expense-manager',
+    name: 'ExpenseManager',
+    component: ExpenseManager,
+    meta: { requiresAuth: true, requiresRole: ['admin', 'moderator'] }
   }
 ];
 
@@ -222,8 +262,12 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiredRoles = to.meta.requiresRole;
+  const user = authStore.user.value;
 
-  console.log(`[Router Guard] To: ${to.path}, Auth: ${authStore.isAuthenticated.value}, Roles: ${authStore.user.value?.role}`);
+  // Get all user roles
+  const userRoles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+
+  console.log(`[Router Guard] To: ${to.path}, Auth: ${authStore.isAuthenticated.value}, Roles: ${userRoles}`);
 
   // Redirect logged-in users away from login page
   if ((to.name === 'Login' || to.name === 'LoginAlias') && authStore.isAuthenticated.value) {
@@ -235,7 +279,14 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !authStore.isAuthenticated.value) {
     console.log('[Router Guard] Redirecting to login');
     next({ path: '/', query: { redirect: to.fullPath } });
-  } else if (requiredRoles && !requiredRoles.includes(authStore.user.value?.role)) {
+  } else if (to.meta.requiresSuperAdmin) {
+    if (!user?.isSuperAdmin) {
+      console.log('[Router Guard] Super Admin required, redirecting to dashboard');
+      next('/dashboard');
+    } else {
+      next();
+    }
+  } else if (requiredRoles && !requiredRoles.some(r => userRoles.includes(r))) {
     console.log('[Router Guard] User does not have required role');
     next('/dashboard');
   } else {

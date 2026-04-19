@@ -129,6 +129,35 @@ export default {
               />
             </div>
 
+            <!-- Moniker / Handle -->
+            <div class="col-span-1 sm:col-span-2">
+              <label class="block text-xs md:text-sm font-medium text-gray-300 mb-1">Moniker / Handle</label>
+              <p class="text-gray-500 text-xs mb-2">Choose a unique nickname. Letters, numbers, hyphens, and underscores only.</p>
+              <div class="flex items-center gap-3">
+                <div class="relative flex-1">
+                  <input
+                    v-model="moniker"
+                    @input="checkMoniker"
+                    type="text"
+                    maxlength="30"
+                    placeholder="e.g. Eagle-1"
+                    class="w-full bg-gray-700 border text-white rounded px-2 md:px-3 py-1.5 md:py-2 focus:outline-none"
+                    :class="monikerStatus === 'available' ? 'border-green-500 focus:border-green-400' : monikerStatus === 'taken' || monikerStatus === 'invalid' ? 'border-red-500 focus:border-red-400' : 'border-gray-600 focus:border-yellow-500'"
+                  />
+                  <span v-if="monikerStatus === 'checking'" class="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg class="w-4 h-4 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  </span>
+                  <span v-else-if="monikerStatus === 'available'" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 text-sm">&#10003;</span>
+                  <span v-else-if="monikerStatus === 'taken' || monikerStatus === 'invalid'" class="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-sm">&#10007;</span>
+                </div>
+              </div>
+              <p v-if="monikerMessage" class="text-xs mt-1" :class="monikerStatus === 'available' ? 'text-green-400' : 'text-red-400'">{{ monikerMessage }}</p>
+              <label v-if="moniker" class="flex items-center gap-2 mt-2 cursor-pointer">
+                <input v-model="useMoniker" type="checkbox" class="w-4 h-4 rounded bg-gray-700 border-gray-600 text-yellow-500 focus:ring-yellow-500">
+                <span class="text-xs md:text-sm text-gray-300">Use moniker as my display name across the site</span>
+              </label>
+            </div>
+
             <!-- Role Badge -->
             <div>
               <label class="block text-xs md:text-sm font-medium text-gray-300 mb-1">Role</label>
@@ -551,6 +580,11 @@ export default {
       changingPassword: false,
       uploadingAvatar: false,
       user: {},
+      moniker: '',
+      useMoniker: false,
+      monikerStatus: '', // '', 'checking', 'available', 'taken', 'invalid'
+      monikerMessage: '',
+      monikerCheckTimeout: null,
       form: {
         firstName: '',
         lastName: '',
@@ -713,6 +747,8 @@ export default {
           this.form.firstName = this.user.firstName || '';
           this.form.lastName = this.user.lastName || '';
           this.form.phone = this.user.phone || '';
+          this.moniker = this.user.moniker || '';
+          this.useMoniker = this.user.useMoniker || false;
           this.form.displayName = this.user.profile?.displayName || '';
           this.form.tagline = this.user.profile?.tagline || '';
           this.form.bio = this.user.profile?.bio || '';
@@ -746,13 +782,34 @@ export default {
       }
     },
 
+    checkMoniker() {
+      clearTimeout(this.monikerCheckTimeout);
+      const val = this.moniker.trim();
+      if (!val) { this.monikerStatus = ''; this.monikerMessage = ''; return; }
+      if (val.length < 2) { this.monikerStatus = 'invalid'; this.monikerMessage = 'At least 2 characters'; return; }
+      if (!/^[a-zA-Z0-9_-]+$/.test(val)) { this.monikerStatus = 'invalid'; this.monikerMessage = 'Only letters, numbers, hyphens, underscores'; return; }
+      this.monikerStatus = 'checking';
+      this.monikerMessage = '';
+      this.monikerCheckTimeout = setTimeout(async () => {
+        try {
+          const res = await window.api.get(`/auth/check-moniker?moniker=${encodeURIComponent(val)}`);
+          if (res.success) {
+            if (res.data.available) { this.monikerStatus = 'available'; this.monikerMessage = 'Available!'; }
+            else { this.monikerStatus = 'taken'; this.monikerMessage = res.data.reason || 'Already taken'; }
+          }
+        } catch (e) { this.monikerStatus = ''; this.monikerMessage = ''; }
+      }, 400);
+    },
+
     async updateProfile() {
       this.savingBasic = true;
       try {
         const response = await window.api.updateProfile({
           firstName: this.form.firstName,
           lastName: this.form.lastName,
-          phone: this.form.phone
+          phone: this.form.phone,
+          moniker: this.moniker || '',
+          useMoniker: this.useMoniker
         });
         if (response.success) {
           this.user = response.data.user;

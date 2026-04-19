@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Copyright &amp; Content Guide - Veteran's Scene</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/assets/img/vs-favicon.png"/>
+    <style>
+        /* Smooth scroll offset for sticky nav */
+        [id] { scroll-margin-top: 80px; }
+        /* Sidebar active state */
+        .toc-link.active { color: #facc15; border-left-color: #facc15; }
+        /* Expandable sections */
+        details summary { list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        details[open] summary .chevron { transform: rotate(180deg); }
+        .chevron { transition: transform 0.2s ease; }
+        /* Status badges */
+        .badge-safe { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-caution { background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+        .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    </style>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CZY8ZGYP0M"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CZY8ZGYP0M');
+</script>
+<body class="bg-gray-900 text-gray-100 font-sans flex flex-col min-h-screen scroll-smooth">
+    <!-- Navbar -->
+    <nav class="bg-gray-800 bg-opacity-95 border-b border-gray-700 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="/assets/img/vs-logo.jpg" alt="Veteran's Scene Logo" class="w-10 h-10 rounded-lg">
+                <a href="/index.html" class="text-2xl font-bold text-yellow-400 tracking-wide hover:text-yellow-300">
+                    Veteran's Scene
+                </a>
+            </div>
+            <button id="menu-toggle" type="button" class="md:hidden text-gray-300 hover:text-yellow-400 focus:outline-none">
+                <svg id="menu-open-icon" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <div id="menu" class="hidden md:flex flex-col md:flex-row md:items-center md:space-x-4 absolute md:static left-0 top-full w-full md:w-auto bg-gray-800 md:bg-transparent border-t md:border-none border-gray-700 p-4 md:p-0">
+                <a href="/index.html" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Home</a>
+                <a href="#fair-use" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Fair Use</a>
+                <a href="#government" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Military Content</a>
+                <a href="#youtube" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">YouTube</a>
+                <a href="#quick-ref" class="block py-2 text-gray-300 hover:text-yellow-400 font-medium transition">Quick Ref</a>
+                <a href="/apply.html" class="block mt-2 md:mt-0 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 rounded-md font-semibold transition text-center">
+                    Apply Now
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Banner -->
+    <section class="relative bg-cover bg-center h-[40vh]" style="background-image: url('/assets/img/vs-banner.png');">
+        <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-center px-6">
+            <h1 class="text-4xl sm:text-5xl font-bold text-yellow-400 mb-4 drop-shadow-lg">Copyright &amp; Content Guide</h1>
+            <p class="max-w-2xl text-lg text-gray-200">
+                What our team needs to know about using content legally on YouTube
+            </p>
+        </div>
+    </section>
+
+    <!-- Disclaimer Banner -->
+    <div class="bg-yellow-400 bg-opacity-10 border-b border-yellow-400 border-opacity-30 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex items-start gap-3">
+            <svg class="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <p class="text-yellow-300 text-sm">
+                <strong>Disclaimer:</strong> This guide is for educational purposes and does not constitute legal advice. Copyright law is complex and fact-specific. When in doubt about a specific use, consult a qualified attorney. Information is based on U.S. Copyright Law (Title 17, U.S. Code) and YouTube's published policies.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Layout: Sidebar + Content -->
+    <div class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-8 lg:py-12">
+        <div class="lg:flex lg:gap-8">
+
+            <!-- Sidebar TOC (desktop: sticky, mobile: collapsible) -->
+            <aside class="lg:w-64 flex-shrink-0 mb-8 lg:mb-0">
+                <div class="lg:sticky lg:top-20">
+                    <button id="toc-toggle" class="lg:hidden w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-left text-yellow-400 font-semibold flex justify-between items-center mb-4">
+                        Table of Contents
+                        <svg class="w-5 h-5 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <nav id="toc-menu" class="hidden lg:block bg-gray-800 rounded-lg border border-gray-700 p-4 space-y-1 text-sm">
+                        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3 px-3">Sections</p>
+                        <a href="#overview" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Overview</a>
+                        <a href="#fair-use" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Fair Use (Section 107)</a>
+                        <a href="#government" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Government &amp; Military</a>
+                        <a href="#public-domain" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Public Domain</a>
+                        <a href="#music" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Music &amp; Audio</a>
+                        <a href="#youtube" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">YouTube Policies</a>
+                        <a href="#content-id" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Content ID System</a>
+                        <a href="#creative-commons" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Creative Commons</a>
+                        <a href="#penalties" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Penalties &amp; Strikes</a>
+                        <a href="#quick-ref" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Quick Reference</a>
+                        <a href="#myths" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Common Myths</a>
+                        <a href="#releases" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Guest Releases</a>
+                        <a href="#checklist" class="toc-link block px-3 py-2 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700 border-l-2 border-transparent transition">Pre-Upload Checklist</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-grow min-w-0 space-y-10">
+
+                <!-- OVERVIEW -->
+                <section id="overview">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Why This Matters</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-4">
+                        <p class="text-gray-300 leading-relaxed">
+                            As Veteran's Scene grows and our team creates content for YouTube, understanding copyright is essential. A single copyright strike can limit our channel's features, and three strikes within 90 days results in channel termination.
+                        </p>
+                        <p class="text-gray-300 leading-relaxed">
+                            The good news: copyright law provides significant protections for commentary, criticism, education, and news reporting. As a veterans-focused channel discussing military topics, current events, and veteran experiences, much of what we do falls into protected categories. But we need to do it correctly.
+                        </p>
+                        <div class="grid sm:grid-cols-3 gap-4 mt-6">
+                            <div class="bg-gray-700 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-green-400 mb-1">Protected</div>
+                                <p class="text-sm text-gray-400">Commentary, criticism, parody, education, news reporting</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-yellow-400 mb-1">Careful</div>
+                                <p class="text-sm text-gray-400">Music, movie clips, TV footage, branded content</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-red-400 mb-1">Avoid</div>
+                                <p class="text-sm text-gray-400">Full songs, entire episodes, unmodified copyrighted works</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAIR USE -->
+                <section id="fair-use">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Fair Use &mdash; 17 U.S.C. &sect; 107</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <p class="text-gray-300 leading-relaxed">
+                            Fair use is a legal doctrine that permits limited use of copyrighted material <strong class="text-yellow-300">without permission</strong> from the copyright holder. It exists specifically to protect free speech, commentary, education, and creative expression.
+                        </p>
+
+                        <div class="bg-gray-700 rounded-lg p-6 border-l-4 border-yellow-400">
+                            <p class="text-gray-300 italic leading-relaxed">
+                                "The fair use of a copyrighted work, including such use by reproduction in copies [...] for purposes such as <strong class="text-yellow-300">criticism, comment, news reporting, teaching, scholarship, or research</strong>, is not an infringement of copyright."
+                            </p>
+                            <p class="text-gray-500 text-sm mt-2">&mdash; 17 U.S.C. &sect; 107</p>
+                        </div>
+
+                        <div class="bg-gray-700 rounded-lg p-5 mt-4">
+                            <h4 class="text-red-400 font-semibold mb-2">2023 Update: Andy Warhol Foundation v. Goldsmith</h4>
+                            <p class="text-gray-400 text-sm">The Supreme Court significantly tightened fair use analysis in 2023. The ruling clarified that even highly altered works are <strong class="text-gray-200">not automatically transformative</strong> if they serve the <strong class="text-gray-200">same purpose</strong> as the original. A new work must have a "fundamentally different and new" purpose or character &mdash; not just different aesthetics. This means: <strong class="text-yellow-300">adding commentary, criticism, or educational context is more important than ever.</strong></p>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">The Four Factors</h3>
+                        <p class="text-gray-400 text-sm mb-4">Courts weigh all four factors together. No single factor is decisive.</p>
+
+                        <div class="space-y-4">
+                            <!-- Factor 1 -->
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-yellow-400 font-bold">1</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-100 mb-2">Purpose and Character of the Use</h4>
+                                        <p class="text-gray-300 mb-3">Is the new work <strong class="text-yellow-300">transformative</strong>? Does it add new meaning, commentary, or context? Commercial use weighs against fair use, but is not disqualifying.</p>
+                                        <div class="grid sm:grid-cols-2 gap-3 text-sm">
+                                            <div class="space-y-1">
+                                                <p class="text-green-400 font-medium">Favors Fair Use:</p>
+                                                <ul class="text-gray-400 space-y-1 ml-4 list-disc">
+                                                    <li>Adding commentary or criticism</li>
+                                                    <li>Using a clip to make a new point</li>
+                                                    <li>Parody and satire</li>
+                                                    <li>Educational or news purposes</li>
+                                                </ul>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <p class="text-red-400 font-medium">Weighs Against:</p>
+                                                <ul class="text-gray-400 space-y-1 ml-4 list-disc">
+                                                    <li>Reposting content as-is</li>
+                                                    <li>Using content purely for entertainment</li>
+                                                    <li>No new commentary or meaning added</li>
+                                                    <li>Direct commercial exploitation</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Factor 2 -->
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-yellow-400 font-bold">2</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-100 mb-2">Nature of the Copyrighted Work</h4>
+                                        <p class="text-gray-300">Factual works (news footage, documentaries, government reports) get less protection than highly creative works (movies, music, novels). This factor generally <strong class="text-yellow-300">favors us</strong> when discussing news, military operations, and factual events.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Factor 3 -->
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-yellow-400 font-bold">3</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-100 mb-2">Amount and Substantiality Used</h4>
+                                        <p class="text-gray-300 mb-3">Use only what's necessary to make your point. Less is better, but quality matters too &mdash; using the "heart" of a work weighs against fair use even if the amount is small.</p>
+                                        <div class="bg-gray-800 rounded-lg p-4 text-sm">
+                                            <p class="text-yellow-300 font-medium mb-2">Rule of Thumb for Our Content:</p>
+                                            <ul class="text-gray-400 space-y-1 ml-4 list-disc">
+                                                <li>Use short clips (5-30 seconds) when discussing video content</li>
+                                                <li>Show only what's needed to support your commentary</li>
+                                                <li>Never play an entire song, episode, or article</li>
+                                                <li>Pause and comment frequently when showing clips</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Factor 4 -->
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 bg-yellow-400 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-yellow-400 font-bold">4</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-100 mb-2">Effect on the Market</h4>
+                                        <p class="text-gray-300">Would your use serve as a <strong class="text-yellow-300">substitute</strong> for the original? If viewers watch your video instead of the original, that weighs against fair use. Commentary and criticism generally don't substitute for the original.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Protected Categories Detail -->
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">Protected Categories in Detail</h3>
+
+                        <div class="space-y-3">
+                            <details class="bg-gray-700 rounded-lg">
+                                <summary class="p-4 cursor-pointer hover:bg-gray-600 rounded-lg transition flex justify-between items-center">
+                                    <span class="text-yellow-300 font-medium">Commentary &amp; Criticism</span>
+                                    <svg class="w-5 h-5 text-gray-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </summary>
+                                <div class="px-4 pb-4 text-gray-300 space-y-2">
+                                    <p>You may use portions of copyrighted works to <strong class="text-yellow-300">comment on or critique them</strong>. This is the strongest fair use category for YouTube creators.</p>
+                                    <p class="text-sm text-gray-400"><strong>Example:</strong> Showing a 15-second clip from a news broadcast about veterans, then pausing to discuss what's wrong or right about their reporting. Your commentary is the primary content; the clip supports it.</p>
+                                    <p class="text-sm text-gray-400"><strong>Key:</strong> You must actually be commenting on the content you're showing. Playing a clip just because it's entertaining, without substantive commentary, is not criticism.</p>
+                                </div>
+                            </details>
+
+                            <details class="bg-gray-700 rounded-lg">
+                                <summary class="p-4 cursor-pointer hover:bg-gray-600 rounded-lg transition flex justify-between items-center">
+                                    <span class="text-yellow-300 font-medium">Parody &amp; Satire</span>
+                                    <svg class="w-5 h-5 text-gray-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </summary>
+                                <div class="px-4 pb-4 text-gray-300 space-y-2">
+                                    <p><strong class="text-yellow-300">Parody</strong> (mocking the original work itself) has strong fair use protection. <strong class="text-yellow-300">Satire</strong> (using a work to mock something else) has weaker protection.</p>
+                                    <p class="text-sm text-gray-400"><strong>Parody example:</strong> Creating a humorous version of a military recruitment ad that comments on the ad itself. (Strong protection &mdash; <em>Campbell v. Acuff-Rose Music, 1994</em>)</p>
+                                    <p class="text-sm text-gray-400"><strong>Satire example:</strong> Using a copyrighted song as background while making fun of something unrelated to the song. (Weaker protection &mdash; you could have used a different song)</p>
+                                </div>
+                            </details>
+
+                            <details class="bg-gray-700 rounded-lg">
+                                <summary class="p-4 cursor-pointer hover:bg-gray-600 rounded-lg transition flex justify-between items-center">
+                                    <span class="text-yellow-300 font-medium">News Reporting</span>
+                                    <svg class="w-5 h-5 text-gray-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </summary>
+                                <div class="px-4 pb-4 text-gray-300 space-y-2">
+                                    <p>Reporting on current events allows use of copyrighted material to illustrate the story. This applies to independent media and YouTube channels, not just traditional news outlets.</p>
+                                    <p class="text-sm text-gray-400"><strong>Example:</strong> Showing a brief clip of a congressional hearing about VA benefits while reporting on and discussing the hearing's outcomes.</p>
+                                    <p class="text-sm text-gray-400"><strong>Limit:</strong> Use only what's necessary to tell the story. Don't rebroadcast entire segments.</p>
+                                </div>
+                            </details>
+
+                            <details class="bg-gray-700 rounded-lg">
+                                <summary class="p-4 cursor-pointer hover:bg-gray-600 rounded-lg transition flex justify-between items-center">
+                                    <span class="text-yellow-300 font-medium">Education &amp; Scholarship</span>
+                                    <svg class="w-5 h-5 text-gray-400 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </summary>
+                                <div class="px-4 pb-4 text-gray-300 space-y-2">
+                                    <p>Educational use is favored, but it's not a blanket pass. The use must be genuinely educational, not just labeled as such.</p>
+                                    <p class="text-sm text-gray-400"><strong>Example:</strong> Using historical photos and brief documentary clips to teach viewers about a specific military operation or veteran benefit program.</p>
+                                    <p class="text-sm text-gray-400"><strong>Not educational:</strong> Labeling a reaction video "educational" without providing actual educational content.</p>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- GOVERNMENT & MILITARY CONTENT -->
+                <section id="government">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Government &amp; Military Content</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <div class="bg-gray-700 rounded-lg p-6 border-l-4 border-green-400">
+                            <p class="text-gray-300 leading-relaxed">
+                                Under <strong class="text-yellow-300">17 U.S.C. &sect; 105</strong>, works created by U.S. federal government employees as part of their official duties are <strong class="text-green-400">not eligible for copyright protection</strong> and are in the public domain. This is a significant advantage for our content.
+                            </p>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-4">What You CAN Use Freely</h3>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full">FREE TO USE</span>
+                                <h4 class="text-gray-100 font-medium mt-3 mb-2">DoD Photos &amp; Videos</h4>
+                                <p class="text-gray-400 text-sm">Photos and videos taken by military photographers (DVIDS, defense.gov, military branch websites) as part of their official duties.</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full">FREE TO USE</span>
+                                <h4 class="text-gray-100 font-medium mt-3 mb-2">Congressional Hearings</h4>
+                                <p class="text-gray-400 text-sm">C-SPAN footage of congressional proceedings, hearings, and floor speeches. These are government works.</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full">FREE TO USE</span>
+                                <h4 class="text-gray-100 font-medium mt-3 mb-2">Government Reports &amp; Documents</h4>
+                                <p class="text-gray-400 text-sm">VA reports, GAO studies, DoD publications, executive orders, federal regulations, and court opinions.</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full">FREE TO USE</span>
+                                <h4 class="text-gray-100 font-medium mt-3 mb-2">NASA Content</h4>
+                                <p class="text-gray-400 text-sm">Photos, videos, and audio from NASA (unless specifically noted as from a contractor or third party).</p>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">Important Restrictions on Government Content</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="text-gray-100 font-medium mb-1">No Implied Endorsement</h4>
+                                        <p class="text-gray-400 text-sm">You may not use government or military content in a way that implies the DoD, any military branch, or the U.S. government endorses your content, products, or views. This is a DoD policy requirement, not copyright law.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="text-gray-100 font-medium mb-1">Military Branch Logos &amp; Insignia</h4>
+                                        <p class="text-gray-400 text-sm">While not copyrighted, official military seals, emblems, and logos are protected under <strong class="text-yellow-300">18 U.S.C. &sect; 506</strong> and various DoD regulations. Using them in a way that suggests official endorsement or in commercial merchandise is prohibited. Editorial/educational use in videos discussing the military is generally acceptable.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="text-gray-100 font-medium mb-1">Privacy &amp; Identifiable Persons</h4>
+                                        <p class="text-gray-400 text-sm">Even public domain military photos may feature identifiable service members. Be mindful of context, especially with content related to special operations, casualties, or sensitive missions. OPSEC (Operational Security) considerations may apply.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-700 rounded-lg p-5">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="text-gray-100 font-medium mb-1">Contractor-Created Content</h4>
+                                        <p class="text-gray-400 text-sm">Not all content on .mil or .gov websites is government-created. Content produced by contractors may be copyrighted. Look for photo/video credits. If credited to a contractor or civilian, it may not be public domain.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">Best Sources for Government Content</h3>
+                        <div class="bg-gray-700 rounded-lg p-5">
+                            <ul class="space-y-3 text-gray-300 text-sm">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                    <span><strong class="text-gray-100">DVIDS</strong> (dvidshub.net) &mdash; Defense Visual Information Distribution Service. Primary source for DoD imagery.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                    <span><strong class="text-gray-100">defense.gov</strong> &mdash; Official DoD photos, press releases, and publications.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                    <span><strong class="text-gray-100">Branch Websites</strong> &mdash; army.mil, navy.mil, af.mil, marines.mil, coastguard.mil</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                    <span><strong class="text-gray-100">National Archives</strong> (archives.gov) &mdash; Historical military photos, documents, and film.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                    <span><strong class="text-gray-100">VA.gov</strong> &mdash; Veterans Affairs publications, infographics, and reports.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PUBLIC DOMAIN -->
+                <section id="public-domain">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Public Domain</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <p class="text-gray-300 leading-relaxed">
+                            Public domain works have no copyright restrictions. You can use them freely, modify them, and even monetize content that includes them.
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead>
+                                    <tr class="border-b border-gray-600">
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Category</th>
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Public Domain When</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-300">
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">U.S. Government Works</td>
+                                        <td class="py-3 px-4">Immediately (17 U.S.C. &sect; 105)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Published before 1929</td>
+                                        <td class="py-3 px-4">Now public domain (as of 2024)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Published 1929-1977 without copyright notice</td>
+                                        <td class="py-3 px-4">Public domain (notice was required)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Published 1929-1963 with notice but not renewed</td>
+                                        <td class="py-3 px-4">Public domain (renewal was required)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Works by authors who died 70+ years ago</td>
+                                        <td class="py-3 px-4">Life + 70 years (current rule for post-1978 works)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 px-4">Dedicated by owner</td>
+                                        <td class="py-3 px-4">When explicitly released (CC0, public domain dedication)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-gray-400 text-sm">
+                            <strong class="text-yellow-300">For our purposes:</strong> Most WWII-era and earlier military footage, photos published before 1929, and all U.S. government-produced content are public domain. Korean War, Vietnam, and later conflicts &mdash; government-produced content is public domain; news network footage is not.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- MUSIC & AUDIO -->
+                <section id="music">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Music &amp; Audio</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <div class="bg-red-400 bg-opacity-10 border border-red-400 border-opacity-30 rounded-lg p-4">
+                            <p class="text-red-300 text-sm"><strong>Music is the #1 source of copyright claims on YouTube.</strong> Even a few seconds of a popular song playing in the background can trigger Content ID. This section is critical.</p>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-4">Safe Music Sources</h3>
+                        <div class="space-y-3">
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">SAFE</span>
+                                <div>
+                                    <h4 class="text-gray-100 font-medium">YouTube Audio Library</h4>
+                                    <p class="text-gray-400 text-sm">Free music and sound effects provided by YouTube. Some require attribution in the video description. Available in YouTube Studio.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">SAFE</span>
+                                <div>
+                                    <h4 class="text-gray-100 font-medium">Royalty-Free Libraries</h4>
+                                    <p class="text-gray-400 text-sm">Services like Epidemic Sound, Artlist, or Pixabay Music. Pay a license fee (or use free tiers) and use the music without claims. Read their specific license terms.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">SAFE</span>
+                                <div>
+                                    <h4 class="text-gray-100 font-medium">Creative Commons Music</h4>
+                                    <p class="text-gray-400 text-sm">Music released under CC licenses (see Creative Commons section below). Always check which CC license applies and follow its requirements.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-safe text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">SAFE</span>
+                                <div>
+                                    <h4 class="text-gray-100 font-medium">Original Compositions</h4>
+                                    <p class="text-gray-400 text-sm">Music you or a team member created. If someone else made it for you, get a written agreement confirming you have rights to use it.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">What About Using Popular Songs?</h3>
+                        <div class="bg-gray-700 rounded-lg p-5 space-y-3">
+                            <p class="text-gray-300">Using copyrighted music requires licenses. For a YouTube video, you would typically need:</p>
+                            <ul class="text-gray-400 text-sm space-y-2 ml-4 list-disc">
+                                <li><strong class="text-gray-200">Synchronization (Sync) License</strong> &mdash; Permission from the songwriter/publisher to pair their music with visual content</li>
+                                <li><strong class="text-gray-200">Master Use License</strong> &mdash; Permission from the record label to use their specific recording</li>
+                            </ul>
+                            <p class="text-gray-400 text-sm">These licenses are expensive and complex. For our channel, <strong class="text-yellow-300">do not use copyrighted music</strong> as background, intro/outro, or ambiance. Use the safe sources listed above.</p>
+                            <p class="text-gray-400 text-sm"><strong class="text-yellow-300">Exception:</strong> Brief clips of music used for direct commentary/criticism about that music may qualify as fair use (e.g., discussing a military-themed song and playing a 10-second sample while analyzing its lyrics).</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- YOUTUBE POLICIES -->
+                <section id="youtube">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">YouTube Copyright Policies</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <p class="text-gray-300 leading-relaxed">
+                            YouTube has its own copyright enforcement system that operates <strong class="text-yellow-300">independently from the courts</strong>. Something can be legal fair use but still get flagged by YouTube's automated system. Understanding both the law and YouTube's platform rules is essential.
+                        </p>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-4">Copyright Strike vs. Content ID Claim</h3>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-gray-700 rounded-lg p-5 border-t-4 border-red-400">
+                                <h4 class="text-red-400 font-bold text-lg mb-3">Copyright Strike</h4>
+                                <ul class="text-gray-400 text-sm space-y-2">
+                                    <li>Filed manually by a copyright holder via DMCA takedown</li>
+                                    <li>Video is removed from YouTube</li>
+                                    <li><strong class="text-gray-200">3 strikes in 90 days = channel terminated</strong></li>
+                                    <li>1 strike: lose access to some features for 90 days</li>
+                                    <li>Can be appealed via counter-notification (DMCA process)</li>
+                                    <li>Counter-notification is a legal declaration under penalty of perjury</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-5 border-t-4 border-yellow-400">
+                                <h4 class="text-yellow-400 font-bold text-lg mb-3">Content ID Claim</h4>
+                                <ul class="text-gray-400 text-sm space-y-2">
+                                    <li>Automated system matches audio/video against a database</li>
+                                    <li>Video stays up (usually)</li>
+                                    <li><strong class="text-gray-200">Does NOT count as a strike</strong></li>
+                                    <li>Copyright holder may: monetize your video, track views, or block in some countries</li>
+                                    <li>Can be disputed if you believe it's fair use</li>
+                                    <li>If dispute rejected, you can appeal (then it may become a strike if the holder files a takedown)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CONTENT ID -->
+                <section id="content-id">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Content ID System</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <p class="text-gray-300 leading-relaxed">
+                            Content ID is YouTube's automated fingerprinting system. Copyright holders upload reference files, and YouTube scans every upload against this database.
+                        </p>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-4">What Triggers Content ID</h3>
+                        <div class="grid sm:grid-cols-2 gap-3">
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <p class="text-red-400 font-medium text-sm mb-2">Almost Always Triggers:</p>
+                                <ul class="text-gray-400 text-sm space-y-1 ml-4 list-disc">
+                                    <li>Any recognizable music (even humming)</li>
+                                    <li>TV or movie audio/video</li>
+                                    <li>Sports broadcasts</li>
+                                    <li>Music playing in the background of your recording</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <p class="text-green-400 font-medium text-sm mb-2">Rarely Triggers:</p>
+                                <ul class="text-gray-400 text-sm space-y-1 ml-4 list-disc">
+                                    <li>Original spoken content (interviews, discussions)</li>
+                                    <li>Government/public domain footage</li>
+                                    <li>Royalty-free music from proper libraries</li>
+                                    <li>Your own original footage</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">Dispute Process</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 text-yellow-400 font-bold text-sm">1</div>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Content ID Claim Received</p>
+                                    <p class="text-gray-400 text-sm">You receive a claim. Video usually stays up but may be monetized by the claimant.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 text-yellow-400 font-bold text-sm">2</div>
+                                <div>
+                                    <p class="text-gray-100 font-medium">You Dispute (if fair use applies)</p>
+                                    <p class="text-gray-400 text-sm">Select "Fair Use" as your reason. Explain how your use is transformative. The claimant has 30 days to respond.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 text-yellow-400 font-bold text-sm">3</div>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Claimant Responds</p>
+                                    <p class="text-gray-400 text-sm">They can release the claim, uphold it, or take no action (claim released after 30 days).</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 text-yellow-400 font-bold text-sm">4</div>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Appeal (if upheld)</p>
+                                    <p class="text-gray-400 text-sm">You can appeal once more. If the claimant still disagrees, they must file a formal DMCA takedown (which becomes a copyright strike) or release the claim.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-400 bg-opacity-10 border border-yellow-400 border-opacity-30 rounded-lg p-4 mt-4">
+                            <p class="text-yellow-300 text-sm"><strong>Team Policy:</strong> Before disputing any claim, discuss it with the team. Only dispute claims where we have a strong fair use case. Frivolous disputes can escalate to strikes.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CREATIVE COMMONS -->
+                <section id="creative-commons">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Creative Commons Licenses</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <p class="text-gray-300 leading-relaxed">
+                            Creative Commons (CC) licenses let creators share their work with specific permissions. Look for CC-licensed content as a great source of usable material.
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead>
+                                    <tr class="border-b border-gray-600">
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">License</th>
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Can Use?</th>
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Requirements</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-300">
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4 font-medium">CC0 (Public Domain)</td>
+                                        <td class="py-3 px-4"><span class="badge-safe text-xs px-2 py-0.5 rounded-full">Yes</span></td>
+                                        <td class="py-3 px-4 text-gray-400">No requirements. Use however you want.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4 font-medium">CC BY (Attribution)</td>
+                                        <td class="py-3 px-4"><span class="badge-safe text-xs px-2 py-0.5 rounded-full">Yes</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Credit the creator in your video description.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4 font-medium">CC BY-SA (ShareAlike)</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Careful</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Credit creator + your video must use the same license.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4 font-medium">CC BY-NC (NonCommercial)</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Careful</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Credit creator. Cannot monetize the video if using this content.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4 font-medium">CC BY-ND (NoDerivatives)</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Careful</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Credit creator. Cannot modify or remix the content.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 px-4 font-medium">CC BY-NC-ND</td>
+                                        <td class="py-3 px-4"><span class="badge-danger text-xs px-2 py-0.5 rounded-full">Restrictive</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Credit creator. No monetization. No modifications. Very limited use.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-gray-400 text-sm"><strong class="text-yellow-300">Best for our channel:</strong> CC0 and CC BY content. These give us maximum flexibility including monetization. Always credit CC BY creators in the video description.</p>
+                    </div>
+                </section>
+
+                <!-- PENALTIES -->
+                <section id="penalties">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Penalties &amp; Consequences</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-4">YouTube Consequences</h3>
+                        <div class="space-y-3">
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-caution text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">1 STRIKE</span>
+                                <p class="text-gray-300 text-sm">Warning. Lose ability to upload, post, or live stream for 1 week. Strike expires after 90 days.</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-danger text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">2 STRIKES</span>
+                                <p class="text-gray-300 text-sm">Cannot upload, post, or live stream for 2 weeks. Both strikes must expire (90 days each).</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="badge-danger text-xs font-medium px-2 py-1 rounded-full flex-shrink-0">3 STRIKES</span>
+                                <p class="text-gray-300 text-sm"><strong class="text-red-400">Channel permanently terminated.</strong> All videos removed. Cannot create new channels.</p>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mt-8 mb-4">Legal Consequences (U.S. Copyright Law)</h3>
+                        <div class="bg-gray-700 rounded-lg p-5 text-sm text-gray-400 space-y-2">
+                            <p>Copyright infringement can result in civil and criminal penalties under U.S. law:</p>
+                            <ul class="ml-4 list-disc space-y-1">
+                                <li><strong class="text-gray-200">Statutory Damages:</strong> $750 to $30,000 per work infringed (up to $150,000 for willful infringement)</li>
+                                <li><strong class="text-gray-200">Actual Damages:</strong> Lost profits suffered by the copyright holder</li>
+                                <li><strong class="text-gray-200">Attorney's Fees:</strong> Losing party may pay the other side's legal costs</li>
+                                <li><strong class="text-gray-200">Criminal Penalties:</strong> Up to 5 years imprisonment for willful infringement for commercial gain (rare for YouTube creators, but possible)</li>
+                            </ul>
+                            <p class="mt-3 text-yellow-300">For our channel, the realistic risk is YouTube strikes and potential civil claims. Following this guide minimizes that risk significantly.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- QUICK REFERENCE -->
+                <section id="quick-ref">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Quick Reference: Can I Use This?</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead>
+                                    <tr class="border-b border-gray-600">
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Content Type</th>
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Status</th>
+                                        <th class="py-3 px-4 text-yellow-300 font-semibold">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-300">
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">DoD/military photos &amp; video</td>
+                                        <td class="py-3 px-4"><span class="badge-safe text-xs px-2 py-0.5 rounded-full">Safe</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Public domain. Credit source. Don't imply endorsement.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Your own interview recordings</td>
+                                        <td class="py-3 px-4"><span class="badge-safe text-xs px-2 py-0.5 rounded-full">Safe</span></td>
+                                        <td class="py-3 px-4 text-gray-400">You own it. Get verbal/written consent from participants.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">YouTube Audio Library music</td>
+                                        <td class="py-3 px-4"><span class="badge-safe text-xs px-2 py-0.5 rounded-full">Safe</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Some tracks require attribution in description.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Historical footage (pre-1929)</td>
+                                        <td class="py-3 px-4"><span class="badge-safe text-xs px-2 py-0.5 rounded-full">Safe</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Public domain. Verify the date.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">News clip with your commentary</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Fair Use</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Keep clips short. Add substantial commentary. Don't play full segments.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Movie/TV clip for discussion</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Fair Use</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Brief clips only. Must be commenting on the content shown. May still trigger Content ID.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Popular song as background music</td>
+                                        <td class="py-3 px-4"><span class="badge-danger text-xs px-2 py-0.5 rounded-full">No</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Will get claimed. Not fair use. Use royalty-free alternatives.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Full song, episode, or article</td>
+                                        <td class="py-3 px-4"><span class="badge-danger text-xs px-2 py-0.5 rounded-full">No</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Never. Not fair use regardless of commentary.</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-3 px-4">Military branch logos in video</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Careful</span></td>
+                                        <td class="py-3 px-4 text-gray-400">OK for editorial/educational context. Don't use on merchandise or imply endorsement.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 px-4">Other YouTube creator's content</td>
+                                        <td class="py-3 px-4"><span class="badge-caution text-xs px-2 py-0.5 rounded-full">Careful</span></td>
+                                        <td class="py-3 px-4 text-gray-400">Same fair use rules apply. Brief clips with commentary only. Best to ask permission.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- COMMON MYTHS -->
+                <section id="myths">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Common Myths &mdash; Debunked</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-4">
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <div>
+                                <p class="text-gray-100 font-medium">"I gave credit, so it's fine."</p>
+                                <p class="text-gray-400 text-sm">Attribution does NOT create fair use. Giving credit is polite and good practice, but it has zero legal effect on whether your use is infringing.</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <div>
+                                <p class="text-gray-100 font-medium">"I wrote 'no copyright infringement intended.'"</p>
+                                <p class="text-gray-400 text-sm">This disclaimer has absolutely no legal effect. Courts and YouTube both ignore it entirely.</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <div>
+                                <p class="text-gray-100 font-medium">"It's only 30 seconds, so it's fair use."</p>
+                                <p class="text-gray-400 text-sm">There is no "X seconds is always safe" rule. Even a few seconds can infringe if it's the "heart" of the work. Conversely, longer uses can be fair if highly transformative. Context matters.</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <div>
+                                <p class="text-gray-100 font-medium">"I'm not monetizing, so it's not infringement."</p>
+                                <p class="text-gray-400 text-sm">Non-commercial use weighs <em>in favor</em> of fair use, but it doesn't make infringement legal. You can be sued for non-monetized content.</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <div>
+                                <p class="text-gray-100 font-medium">"It was on the internet, so it's free to use."</p>
+                                <p class="text-gray-400 text-sm">Being publicly accessible does not mean public domain. Almost everything on the internet is copyrighted by default. Only works explicitly released as public domain or under permissive licenses are free to use.</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <div>
+                                <p class="text-gray-100 font-medium">"It's a reaction video, so it's automatically fair use."</p>
+                                <p class="text-gray-400 text-sm">Simply watching and reacting with minimal commentary is weak fair use. You need <strong class="text-gray-200">substantive analysis, criticism, or commentary</strong>. The more you add, the stronger your case.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- GUEST RELEASES -->
+                <section id="releases">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Guest Appearances &amp; Releases</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-6">
+                        <p class="text-gray-300 leading-relaxed">
+                            When interviewing veterans or featuring guests, copyright is generally not the concern &mdash; but <strong class="text-yellow-300">consent and privacy</strong> are. Every guest should agree to being recorded and published.
+                        </p>
+
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-4">Best Practices</h3>
+                        <div class="space-y-3">
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Get a Release Form</p>
+                                    <p class="text-gray-400 text-sm">Have each guest sign a simple release granting permission to record and publish the interview on YouTube, podcast platforms, and promotional materials. This avoids future disputes.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="text-green-400 mt-0.5 flex-shrink-0">&#10003;</span>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Verbal Consent on Recording</p>
+                                    <p class="text-gray-400 text-sm">At minimum, get verbal confirmation on camera/recording that the guest consents to the interview being published. This creates a record even without a written form.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="text-yellow-400 mt-0.5 flex-shrink-0">!</span>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Sensitive Topics</p>
+                                    <p class="text-gray-400 text-sm">Be mindful of PTSD-related topics. YouTube's community guidelines restrict excessively graphic content. Let guests set boundaries on what they're comfortable discussing publicly.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4 flex items-start gap-3">
+                                <span class="text-yellow-400 mt-0.5 flex-shrink-0">!</span>
+                                <div>
+                                    <p class="text-gray-100 font-medium">Classified Information</p>
+                                    <p class="text-gray-400 text-sm">If a veteran shares potentially classified information during an interview, do not publish that portion. While civilians are generally not bound by classification rules, the veteran could face consequences, and publishing could invite government action.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PRE-UPLOAD CHECKLIST -->
+                <section id="checklist">
+                    <h2 class="text-3xl font-bold text-yellow-400 mb-6">Pre-Upload Checklist</h2>
+                    <div class="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700 space-y-4">
+                        <p class="text-gray-300 mb-4">Run through this before every upload:</p>
+
+                        <div class="space-y-3">
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">All music is from approved sources</p>
+                                    <p class="text-gray-400 text-sm">YouTube Audio Library, royalty-free library, or original composition</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">No background music playing in recordings</p>
+                                    <p class="text-gray-400 text-sm">Check that no radio, TV, or music was audible during recording</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">Third-party clips have commentary</p>
+                                    <p class="text-gray-400 text-sm">Every clip from outside sources is accompanied by your analysis, criticism, or discussion</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">Clips are brief and necessary</p>
+                                    <p class="text-gray-400 text-sm">Using only what's needed to make your point (5-30 seconds typical)</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">Government content is properly sourced</p>
+                                    <p class="text-gray-400 text-sm">Credit the source (e.g., "Photo: U.S. Army / DVIDS"). Confirm it's government-produced, not contractor.</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">No implied government/military endorsement</p>
+                                    <p class="text-gray-400 text-sm">Content doesn't suggest the DoD or any branch endorses our channel or views</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">Participant consent obtained</p>
+                                    <p class="text-gray-400 text-sm">All interview participants have given permission to appear in published content</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400 bg-gray-800 flex-shrink-0">
+                                <div>
+                                    <p class="text-gray-100 font-medium">Credits and attributions in description</p>
+                                    <p class="text-gray-400 text-sm">CC BY content credited, music attribution included where required, sources listed</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CONTACT -->
+                <section class="text-center bg-gray-800 rounded-lg p-8 border border-gray-700">
+                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">Questions About Content Usage?</h2>
+                    <p class="text-gray-300 mb-6">Not sure if something qualifies as fair use? Ask before uploading. When in doubt, leave it out.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="mailto:veteransscene@gmail.com" class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-3 px-6 rounded-lg transition">
+                            Email the Team
+                        </a>
+                        <a href="/index.html" class="inline-block bg-gray-700 hover:bg-gray-600 text-yellow-400 font-bold py-3 px-6 rounded-lg transition">
+                            Back to Home
+                        </a>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 text-center py-8 text-gray-400 mt-auto">
+        <p class="mt-2">Email: <a href="mailto:veteransscene@gmail.com" class="text-yellow-400 hover:underline">veteransscene@gmail.com</a></p>
+        <p class="m-6 text-sm">This guide is for educational purposes only and does not constitute legal advice. Copyright law is complex and fact-specific. Consult a qualified attorney for specific legal questions.</p>
+        <p class="mt-2">&copy; <span id="year"></span> Veteran's Scene. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const menu = document.getElementById('menu');
+            const openIcon = document.getElementById('menu-open-icon');
+
+            if (menuToggle && menu) {
+                menuToggle.addEventListener('click', () => {
+                    const isHidden = menu.classList.toggle('hidden');
+                    if (!isHidden) {
+                        openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />';
+                    } else {
+                        openIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />';
+                    }
+                });
+            }
+
+            // TOC toggle (mobile)
+            const tocToggle = document.getElementById('toc-toggle');
+            const tocMenu = document.getElementById('toc-menu');
+            if (tocToggle && tocMenu) {
+                tocToggle.addEventListener('click', () => {
+                    tocMenu.classList.toggle('hidden');
+                    tocToggle.querySelector('.chevron').style.transform =
+                        tocMenu.classList.contains('hidden') ? '' : 'rotate(180deg)';
+                });
+            }
+
+            // Active section highlighting in TOC
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === '#' + entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-20% 0px -60% 0px' });
+
+            sections.forEach(section => observer.observe(section));
+
+            // Close mobile TOC when clicking a link
+            tocLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) {
+                        tocMenu.classList.add('hidden');
+                        tocToggle.querySelector('.chevron').style.transform = '';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -11,8 +11,8 @@ export default {
       <div class="mb-4 flex items-center gap-4">
         <!-- Avatar -->
         <div class="flex-shrink-0">
-          <div v-if="user?.avatarUrl" class="w-12 h-12 rounded-lg bg-gray-700 overflow-hidden border-2 border-yellow-400">
-            <img :src="user.avatarUrl" :alt="user.firstName" class="w-full h-full object-cover">
+          <div v-if="user?.profile?.avatarUrl" class="w-12 h-12 rounded-lg bg-gray-700 overflow-hidden border-2 border-yellow-400">
+            <img :src="getAvatarUrl(user)" :alt="user.firstName" class="w-full h-full object-cover">
           </div>
           <div v-else class="w-12 h-12 rounded-lg bg-yellow-600 flex items-center justify-center text-gray-900 font-bold text-lg border-2 border-yellow-400">
             {{ (user?.firstName || 'U')[0] }}{{ (user?.lastName || '')[0] }}
@@ -221,6 +221,68 @@ export default {
             <span class="text-xs md:text-sm">Segments</span>
             <span v-if="segments.length > 0" class="text-xs px-1.5 py-0.5 bg-purple-500/30 text-purple-300 rounded-full font-medium">{{ segments.length }}</span>
           </button>
+
+          <!-- Expenses / Cost Transparency (list of expenses, public page) -->
+          <router-link
+            v-if="user?.isSuperAdmin"
+            to="/transparency/costs"
+            class="group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03] bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-teal-500/50"
+            title="View Expenses &amp; Cost Transparency"
+          >
+            <div class="p-1 md:p-1.5 rounded-lg transition-colors duration-300 bg-gray-700 group-hover:bg-teal-900/30">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">Expenses</span>
+          </router-link>
+
+          <!-- Expense Manager (Super Admin only) -->
+          <router-link
+            v-if="user?.isSuperAdmin"
+            to="/expense-manager"
+            class="group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03] bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-purple-500/50"
+            title="Manage Expenses (Super Admin)"
+          >
+            <div class="p-1 md:p-1.5 rounded-lg transition-colors duration-300 bg-gray-700 group-hover:bg-purple-900/30">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">Expense Manager</span>
+          </router-link>
+
+          <!-- Copyright Guide -->
+          <a
+            href="/copyright-guide.html"
+            target="_blank"
+            class="group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03] bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-teal-500/50"
+            title="Copyright &amp; Content Guide"
+          >
+            <div class="p-1 md:p-1.5 rounded-lg transition-colors duration-300 bg-gray-700 group-hover:bg-teal-900/30">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">Copyright Guide</span>
+          </a>
+
+          <!-- Site Settings (Admin Only) -->
+          <router-link
+            v-if="hasAnyRole('admin')"
+            to="/site-settings"
+            class="ml-auto group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all duration-700 hover:scale-[1.03] bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-gray-500/50"
+            title="Site Settings"
+          >
+            <div class="p-1 md:p-1.5 rounded-lg transition-colors duration-300 bg-gray-700 group-hover:bg-gray-600/30">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <span class="text-xs md:text-sm">Settings</span>
+          </router-link>
         </div>
 
         <!-- Reorderable Panels Container (flex layout for dynamic ordering) - appears ABOVE Overview -->
@@ -434,7 +496,7 @@ export default {
                           <div class="flex items-center gap-2 min-w-0 flex-1">
                             <!-- Avatar Image or Initials -->
                             <div v-if="comment.author?.profile?.avatarUrl" class="w-6 h-6 rounded-full bg-gray-700 overflow-hidden border border-gray-600 flex-shrink-0">
-                              <img :src="comment.author.avatarUrl" :alt="comment.author.firstName" class="w-full h-full object-cover">
+                              <img :src="getAvatarUrl(comment.author)" :alt="comment.author.firstName" class="w-full h-full object-cover">
                             </div>
                             <div v-else class="w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center text-gray-900 text-xs font-bold flex-shrink-0">
                               {{ getInitials(comment.author) }}
@@ -2443,6 +2505,12 @@ export default {
       const first = author.firstName?.charAt(0) || '';
       const last = author.lastName?.charAt(0) || '';
       return (first + last).toUpperCase() || '?';
+    },
+
+    getAvatarUrl(user) {
+      if (!user?.profile?.avatarUrl || !user?.id && !user?._id) return '';
+      const url = window.api.getAvatarUrl(user.id || user._id);
+      return `${url}?v=${encodeURIComponent(user.profile.avatarUrl)}`;
     }
   }
 };
